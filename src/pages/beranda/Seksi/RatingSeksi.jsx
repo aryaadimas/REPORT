@@ -23,9 +23,8 @@ export default function RatingSeksi() {
       pengirim: "Doni Ridho",
       masuk: "18/09/2024",
       selesai: "18/09/2024",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 5,
       foto: "/assets/Suika.jpg",
     },
@@ -33,9 +32,8 @@ export default function RatingSeksi() {
       pengirim: "Rio Widoro",
       masuk: "18/09/2024",
       selesai: "18/09/2024",
-      kategori: "Jaringan",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 4,
       foto: "/assets/Bokuto.jpg",
     },
@@ -43,9 +41,8 @@ export default function RatingSeksi() {
       pengirim: "Lia Yustia",
       masuk: "17/09/2024",
       selesai: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 3,
       foto: "/assets/shizuku.jpg",
     },
@@ -53,9 +50,8 @@ export default function RatingSeksi() {
       pengirim: "Ella Meisya",
       masuk: "17/09/2024",
       selesai: "17/09/2024",
-      kategori: "Aplikasi",
-      jenis: "IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 4,
       foto: "/assets/Bokuto.jpg",
     },
@@ -63,9 +59,8 @@ export default function RatingSeksi() {
       pengirim: "Widiya Karim",
       masuk: "15/09/2024",
       selesai: "16/09/2024",
-      kategori: "Email",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 2,
       foto: "/assets/Suika.jpg",
     },
@@ -73,9 +68,8 @@ export default function RatingSeksi() {
       pengirim: "Doni Ridho",
       masuk: "18/09/2024",
       selesai: "18/09/2024",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 5,
       foto: "/assets/Suika.jpg",
     },
@@ -83,9 +77,8 @@ export default function RatingSeksi() {
       pengirim: "Rio Widoro",
       masuk: "18/09/2024",
       selesai: "18/09/2024",
-      kategori: "Jaringan",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 4,
       foto: "/assets/Bokuto.jpg",
     },
@@ -93,9 +86,8 @@ export default function RatingSeksi() {
       pengirim: "Lia Yustia",
       masuk: "17/09/2024",
       selesai: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 3,
       foto: "/assets/shizuku.jpg",
     },
@@ -103,9 +95,8 @@ export default function RatingSeksi() {
       pengirim: "Ella Meisya",
       masuk: "17/09/2024",
       selesai: "17/09/2024",
-      kategori: "Aplikasi",
-      jenis: "IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 4,
       foto: "/assets/Bokuto.jpg",
     },
@@ -113,9 +104,8 @@ export default function RatingSeksi() {
       pengirim: "Widiya Karim",
       masuk: "15/09/2024",
       selesai: "16/09/2024",
-      kategori: "Email",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      aset: "Komputer",
+      seri: "LP-VLK-021",
       rating: 2,
       foto: "/assets/Suika.jpg",
     },
@@ -169,25 +159,26 @@ export default function RatingSeksi() {
           </button>
         </div>
 
-        {/* === Filter Pencarian 2x2 === */}
+        {/* === Filter Pencarian 1 baris 3 kolom === */}
         <div className="bg-gray-50 rounded-xl p-5 mb-6 border shadow-sm">
           <h2 className="text-gray-700 font-semibold mb-4">
-            Filter Pencarian
+            Filter pencarian
           </h2>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-            {/* Kategori */}
-            <div className="flex items-center">
-              <label className="text-gray-600 text-sm w-32">Kategori</label>
-              <div className="relative w-full">
+          <div className="grid grid-cols-3 gap-6">
+
+            {/* Data Aset */}
+            <div>
+              <label className="text-gray-600 text-sm block mb-1">
+                Data Aset
+              </label>
+              <div className="relative">
                 <select
                   value={filters.kategori}
-                  onChange={(e) =>
-                    handleFilterChange("kategori", e.target.value)
-                  }
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full appearance-none bg-white shadow-sm"
+                  onChange={(e) => handleFilterChange("kategori", e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white shadow-sm appearance-none"
                 >
-                  <option>Semua</option>
+                  <option>Pilih kategori</option>
                   <option>Sistem Operasi</option>
                   <option>Jaringan</option>
                   <option>Aplikasi</option>
@@ -197,16 +188,18 @@ export default function RatingSeksi() {
               </div>
             </div>
 
-            {/* Jenis */}
-            <div className="flex items-center">
-              <label className="text-gray-600 text-sm w-32">Jenis</label>
-              <div className="relative w-full">
+            {/* No Seri */}
+            <div>
+              <label className="text-gray-600 text-sm block mb-1">
+                No. Seri
+              </label>
+              <div className="relative">
                 <select
                   value={filters.jenis}
                   onChange={(e) => handleFilterChange("jenis", e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full appearance-none bg-white shadow-sm"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white shadow-sm appearance-none"
                 >
-                  <option>Semua</option>
+                  <option>Pilih jenis</option>
                   <option>IT</option>
                   <option>Non-IT</option>
                 </select>
@@ -214,33 +207,18 @@ export default function RatingSeksi() {
               </div>
             </div>
 
-            {/* Bentuk */}
-            <div className="flex items-center">
-              <label className="text-gray-600 text-sm w-32">Bentuk</label>
-              <div className="relative w-full">
-                <select
-                  value={filters.bentuk}
-                  onChange={(e) => handleFilterChange("bentuk", e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full appearance-none bg-white shadow-sm"
-                >
-                  <option>Semua</option>
-                  <option>Fisik</option>
-                  <option>Non-Fisik</option>
-                </select>
-                <ChevronDownIcon className="w-4 h-4 absolute right-3 top-3 text-gray-400" />
-              </div>
-            </div>
-
             {/* Rating */}
-            <div className="flex items-center">
-              <label className="text-gray-600 text-sm w-32">Rating</label>
-              <div className="relative w-full">
+            <div>
+              <label className="text-gray-600 text-sm block mb-1">
+                Rating
+              </label>
+              <div className="relative">
                 <select
                   value={filters.rating}
                   onChange={(e) => handleFilterChange("rating", e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full appearance-none bg-white shadow-sm"
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white shadow-sm appearance-none"
                 >
-                  <option>Semua</option>
+                  <option>Pilih rating</option>
                   <option>5</option>
                   <option>4</option>
                   <option>3</option>
@@ -250,8 +228,10 @@ export default function RatingSeksi() {
                 <ChevronDownIcon className="w-4 h-4 absolute right-3 top-3 text-gray-400" />
               </div>
             </div>
+
           </div>
         </div>
+
 
         {/* === Tabel Data === */}
         <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
@@ -259,11 +239,10 @@ export default function RatingSeksi() {
             <thead className="bg-[#0F2C59] text-white">
               <tr>
                 <th className="px-4 py-3 text-left">Pengirim</th>
-                <th className="px-4 py-3 text-left">Masuk</th>
-                <th className="px-4 py-3 text-left">Selesai</th>
-                <th className="px-4 py-3 text-left">Kategori</th>
-                <th className="px-4 py-3 text-left">Jenis</th>
-                <th className="px-4 py-3 text-left">Bentuk</th>
+                <th className="px-4 py-3 text-left">Tgl.Awal</th>
+                <th className="px-4 py-3 text-left">Tgl.Selesai</th>
+                <th className="px-4 py-3 text-left">Data Aset</th>
+                <th className="px-4 py-3 text-left">No Seri</th>
                 <th className="px-4 py-3 text-left">Rating</th>
                 <th className="px-4 py-3 text-left">Aksi</th>
               </tr>
@@ -281,9 +260,8 @@ export default function RatingSeksi() {
                   </td>
                   <td className="px-4 py-3">{item.masuk}</td>
                   <td className="px-4 py-3">{item.selesai}</td>
-                  <td className="px-4 py-3">{item.kategori}</td>
-                  <td className="px-4 py-3">{item.jenis}</td>
-                  <td className="px-4 py-3">{item.bentuk}</td>
+                  <td className="px-4 py-3">{item.aset}</td>
+                  <td className="px-4 py-3">{item.seri}</td>
                   <td className="px-4 py-3 flex">{renderStars(item.rating)}</td>
                   <td className="px-4 py-3">
                     <button

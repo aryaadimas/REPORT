@@ -41,6 +41,7 @@ import StatistikSeksi from "./pages/beranda/Seksi/StatistikSeksi";
 import ArsipSeksi from "./pages/beranda/Seksi/ArsipSeksi";
 import ReopenSeksi from "./pages/beranda/Seksi/ReopenSeksi";
 import RatingSeksi from "./pages/beranda/Seksi/RatingSeksi";
+import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
 
 //*-- Teknisi --*/
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
@@ -48,6 +49,8 @@ import DashboardTeknisi from "./pages/beranda/Teknisi/DashboardTeknisi";
 import CekDetailTeknisi from "./pages/beranda/Teknisi/CekDetailTeknisi";
 import UpdateProgressTeknisi from "./pages/beranda/Teknisi/UpdateProgresTeknisi";
 import RatingTeknisi from "./pages/beranda/Teknisi/RatingTeknisi";
+import KotakMasukTeknisi from "./pages/beranda/Teknisi/KotakMasukTeknisi";
+import DetailRatingTeknisi from "./pages/beranda/Teknisi/DetailRatingTeknisi";
 
 //*-- Kota --*/
 import LayoutKota from "./components/Layout/LayoutKota";
@@ -148,14 +151,9 @@ function App() {
           <Route path="reopenseksi" element={<ReopenSeksi />} />
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
-          <Route
-            path="monitoringtiketseksi"
-            element={<MonitoringTiketSeksi />}
-          />
-          <Route
-            path="/monitoring-tiket/:id"
-            element={<MonitoringTiketSeksi />}
-          />
+          <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
+          <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />}/>
+          <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
           <Route path="layananpesan" element={<LayananPesan />} />
@@ -174,6 +172,8 @@ function App() {
           <Route path="buatformrfc" element={<BuatFormRFC />} />
           <Route path="editformrfc" element={<EditFormRFC />} />
           <Route path="lihatformrfc" element={<LihatFormRFC />} />
+          <Route path="kotakmasukteknisi" element={<KotakMasukTeknisi />} />
+          <Route path="detailratingteknisi" element={<DetailRatingTeknisi />} />
         </Route>
 
         {/* Layout KOTA */}

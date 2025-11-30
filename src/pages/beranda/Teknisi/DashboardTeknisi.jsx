@@ -8,16 +8,16 @@ export default function DashboardTeknisi() {
   const navigate = useNavigate();
 
   const dataTiket = [
-    { id: 1, pengirim: "Doni Ridho", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Non-Fisik", Ket:"Reopen", status: "Diproses", foto: "/assets/shizuku.jpg" },
-    { id: 2, pengirim: "Rio Widoro", kategori: "Jaringan", jenis: "IT", bentuk: "Non-Fisik", status: "Draft", foto: "/assets/Suika.jpg" },
-    { id: 3, pengirim: "Lia Yustia", kategori: "Aplikasi", jenis: "Non-IT", bentuk: "Fisik", status: "Diproses", foto: "/assets/Bokuto.jpg" },
-    { id: 4, pengirim: "Ridwan Yusuf", kategori: "Email", jenis: "IT", bentuk: "Fisik", status: "Draft", foto: "/assets/shizuku.jpg" },
-    { id: 5, pengirim: "Ella Meisya", kategori: "Aplikasi", jenis: "IT", bentuk: "Fisik", status: "Draft", foto: "/assets/Suika.jpg" },
-    { id: 6, pengirim: "Sri Wulandari", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Fisik", Ket:"Reopen", status: "Diproses", foto: "/assets/Bokuto.jpg" },
-    { id: 7, pengirim: "Supriatno", kategori: "Aplikasi", jenis: "Non-IT", bentuk: "Non-Fisik", Ket:"Reopen", status: "Draft", foto: "/assets/Suika.jpg" },
-    { id: 8, pengirim: "Anya Rosalina", kategori: "Jaringan", jenis: "Non-IT", bentuk: "Non-Fisik", status: "Diproses", foto: "/assets/shizuku.jpg" },
-    { id: 9, pengirim: "Widya Karim", kategori: "Email", jenis: "Non-IT", bentuk: "Fisik", status: "Draft", foto: "/assets/Bokuto.jpg" },
-    { id: 10, pengirim: "Rudiono", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Non-Fisik", status: "Draft", foto: "/assets/Suika.jpg" },
+{ id: 1, pengirim: "Doni Ridho", masuk: "11/09/2024", aset: "Laptop Dell", Seri: "LNV-001", status: "Diproses", foto: "/assets/shizuku.jpg" },
+{ id: 2, pengirim: "Feni Lia", masuk: "01/10/2024", aset: "Wifi", Seri: "WF-001", status: "Draft", foto: "/assets/Suika.jpg" },
+{ id: 3, pengirim: "Lia Yustia", masuk: "31/10/2024", aset: "CCTV", Seri: "CT-001", status: "Diproses", foto: "/assets/Bokuto.jpg" },
+{ id: 4, pengirim: "Risa Putri", masuk: "05/09/2024", aset: "Printer Epson", Seri: "PR-204", status: "Revisi", foto: "/assets/shizuku.jpg" },
+{ id: 5, pengirim: "Bagas Arif", masuk: "22/08/2024", aset: "Router TP-Link", Seri: "RT-889", status: "Draft", foto: "/assets/shizuku.jpg" },
+{ id: 6, pengirim: "Sinta Wulandari", masuk: "14/11/2024", aset: "Monitor LG", Seri: "MN-510", status: "Diproses", foto: "/assets/Suika.jpg" },
+{ id: 7, pengirim: "Yusuf Rahman", masuk: "18/10/2024", aset: "Keyboard Logitech", Seri: "KB-102", status: "Terverifikasi", foto: "/assets/Suika.jpg" },
+{ id: 8, pengirim: "Rani Amelia", masuk: "27/09/2024", aset: "Mouse Logitech", Seri: "MS-304", status: "Draft", foto: "/assets/Bokuto.jpg" },
+{ id: 9, pengirim: "Dewi Nursita", masuk: "03/12/2024", aset: "Access Point", Seri: "AP-777", status: "Diproses", foto: "/assets/Bokuto.jpg" },
+{ id: 10, pengirim: "Kevin Hadi", masuk: "09/11/2024", aset: "Scanner Canon", Seri: "SC-019", status: "Revisi", foto: "/assets/Bokuto.jpg" },
   ];
 
   const statusColor = (status) => {
@@ -132,12 +132,10 @@ export default function DashboardTeknisi() {
               <tr className="bg-[#0F2C59] text-white">
                 <th className="p-3">Pengirim</th>
                 <th className="p-3">Tanggal Masuk</th>
-                <th className="p-3">Kategori</th>
-                <th className="p-3">Jenis</th>
-                <th className="p-3">Bentuk</th>
+                <th className="p-3">Data Aset</th>
+                <th className="p-3">Nomor Seri</th>
                 <th className="p-3 text-center">Lampiran</th>
                 <th className="p-3">Status</th>
-                <th className="p-3">Ket</th>
                 <th className="p-3 text-center">Aksi</th>
               </tr>
             </thead>
@@ -145,13 +143,25 @@ export default function DashboardTeknisi() {
               {dataTiket.map((item) => (
                 <tr key={item.id} className="border-b hover:bg-gray-50 transition">
                   <td className="p-3 flex items-center gap-2">
-                    <img src={item.foto} alt={item.pengirim} className="w-8 h-8 rounded-full object-cover" />
-                    {item.pengirim}
-                  </td>
-                  <td className="p-3">18/09/2024</td>
-                  <td className="p-3">{item.kategori}</td>
-                  <td className="p-3">{item.jenis}</td>
-                  <td className="p-3">{item.bentuk}</td>
+  <div className="relative">
+    <img
+      src={item.foto}
+      alt={item.pengirim}
+      className="w-8 h-8 rounded-full object-cover"
+    />
+
+    {/* Badge merah untuk tiket Revisi (Reopen) */}
+    {item.status === "Revisi" && (
+      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"></span>
+    )}
+  </div>
+
+  {item.pengirim}
+</td>
+
+                  <td className="p-3">{item.masuk}</td>
+                  <td className="p-3">{item.aset}</td>
+                  <td className="p-3">{item.Seri}</td>
                   <td className="p-3 text-center text-[#0F2C59]">
                     <FileText className="inline w-5 h-5" />
                   </td>
@@ -160,7 +170,6 @@ export default function DashboardTeknisi() {
                       {item.status}
                     </span>
                   </td>
-                  <td className="p-3">{item.Ket}</td>
                   <td className="p-3 text-center">
                     <button onClick={handleEdit} className="text-[#0F2C59] hover:text-[#15397A] transition">
                       <PencilSquareIcon className="w-5 h-5" />
