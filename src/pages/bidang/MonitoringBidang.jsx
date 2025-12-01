@@ -29,19 +29,19 @@ export default function MonitoringBidang() {
       level: "1",
       laporan: [
         {
-          id: "LPR831938",
+          id: "LP831938",
           progress: 80,
           start: new Date(2025, 10, 2),
           end: new Date(2025, 10, 4),
         },
         {
-          id: "LPR931728",
+          id: "LP931728",
           progress: 100,
           start: new Date(2025, 10, 9),
           end: new Date(2025, 10, 11),
         },
         {
-          id: "LPR931720",
+          id: "LP931720",
           progress: 10,
           start: new Date(2025, 10, 8),
           end: new Date(2025, 10, 12),
@@ -55,13 +55,13 @@ export default function MonitoringBidang() {
       level: "2",
       laporan: [
         {
-          id: "LPR907276",
+          id: "LP907276",
           progress: 50,
           start: new Date(2025, 10, 2),
           end: new Date(2025, 10, 3),
         },
         {
-          id: "LPR826792",
+          id: "LP826792",
           progress: 100,
           start: new Date(2025, 10, 10),
           end: new Date(2025, 10, 11),
@@ -75,13 +75,13 @@ export default function MonitoringBidang() {
       level: "3",
       laporan: [
         {
-          id: "LPR802476",
+          id: "LP802476",
           progress: 100,
           start: new Date(2025, 10, 3),
           end: new Date(2025, 10, 5),
         },
         {
-          id: "LPR937282",
+          id: "LP937282",
           progress: 40,
           start: new Date(2025, 10, 9),
           end: new Date(2025, 10, 10),

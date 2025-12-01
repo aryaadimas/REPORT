@@ -41,7 +41,7 @@ export default function LayoutBidang({ children }) {
               alt="Logo"
               className="w-12 h-12"
             />
-            <h1 className="font-bold text-2xl bg-gradient-to-r from-[#EE1D52] to-[#507687] text-transparent bg-clip-text tracking-wide">
+            <h1 className="font-bold text-2xl bg-gradient-to-r from-[#EE1D52] to-[#0F2C59] text-transparent bg-clip-text tracking-wide">
               REPORT
             </h1>
           </div>
@@ -55,7 +55,7 @@ export default function LayoutBidang({ children }) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-5 py-3 mx-3 mb-2 text-sm font-medium transition-all ${
                     isActive
-                      ? "bg-[#226597] text-white rounded-full shadow-sm"
+                      ? "bg-[#0F2C59] text-white rounded-full shadow-sm"
                       : "text-gray-700 hover:bg-gray-100 rounded-full"
                   }`
                 }

@@ -94,45 +94,7 @@ const LihatRating = () => {
             />
           </div>
 
-          {/* === Apakah Masalah Sudah Terselesaikan === */}
-          <div className="flex items-center justify-between mb-6 md:mb-8">
-            <label className="text-gray-800 font-semibold text-sm md:text-base">
-              Apakah Masalah Anda Sudah Terselesaikan?
-            </label>
-            <button className="bg-[#0F2C59] text-white px-5 py-2 rounded-full text-sm font-medium shadow-sm">
-              Ya
-            </button>
-          </div>
-
-          {/* === Aspek Rating === */}
-          <div className="space-y-4 mb-6 md:mb-8">
-            <div className="flex items-center justify-between">
-              <label className="text-gray-700 font-medium w-48 md:w-64">
-                Kemudahan Penggunaan
-              </label>
-              <div className="flex gap-1">
-                {renderStars(ratingData.aspek.kemudahan)}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="text-gray-700 font-medium w-48 md:w-64">
-                Kecepatan Penanganan
-              </label>
-              <div className="flex gap-1">
-                {renderStars(ratingData.aspek.kecepatan)}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="text-gray-700 font-medium w-48 md:w-64">
-                Kualitas Penyelesaian
-              </label>
-              <div className="flex gap-1">
-                {renderStars(ratingData.aspek.kualitas)}
-              </div>
-            </div>
-          </div>
+          
 
           {/* === Tombol Batalkan === */}
           <div className="flex justify-start">

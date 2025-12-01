@@ -152,7 +152,6 @@ function App() {
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
-          <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />}/>
           <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
@@ -222,7 +221,8 @@ function App() {
         <Route path="/suksespelaporan" element={<SuksesPelaporan />} />
         <Route path="/profilmasyarakat" element={<ProfilMasyarakat />} />
         <Route path="/dashboardbidang" element={<DashboardBidang />} />
-        <Route path="/aksibidang" element={<AksiTiket />} />
+        <Route path="/detailbidang/:id" element={<DetailBidang />} />
+        <Route path="/aksitiket" element={<AksiTiket />} />
         <Route path="/lihatrating" element={<LihatRating />} />
         <Route path="/monitoringbidang" element={<MonitoringBidang />} />
         <Route path="/ratingkepuasan" element={<RatingKepuasan />} />
@@ -250,7 +250,7 @@ function App() {
         <Route path="/notifdarurat" element={<NotifDarurat />} />
         <Route path="/notifumum" element={<NotifUmum />} />
 
-        <Route path="/detailbidang" element={<DetailBidang />} />
+
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
         <Route path="/layoutpegawai" element={<LayoutPegawai />} />
         <Route path="/profilsaya" element={<Profil />} />
