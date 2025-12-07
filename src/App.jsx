@@ -36,6 +36,11 @@ import ReopenMasyarakat from "./pages/masyarakat/ReopenMasyarakat";
 import RiwayatMasyarakat from "./pages/masyarakat/riwayatmasyarakat";
 
 //*-- Seksi --*/
+import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang"
+import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi"
+import DetailRating from "./pages/beranda/Seksi/DetailRating"
+import LayananPesan from "./pages/beranda/Seksi/LayananPesan"
+import LayananChat from "./pages/beranda/Seksi/LayananChat"
 import BerandaSeksi from "./pages/beranda/Seksi/BerandaSeksi";
 import LayoutSeksi from "./components/Layout/LayoutSeksi";
 import PengajuanSeksi from "./pages/beranda/Seksi/PengajuanSeksi";
@@ -50,6 +55,10 @@ import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
 
 //*-- Teknisi --*/
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
+import BuatFormRFC from "./pages/beranda/Teknisi/BuatFormRFC";
+import EditFormRFC from "./pages/beranda/Teknisi/EditFormRFC";
+import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC"
+import RFCTeknisi from "./pages/beranda/Teknisi/RFCTeknisi";
 import DashboardTeknisi from "./pages/beranda/Teknisi/DashboardTeknisi";
 import CekDetailTeknisi from "./pages/beranda/Teknisi/CekDetailTeknisi";
 import UpdateProgressTeknisi from "./pages/beranda/Teknisi/UpdateProgresTeknisi";
@@ -150,6 +159,7 @@ function App() {
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
+          <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />} />
           <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />

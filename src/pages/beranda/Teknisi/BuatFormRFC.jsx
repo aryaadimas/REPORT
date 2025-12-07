@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
-export default function Buatformrfc() {
+export default function BuatFormRFC() {
   const navigate = useNavigate();
 
   // Data aset untuk dropdown + auto nomor seri

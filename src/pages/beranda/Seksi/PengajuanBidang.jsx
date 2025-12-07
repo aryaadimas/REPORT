@@ -3,7 +3,7 @@ import { PaperClipIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
-export default function DetailPengajuan() {
+export default function PengajuanBidang() {
   const navigate = useNavigate();
 
   const [urgensi, setUrgensi] = useState(2);

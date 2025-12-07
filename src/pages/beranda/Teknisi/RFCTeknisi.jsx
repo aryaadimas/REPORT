@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 
-export default function RFCTeknis() {
+export default function RFCTeknisi() {
   const [activeTab, setActiveTab] = useState("Draft");
   const navigate = useNavigate(); // ✅ hook untuk navigasi
 

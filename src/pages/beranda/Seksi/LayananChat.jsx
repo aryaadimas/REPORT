@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 
-export default function LayananChatSeksi() {
+export default function LayananChat() {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
