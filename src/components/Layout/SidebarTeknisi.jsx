@@ -4,6 +4,7 @@ import {
   HomeIcon,
   DocumentTextIcon,
   StarIcon,
+  InboxIcon
 } from "@heroicons/react/24/outline";
 
 export default function SidebarTeknisi() {
@@ -22,6 +23,11 @@ export default function SidebarTeknisi() {
       name: "RFC",
       icon: <DocumentTextIcon className="w-5 h-5" />,
       path: "/rfcteknisi",
+    },
+    {
+      name: "Kotak Masuk",
+      icon: <InboxIcon className="w-5 h-5" />,
+      path: "/kotakmasukteknisi",
     },
   ];
 

@@ -12,93 +12,93 @@ const RatingKepuasan = () => {
   const tableData = [
     {
       name: "Doni Ridho",
-      category: "Sistem Operasi",
+      aset: "Laptop Acer",
       date: "18/09/2024",
       completionDate: "18/09/2024",
       avatar: "/assets/Haechan.jpg",
-      type: "IT",
+      seri: "LPT-A-021",
       rating: 4,
     },
     {
       name: "Rio Widoro",
-      category: "Jaringan",
+      aset: "Laptop Lenovo",
       date: "18/09/2024",
       completionDate: "18/09/2024",
       avatar: "/assets/Rio.jpeg",
-      type: "IT",
+      seri: "LPT-LNV-001",
       rating: 4,
     },
     {
       name: "Lia Yustia",
-      category: "Aplikasi",
+      aset: "Wifi",
       date: "17/09/2024",
       completionDate: "17/09/2024",
       avatar: "/assets/Lia.jpg",
-      type: "Non-IT",
+      seri: "WF-012",
       rating: 4,
     },
     {
-      name: "Ridwan Yusuf",
-      category: "Email",
-      date: "17/09/2024",
-      completionDate: "17/09/2024",
-      avatar: "/assets/Jaemin.jpg",
-      type: "IT",
+      name: "Bagas Arif",
+      aset: "Printer Epson",
+      date: "20/09/2024",
+      completionDate: "21/09/2024",
+      avatar: "/assets/Haechan.jpg",
+      seri: "PR-EP-014",
+      rating: 5,
+    },
+    {
+      name: "Sinta Wulandari",
+      aset: "CCTV Hikvision",
+      date: "22/09/2024",
+      completionDate: "23/09/2024",
+      avatar: "/assets/Rio.jpeg",
+      seri: "CT-HV-022",
+      rating: 3,
+    },
+    {
+      name: "Kevin Hartanta",
+      aset: "Router TP-Link",
+      date: "19/09/2024",
+      completionDate: "19/09/2024",
+      avatar: "/assets/Lia.jpg",
+      seri: "RT-TPL-003",
+      rating: 5,
+    },
+    {
+      name: "Rani Amelia",
+      aset: "PC Dell Mini",
+      date: "10/09/2024",
+      completionDate: "11/09/2024",
+      avatar: "/assets/Haechan.jpg",
+      seri: "PC-DL-088",
       rating: 4,
     },
     {
-      name: "Ella Meisya",
-      category: "Aplikasi",
-      date: "17/09/2024",
-      completionDate: "17/09/2024",
-      avatar: "/assets/Ella.jpg",
-      type: "IT",
+      name: "Dewi Nursita",
+      aset: "Scanner Canon",
+      date: "08/09/2024",
+      completionDate: "08/09/2024",
+      avatar: "/assets/Rio.jpeg",
+      seri: "SC-CN-009",
+      rating: 3,
+    },
+    {
+      name: "Farel Aditya",
+      aset: "Access Point Tenda",
+      date: "25/09/2024",
+      completionDate: "26/09/2024",
+      avatar: "/assets/Lia.jpg",
+      seri: "AP-TD-101",
       rating: 4,
     },
     {
-      name: "Sri Wulandari",
-      category: "Sistem Operasi",
-      date: "16/09/2024",
-      completionDate: "16/09/2024",
-      avatar: "/assets/Suzy.jpg",
-      type: "IT",
-      rating: 4,
-    },
-    {
-      name: "Supriatno",
-      category: "Aplikasi",
-      date: "16/09/2024",
-      completionDate: "16/09/2024",
-      avatar: "/assets/Suprianto.jpg",
-      type: "Non-IT",
-      rating: 4,
-    },
-    {
-      name: "Anya Rosalina",
-      category: "Jaringan",
-      date: "16/09/2024",
-      completionDate: "16/09/2024",
-      avatar: "/assets/Anya.jpg",
-      type: "Non-IT",
-      rating: 4,
-    },
-    {
-      name: "Widya Karim",
-      category: "Email",
-      date: "15/09/2024",
-      completionDate: "15/09/2024",
-      avatar: "/assets/Widya.jpeg",
-      type: "Non-IT",
-      rating: 4,
-    },
-    {
-      name: "Rualono",
-      category: "Sistem Operasi",
-      date: "15/09/2024",
-      completionDate: "15/09/2024",
-      avatar: "/assets/Rudiono.jpeg",
-      type: "IT",
-      rating: 4,
+      name: "Putri Melani",
+      aset: "Monitor LG",
+      date: "30/09/2024",
+      completionDate: "30/09/2024",
+      avatar: "/assets/Haechan.jpg",
+      seri: "MN-LG-223",
+      rating: 5,
     },
   ];
 
@@ -124,27 +124,24 @@ const RatingKepuasan = () => {
 
   // Fungsi untuk navigasi ke halaman LihatRating
   const handleLihatRating = (item) => {
-    navigate("/lihatrating", { state: { ratingData: item } });
+    navigate("/lihatratingbidang", { state: { ratingData: item } });
   };
 
-  // Bungkus seluruh konten dengan LayoutBidang
   return (
     <LayoutBidang>
       <div className="min-h-screen bg-gray-50">
-        {/* Dashboard Content */}
         <main className="p-4 md:p-6">
-          {/* Dashboard Header Card */}
+          {/* Header */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-4 md:mb-8">
             <h1 className="text-xl md:text-2xl font-bold text-[#226597] text-left">
               Rating Kepuasan
             </h1>
           </div>
 
-          {/* Card untuk Pelaporan dan Filter Pencarian */}
+          {/* Main Content */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6 md:mb-8">
-            {/* Tab Navigation */}
+            {/* Tabs and Refresh Button */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
-              {/* Tab Navigation */}
               <div className="flex space-x-4 md:space-x-8 border-b border-gray-200 pb-0.5 w-full sm:w-auto overflow-x-auto">
                 <button
                   onClick={() => setActiveTab("pelaporan")}
@@ -168,7 +165,6 @@ const RatingKepuasan = () => {
                 </button>
               </div>
 
-              {/* Tombol Refresh */}
               <button className="flex items-center space-x-2 bg-[#226597] hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 w-full sm:w-auto justify-center">
                 <svg
                   width="14"
@@ -187,19 +183,18 @@ const RatingKepuasan = () => {
               </button>
             </div>
 
-            {/* Filter Pencarian Card */}
+            {/* Filter Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-4 md:mb-6">
               <h2 className="text-base md:text-lg font-semibold text-[#226597] mb-4 text-left">
                 Filter pencarian
               </h2>
 
-              {/* Filter Row - TIGA KOLOM SEJAJAR */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                {/* Filter Kategori */}
+                {/* Data Aset Filter */}
                 <div className="text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20">
-                      Kategori
+                      Data Aset
                     </div>
                     <div className="relative flex-1">
                       <select className="w-full text-xs md:text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none">
@@ -228,11 +223,11 @@ const RatingKepuasan = () => {
                   </div>
                 </div>
 
-                {/* Filter Jenis */}
+                {/* No Seri Filter */}
                 <div className="text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20">
-                      Jenis
+                      No seri
                     </div>
                     <div className="relative flex-1">
                       <select className="w-full text-xs md:text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none">
@@ -259,7 +254,7 @@ const RatingKepuasan = () => {
                   </div>
                 </div>
 
-                {/* Filter Rating */}
+                {/* Rating Filter */}
                 <div className="text-left">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20">
@@ -297,15 +292,20 @@ const RatingKepuasan = () => {
 
             {/* Table Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              {/* Desktop Table Header - DIUBAH: 7 kolom tanpa Bentuk */}
-              <div className="bg-[#226597] rounded-t-lg p-3 md:p-4 grid grid-cols-7 gap-2 md:gap-3 text-xs md:text-sm font-medium text-white text-left hidden md:grid">
-                <div className="min-w-[150px]">Pengirim</div>
-                <div className="min-w-[100px]">Tanggal Pengerjaan</div>
-                <div className="min-w-[100px]">Tanggal Selesai</div>
-                <div className="min-w-[120px]">Kategori</div>
-                <div className="min-w-[80px]">Jenis</div>
-                <div className="min-w-[80px]">Rating</div>
-                <div className="min-w-[60px]">Aksi</div>
+              {/* Desktop Table Header */}
+              <div className="bg-[#226597] rounded-t-lg p-3 md:p-4 hidden md:grid"
+                style={{
+                  gridTemplateColumns: "1fr 0.8fr 0.8fr 1.2fr 0.8fr 0.6fr 0.4fr",
+                  gap: "1rem"
+                }}
+              >
+                <div>Pengirim</div>
+                <div>Tgl.Awal</div>
+                <div>Tgl.Selesai</div>
+                <div>Data Aset</div>
+                <div>No Seri</div>
+                <div>Rating</div>
+                <div>Aksi</div>
               </div>
 
               {/* Mobile Table Header */}
@@ -313,99 +313,24 @@ const RatingKepuasan = () => {
                 Daftar Rating Kepuasan
               </div>
 
-              {/* Table Data */}
+              {/* Table Body */}
               <div className="rounded-b-lg">
                 {tableData.map((item, index) => (
                   <div
                     key={index}
-                    className={`p-3 md:p-4 grid grid-cols-1 md:grid-cols-7 gap-3 md:gap-3 text-sm text-left items-center ${
-                      index !== tableData.length - 1
-                        ? "border-b border-gray-200"
-                        : ""
-                    }`}
+                    className="
+                      p-3 md:p-4 
+                      hidden md:grid
+                      gap-3 text-sm text-left items-center 
+                      border-b border-gray-200
+                    "
+                    style={{
+                      gridTemplateColumns: "1fr 0.8fr 0.8fr 1.2fr 0.8fr 0.6fr 0.4fr",
+                      gap: "1rem"
+                    }}
                   >
-                    {/* Mobile View - DIUBAH: tanpa Bentuk */}
-                    <div className="md:hidden space-y-3">
-                      {/* Row 1: Pengirim dan Rating */}
-                      <div className="flex justify-between items-center">
-                        <div className="font-medium text-gray-800 flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {item.avatar ? (
-                              <img
-                                src={item.avatar}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                                <span className="text-white text-xs font-bold">
-                                  {item.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-sm font-semibold">
-                              {item.name}
-                            </span>
-                            <div className="mt-1">
-                              <StarRating rating={item.rating} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <button
-                            onClick={() => handleLihatRating(item)}
-                            className="text-[#113F67] hover:text-[#226597] transition-colors duration-200"
-                          >
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M12 9C11.2044 9 10.4413 9.31607 9.87868 9.87868C9.31607 10.4413 9 11.2044 9 12C9 12.7956 9.31607 13.5587 9.87868 14.1213C10.4413 14.6839 11.2044 15 12 15C12.7956 15 13.5587 14.6839 14.1213 14.1213C14.6839 13.5587 15 12.7956 15 12C15 11.2044 14.6839 10.4413 14.1213 9.87868C13.5587 9.31607 12.7956 9 12 9ZM12 17C10.6739 17 9.40215 16.4732 8.46447 15.5355C7.52678 14.5979 7 13.3261 7 12C7 10.6739 7.52678 9.40215 8.46447 8.46447C9.40215 7.52678 10.6739 7 12 7C13.3261 7 14.5979 7.52678 15.5355 8.46447C16.4732 9.40215 17 10.6739 17 12C17 13.3261 16.4732 14.5979 15.5355 15.5355C14.5979 16.4732 13.3261 17 12 17ZM12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5Z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Row 2: Kategori dan Jenis */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <div className="font-medium text-gray-500">
-                            Kategori
-                          </div>
-                          <div className="text-gray-800">{item.category}</div>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-500">Jenis</div>
-                          <div className="text-gray-800">{item.type}</div>
-                        </div>
-                      </div>
-
-                      {/* Row 3: Tanggal */}
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <div>
-                          <div className="font-medium">Tanggal Masuk:</div>
-                          <div>{item.date}</div>
-                        </div>
-                        <div>
-                          <div className="font-medium">Tanggal Selesai:</div>
-                          <div>{item.completionDate}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Desktop View - DIUBAH: tanpa Bentuk */}
-                    <div className="hidden md:flex font-medium text-gray-800 items-center space-x-3 min-w-[150px]">
+                    {/* Pengirim */}
+                    <div className="font-medium text-gray-800 flex items-center space-x-3 overflow-hidden">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {item.avatar ? (
                           <img
@@ -427,22 +352,33 @@ const RatingKepuasan = () => {
                       <span className="truncate">{item.name}</span>
                     </div>
 
-                    <div className="hidden md:block text-gray-600 min-w-[100px]">
+                    {/* Tanggal Awal */}
+                    <div className="text-gray-600 truncate">
                       {item.date}
                     </div>
-                    <div className="hidden md:block text-gray-600 min-w-[100px]">
+
+                    {/* Tanggal Selesai */}
+                    <div className="text-gray-600 truncate">
                       {item.completionDate}
                     </div>
-                    <div className="hidden md:block text-gray-600 min-w-[120px]">
-                      {item.category}
+
+                    {/* Data Aset */}
+                    <div className="text-gray-600 truncate">
+                      {item.aset}
                     </div>
-                    <div className="hidden md:block text-gray-600 min-w-[80px]">
-                      {item.type}
+
+                    {/* No Seri */}
+                    <div className="text-gray-600 truncate">
+                      {item.seri}
                     </div>
-                    <div className="hidden md:block min-w-[80px]">
+
+                    {/* Rating */}
+                    <div className="truncate">
                       <StarRating rating={item.rating} />
                     </div>
-                    <div className="hidden md:block min-w-[60px]">
+
+                    {/* Aksi */}
+                    <div className="truncate">
                       <button
                         onClick={() => handleLihatRating(item)}
                         className="text-[#113F67] hover:text-[#226597] transition-colors duration-200"
@@ -465,13 +401,12 @@ const RatingKepuasan = () => {
                 ))}
               </div>
 
-              {/* Pagination Info - DIUBAH: sesuai gambar */}
+              {/* Pagination */}
               <div className="flex flex-col sm:flex-row justify-between items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-500 mt-4 p-3 md:p-4 border-t border-gray-200">
                 <div className="text-left order-2 sm:order-1">
                   Menampilkan data 1 sampai 10 dari 33 data
                 </div>
 
-                {/* Pagination Navigation - DIUBAH: sesuai gambar */}
                 <div className="flex items-center space-x-3 md:space-x-4 order-1 sm:order-2 mb-3 sm:mb-0">
                   <button className="text-[#226597] hover:text-[#113F67] transition-colors duration-200">
                     <svg

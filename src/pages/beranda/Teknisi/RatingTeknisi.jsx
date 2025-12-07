@@ -1,21 +1,24 @@
 import React, { useState } from "react";
 import { RefreshCcw, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function RatingTeknisi() {
   const [activeTab, setActiveTab] = useState("pelaporan");
 
+  const navigate = useNavigate();
+
   // === Dummy data lengkap (ada IT / Non-IT & Fisik / Non-Fisik)
   const dataRating = [
-    { id: 1, nama: "Doni Ridho", masuk: "18/09/2024", selesai: "18/09/2024", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Non-Fisik", rating: 4, foto: "/assets/shizuku.jpg" },
-    { id: 2, nama: "Rio Widoro", masuk: "18/09/2024", selesai: "18/09/2024", kategori: "Jaringan", jenis: "IT", bentuk: "Non-Fisik", rating: 3, foto: "/assets/Suika.jpg" },
-    { id: 3, nama: "Lia Yustia", masuk: "17/09/2024", selesai: "17/09/2024", kategori: "Aplikasi", jenis: "Non-IT", bentuk: "Fisik", rating: 5, foto: "/assets/Bokuto.jpg" },
-    { id: 4, nama: "Ridwan Yusuf", masuk: "17/09/2024", selesai: "17/09/2024", kategori: "Email", jenis: "IT", bentuk: "Fisik", rating: 4, foto: "/assets/shizuku.jpg" },
-    { id: 5, nama: "Ella Meisya", masuk: "17/09/2024", selesai: "17/09/2024", kategori: "Aplikasi", jenis: "IT", bentuk: "Fisik", rating: 5, foto: "/assets/Suika.jpg" },
-    { id: 6, nama: "Sri Wulandari", masuk: "16/09/2024", selesai: "16/09/2024", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Fisik", rating: 5, foto: "/assets/Bokuto.jpg" },
-    { id: 7, nama: "Supriatno", masuk: "16/09/2024", selesai: "16/09/2024", kategori: "Aplikasi", jenis: "Non-IT", bentuk: "Non-Fisik", rating: 4, foto: "/assets/shizuku.jpg" },
-    { id: 8, nama: "Anya Rosalina", masuk: "16/09/2024", selesai: "16/09/2024", kategori: "Jaringan", jenis: "Non-IT", bentuk: "Non-Fisik", rating: 5, foto: "/assets/Suika.jpg" },
-    { id: 9, nama: "Widya Karim", masuk: "15/09/2024", selesai: "15/09/2024", kategori: "Email", jenis: "Non-IT", bentuk: "Fisik", rating: 4, foto: "/assets/Bokuto.jpg" },
-    { id: 10, nama: "Rudiono", masuk: "15/09/2024", selesai: "15/09/2024", kategori: "Sistem Operasi", jenis: "IT", bentuk: "Non-Fisik", rating: 5, foto: "/assets/shizuku.jpg" },
+    { id: 1, nama: "Doni Ridho", masuk: "18/09/2024", selesai: "28/09/2024", aset: "Laptop Lenovo", seri: "LNV-TP-001", rating: 4, foto: "/assets/shizuku.jpg" },
+    { id: 2, nama: "Rio Widoro", masuk: "18/09/2024", selesai: "19/09/2024", aset: "Printer HP", seri: "PT-HP-001", rating: 3, foto: "/assets/Suika.jpg" },
+    { id: 3, nama: "Lia Yustia", masuk: "17/09/2024", selesai: "17/09/2024", aset: "PC Dell", seri: "PC-DL-012", rating: 5, foto: "/assets/Bokuto.jpg" },
+    { id: 4, nama: "Sinta Wulandari", masuk: "20/09/2024", selesai: "21/09/2024", aset: "Monitor Samsung", seri: "MN-SS-004", rating: 4, foto: "/assets/shizuku.jpg" },
+    { id: 5, nama: "Bagas Arif", masuk: "15/09/2024", selesai: "18/09/2024", aset: "Router TP-Link", seri: "RT-TPL-010", rating: 2, foto: "/assets/Suika.jpg" },
+    { id: 6, nama: "Rani Amelia", masuk: "11/09/2024", selesai: "11/09/2024", aset: "Keyboard Logitech", seri: "KB-LG-022", rating: 5, foto: "/assets/Bokuto.jpg" },
+    { id: 7, nama: "Feri Saputra", masuk: "09/10/2024", selesai: "10/10/2024", aset: "Mouse Logitech", seri: "MS-LG-099", rating: 3, foto: "/assets/shizuku.jpg" },
+    { id: 8, nama: "Ayuni Pratiwi", masuk: "12/10/2024", selesai: "13/10/2024", aset: "Scanner Canon", seri: "SC-CN-008", rating: 4, foto: "/assets/Suika.jpg" },
+    { id: 9, nama: "Kevin Hartanta", masuk: "05/10/2024", selesai: "07/10/2024", aset: "CCTV Hikvision", seri: "CT-HV-003", rating: 2, foto: "/assets/Bokuto.jpg" },
+    { id: 10, nama: "Dewi Nursita", masuk: "01/10/2024", selesai: "03/10/2024", aset: "Wifi Indihome", seri: "WF-ID-020", rating: 5, foto: "/assets/shizuku.jpg" },
   ];
 
   const renderStars = (count) => (
@@ -55,49 +58,52 @@ export default function RatingTeknisi() {
           </button>
         </div>
 
-        {/* === Filter 2x2 Grid === */}
-        <div className="p-6 bg-gray-50 border-b grid grid-cols-2 gap-x-12 gap-y-4">
-          <div className="flex items-center justify-between">
-            <label className="w-1/3 text-sm font-semibold text-gray-700">Kategori</label>
-            <select className="w-2/3 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-              <option>Semua</option>
-              <option>Jaringan</option>
-              <option>Aplikasi</option>
-              <option>Email</option>
-              <option>Sistem Operasi</option>
-            </select>
-          </div>
+        {/* === Filter Baru 1 Baris 3 Kolom === */}
+        <div className="p-6 bg-gray-50 border-b">
+          <div className="grid grid-cols-3 gap-8">
 
-          <div className="flex items-center justify-between">
-            <label className="w-1/3 text-sm font-semibold text-gray-700">Jenis</label>
-            <select className="w-2/3 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-              <option>Semua</option>
-              <option>IT</option>
-              <option>Non-IT</option>
-            </select>
-          </div>
+            {/* Kategori */}
+            <div className="flex items-center gap-2">
+              <label className="w-29 text-sm font-semibold text-gray-700">
+                Data Aset
+              </label>
+              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
+                <option>Laptop Dell</option>
+                <option>Jaringan</option>
+                <option>Aplikasi</option>
+                <option>Email</option>
+                <option>Sistem Operasi</option>
+              </select>
+            </div>
 
-          <div className="flex items-center justify-between">
-            <label className="w-1/3 text-sm font-semibold text-gray-700">Bentuk</label>
-            <select className="w-2/3 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-              <option>Semua</option>
-              <option>Fisik</option>
-              <option>Non-Fisik</option>
-            </select>
-          </div>
+            {/* Jenis */}
+            <div className="flex items-center gap-2">
+              <label className="w-29 text-sm font-semibold text-gray-700">
+                No Seri
+              </label>
+              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
+                <option>Semua</option>
+                <option>IT</option>
+                <option>Non-IT</option>
+              </select>
+            </div>
 
-          <div className="flex items-center justify-between">
-            <label className="w-1/3 text-sm font-semibold text-gray-700">Rating</label>
-            <select className="w-2/3 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-              <option>PSemua</option>
-              <option>⭐</option>
-              <option>⭐⭐</option>
-              <option>⭐⭐⭐</option>
-              <option>⭐⭐⭐⭐</option>
-              <option>⭐⭐⭐⭐⭐</option>
-            </select>
+            <div className="flex items-center  gap-2">
+              <label className="w-29 text-sm font-semibold text-gray-700">
+                Rating
+              </label>
+              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
+                <option>Semua</option>
+                <option>⭐</option>
+                <option>⭐⭐</option>
+                <option>⭐⭐⭐</option>
+                <option>⭐⭐⭐⭐</option>
+                <option>⭐⭐⭐⭐⭐</option>
+              </select>
+            </div>
           </div>
         </div>
+
 
         {/* === Tabel Data === */}
         <div className="p-4 overflow-x-auto">
@@ -105,11 +111,10 @@ export default function RatingTeknisi() {
             <thead>
               <tr className="bg-[#0F2C59] text-white">
                 <th className="p-3">Pengirim</th>
-                <th className="p-3">Masuk</th>
-                <th className="p-3">Selesai</th>
-                <th className="p-3">Kategori</th>
-                <th className="p-3">Jenis</th>
-                <th className="p-3">Bentuk</th>
+                <th className="p-3">Tgl. Awal</th>
+                <th className="p-3">Tgl. Selesai</th>
+                <th className="p-3">Data Aset</th>
+                <th className="p-3">No Seri</th>
                 <th className="p-3">Rating</th>
                 <th className="p-3 text-center">Aksi</th>
               </tr>
@@ -123,12 +128,16 @@ export default function RatingTeknisi() {
                   </td>
                   <td className="p-3">{item.masuk}</td>
                   <td className="p-3">{item.selesai}</td>
-                  <td className="p-3">{item.kategori}</td>
-                  <td className="p-3">{item.jenis}</td>
-                  <td className="p-3">{item.bentuk}</td>
+                  <td className="p-3">{item.aset}</td>
+                  <td className="p-3">{item.seri}</td>
                   <td className="p-3">{renderStars(item.rating)}</td>
-                  <td className="p-3 text-center text-[#0F2C59] hover:text-[#15397A] cursor-pointer">
-                    <Eye size={18} />
+                  <td className="px-4 py-3">
+                    <button
+                      className="text-[#0F2C59] hover:text-[#15397A]"
+                      onClick={() => navigate("/detailratingteknisi")} // ✅ Tambahan navigasi
+                    >
+                      <Eye className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
               ))}

@@ -14,22 +14,19 @@ export default function PenugasanSeksi() {
     {
       id: 1,
       nama: "Doni Ridho",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
-      prioritas: "Rendah",
+      prioritas: "Tinggi",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Draft",
       foto: "/assets/Suika.jpg",
-      Ket:"Reopen",
       lampiran: ["/assets/doc1.pdf"],
     },
     {
       id: 2,
       nama: "Rio Widoro",
-      kategori: "Jaringan",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
       prioritas: "Tinggi",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Draft",
       foto: "/assets/shizuku.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
@@ -37,10 +34,9 @@ export default function PenugasanSeksi() {
     {
       id: 3,
       nama: "Lia Yustia",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
       prioritas: "Sedang",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
@@ -48,10 +44,9 @@ export default function PenugasanSeksi() {
     {
       id: 4,
       nama: "Ridwan Yusuf",
-      kategori: "Email",
-      jenis: "IT",
-      bentuk: "Fisik",
-      prioritas: "Rendah",
+      prioritas: "Sedang",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/shizuku.jpg",
       lampiran: [],
@@ -59,11 +54,9 @@ export default function PenugasanSeksi() {
     {
       id: 5,
       nama: "Ridwan Yusuf",
-      kategori: "Email",
-      jenis: "IT",
-      bentuk: "Fisik",
       prioritas: "Rendah",
-      Ket: "reopen",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/shizuku.jpg",
       lampiran: [],
@@ -71,10 +64,9 @@ export default function PenugasanSeksi() {
     {
       id: 6,
       nama: "Lia Yustia",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
-      prioritas: "Sedang",
+      prioritas: "Tinggi",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
@@ -82,10 +74,9 @@ export default function PenugasanSeksi() {
     {
       id: 7,
       nama: "Doni Ridho",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
       prioritas: "Rendah",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Draft",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf"],
@@ -93,11 +84,9 @@ export default function PenugasanSeksi() {
     {
       id: 8,
       nama: "Rio Widoro",
-      kategori: "Jaringan",
-      jenis: "IT",
-      Ket:"Reopen",
-      bentuk: "Non-Fisik",
-      prioritas: "Tinggi",
+      prioritas: "Rendah",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Draft",
       foto: "/assets/shizuku.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
@@ -105,11 +94,9 @@ export default function PenugasanSeksi() {
     {
       id: 9,
       nama: "Lia Yustia",
-      kategori: "Aplikasi",
-      Ket:"Reopen",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
-      prioritas: "Sedang",
+      prioritas: "Rendah",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
@@ -117,10 +104,9 @@ export default function PenugasanSeksi() {
     {
       id: 10,
       nama: "Ridwan Yusuf",
-      kategori: "Email",
-      jenis: "IT",
-      bentuk: "Fisik",
-      prioritas: "Rendah",
+      prioritas: "Tinggi",
+      aset: "IT",
+      seri: "Non-Fisik",
       status: "Diproses",
       foto: "/assets/shizuku.jpg",
       lampiran: [],
@@ -191,7 +177,7 @@ export default function PenugasanSeksi() {
           {/* Kategori */}
           <div className="flex items-center justify-between">
             <label className="w-24 text-sm font-medium text-gray-700">
-              Kategori
+              Data Aset
             </label>
             <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
               <option>Semua</option>
@@ -204,7 +190,7 @@ export default function PenugasanSeksi() {
           {/* Jenis */}
           <div className="flex items-center justify-between">
             <label className="w-24 text-sm font-medium text-gray-700">
-              Jenis
+              Prioritas
             </label>
             <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
               <option>Semua</option>
@@ -216,7 +202,7 @@ export default function PenugasanSeksi() {
           {/* Bentuk */}
           <div className="flex items-center justify-between">
             <label className="w-24 text-sm font-medium text-gray-700">
-              Bentuk
+              No Seri
             </label>
             <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
               <option>Semua</option>
@@ -228,25 +214,13 @@ export default function PenugasanSeksi() {
           {/* Prioritas */}
           <div className="flex items-center justify-between">
             <label className="w-24 text-sm font-medium text-gray-700">
-              Prioritas
+              Status
             </label>
             <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
               <option>Semua</option>
               <option>Rendah</option>
               <option>Sedang</option>
               <option>Tinggi</option>
-            </select>
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center justify-between">
-            <label className="w-24 text-sm font-medium text-gray-700">
-              Status
-            </label>
-            <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-              <option>Semua</option>
-              <option>Draft</option>
-              <option>Diproses</option>
             </select>
           </div>
         </div>
@@ -258,13 +232,11 @@ export default function PenugasanSeksi() {
           <thead className="bg-[#0F2C59] text-white text-xs uppercase">
             <tr>
               <th className="py-3 px-4 rounded-tl-lg">Pengirim</th>
-              <th className="py-3 px-4">Kategori</th>
-              <th className="py-3 px-4">Jenis</th>
-              <th className="py-3 px-4">Bentuk</th>
+              <th className="py-3 px-4">Data Aset</th>
+              <th className="py-3 px-4">No Seri</th>
               <th className="py-3 px-4">Lampiran</th>
               <th className="py-3 px-4">Prioritas</th>
               <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Ket</th>
               <th className="py-3 px-4 rounded-tr-lg">Aksi</th>
             </tr>
           </thead>
@@ -282,9 +254,8 @@ export default function PenugasanSeksi() {
                   />
                   <span>{item.nama}</span>
                 </td>
-                <td className="py-3 px-4">{item.kategori}</td>
-                <td className="py-3 px-4">{item.jenis}</td>
-                <td className="py-3 px-4">{item.bentuk}</td>
+                <td className="py-3 px-4">{item.aset}</td>
+                <td className="py-3 px-4">{item.seri}</td>
                 <td className="py-3 px-4">
                   <div className="flex gap-2">
                     {item.lampiran.length > 0 ? (
@@ -319,7 +290,6 @@ export default function PenugasanSeksi() {
                     {item.status}
                   </span>
                 </td>
-                <td className="py-3 px-4">{item.Ket}</td>
                 <td className="py-3 px-4">
                   <button
                     onClick={() => navigate("/formpenugasanseksi")}

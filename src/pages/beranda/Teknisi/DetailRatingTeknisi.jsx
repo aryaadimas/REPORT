@@ -2,7 +2,7 @@ import React from "react";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 
-export default function DetailRating() {
+export default function DetailRatingTeknisi() {
   const navigate = useNavigate();
 
   const ratingData = {

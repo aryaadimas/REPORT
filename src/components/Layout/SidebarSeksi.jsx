@@ -6,6 +6,8 @@ import {
   ChartBarIcon,
   StarIcon,
   ChatBubbleLeftRightIcon,
+  InboxIcon,
+  ArchiveBoxIcon,
 } from "@heroicons/react/24/outline";
 
 export default function SidebarSeksi() {
@@ -32,9 +34,19 @@ export default function SidebarSeksi() {
       isActive: isMonitoringActive,
     },
     {
+      name: "Arsip",
+      icon: <ArchiveBoxIcon className="w-5 h-5" />,
+      path: "/arsipseksi",
+    },
+    {
       name: "Rating",
       icon: <StarIcon className="w-5 h-5" />,
       path: "/ratingseksi",
+    },
+    {
+      name: "Kotak Masuk",
+      icon: <InboxIcon className="w-5 h-5" />,
+      path: "/kotakmasukseksi",
     },
     {
       name: "Layanan Chat",

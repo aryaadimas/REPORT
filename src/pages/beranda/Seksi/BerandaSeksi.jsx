@@ -15,9 +15,8 @@ export default function DashboardSeksi() {
       id: 1,
       pengirim: "Doni Ridho",
       tanggal: "18/09/2024",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Revisi",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
@@ -26,9 +25,8 @@ export default function DashboardSeksi() {
       id: 2,
       pengirim: "Hiko Wicakso",
       tanggal: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Draft",
       foto: "/assets/shizuku.jpg",
       lampiran: ["/assets/doc1.pdf"],
@@ -37,9 +35,8 @@ export default function DashboardSeksi() {
       id: 3,
       pengirim: "Ella Melisya",
       tanggal: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Terverifikasi",
       foto: "/assets/Bokuto.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
@@ -48,9 +45,8 @@ export default function DashboardSeksi() {
       id: 4,
       pengirim: "Arnya Rosalina",
       tanggal: "20/09/2024",
-      kategori: "Jaringan",
-      jenis: "Non-IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Pending",
       foto: "/assets/Suika.jpg",
       lampiran: [],
@@ -59,9 +55,8 @@ export default function DashboardSeksi() {
       id: 5,
       pengirim: "Arnya Rosalina",
       tanggal: "20/09/2024",
-      kategori: "Jaringan",
-      jenis: "Non-IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Ditolak",
       foto: "/assets/Suika.jpg",
       lampiran: [],
@@ -70,9 +65,8 @@ export default function DashboardSeksi() {
       id: 6,
       pengirim: "Doni Ridho",
       tanggal: "18/09/2024",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Revisi",
       foto: "/assets/Suika.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
@@ -81,9 +75,8 @@ export default function DashboardSeksi() {
       id: 7,
       pengirim: "Hiko Wicakso",
       tanggal: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "Non-IT",
-      bentuk: "Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Draft",
       foto: "/assets/shizuku.jpg",
       lampiran: ["/assets/doc1.pdf"],
@@ -92,9 +85,8 @@ export default function DashboardSeksi() {
       id: 8,
       pengirim: "Ella Melisya",
       tanggal: "18/09/2024",
-      kategori: "Aplikasi",
-      jenis: "IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Terverifikasi",
       foto: "/assets/Bokuto.jpg",
       lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
@@ -103,9 +95,8 @@ export default function DashboardSeksi() {
       id: 9,
       pengirim: "Arnya Rosalina",
       tanggal: "20/09/2024",
-      kategori: "Jaringan",
-      jenis: "Non-IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Pending",
       foto: "/assets/Suika.jpg",
       lampiran: [],
@@ -114,9 +105,8 @@ export default function DashboardSeksi() {
       id: 10,
       pengirim: "Arnya Rosalina",
       tanggal: "20/09/2024",
-      kategori: "Jaringan",
-      jenis: "Non-IT",
-      bentuk: "Non-Fisik",
+      Aset: "Lenovo",
+      Seri: "LNV-TP-001",
       status: "Ditolak",
       foto: "/assets/Suika.jpg",
       lampiran: [],
@@ -198,35 +188,24 @@ export default function DashboardSeksi() {
             {/* Baris 1 */}
             <div className="flex items-center justify-between">
               <label className="w-24 text-sm font-medium text-gray-700">
-                Kategori
+                Data Aset
               </label>
               <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>Sistem Operasi</option>
-                <option>Aplikasi</option>
-                <option>Jaringan</option>
+                <option>-</option>
+                <option>-</option>
+                <option>-</option>
+                <option>-</option>
               </select>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="w-24 text-sm font-medium text-gray-700">
-                Bentuk
-              </label>
-              <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>Fisik</option>
-                <option>Non-Fisik</option>
-              </select>
-            </div>
-
             {/* Baris 2 */}
             <div className="flex items-center justify-between">
               <label className="w-24 text-sm font-medium text-gray-700">
-                Jenis
+                No Seri
               </label>
               <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>IT</option>
-                <option>Non-IT</option>
+                <option>-</option>
+                <option>-</option>
+                <option>-</option>
               </select>
             </div>
             <div className="flex items-center justify-between">
@@ -251,9 +230,8 @@ export default function DashboardSeksi() {
               <tr>
                 <th className="py-3 px-4 rounded-tl-lg">Pengirim</th>
                 <th className="py-3 px-4">Tanggal Masuk</th>
-                <th className="py-3 px-4">Kategori</th>
-                <th className="py-3 px-4">Jenis</th>
-                <th className="py-3 px-4">Bentuk</th>
+                <th className="py-3 px-4">Data Aset</th>
+                <th className="py-3 px-4">No Seri</th>
                 <th className="py-3 px-4">Lampiran</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4 rounded-tr-lg">Aksi</th>
@@ -276,9 +254,8 @@ export default function DashboardSeksi() {
                   </td>
 
                   <td className="py-3 px-4">{item.tanggal}</td>
-                  <td className="py-3 px-4">{item.kategori}</td>
-                  <td className="py-3 px-4">{item.jenis}</td>
-                  <td className="py-3 px-4">{item.bentuk}</td>
+                  <td className="py-3 px-4">{item.Aset}</td>
+                  <td className="py-3 px-4">{item.Seri}</td>
 
                   {/* Lampiran (1-3 ikon) */}
                   <td className="py-3 px-4">

@@ -6,26 +6,47 @@ export default function ArsipSeksi() {
   const [activeTab, setActiveTab] = useState("pelaporan");
 
   const dataArsip = [
-    { id: 1, nama: "Budi Winarto", perihal: "Jaringan & Konektivitas", masuk: "02/09/2024", selesai: "11/09/2024", status: "Selesai", foto: "/assets/shizuku.jpg", lampiran: ["/files/lampiran.pdf", "/files/lampiran2.pdf"] },
-    { id: 2, nama: "Elly Serila", perihal: "Jaringan & Konektivitas", masuk: "02/09/2024", selesai: "10/09/2024", status: "Re-open", foto: "/assets/Suika.jpg", lampiran: ["/files/lampiran2.pdf"]  },
-    { id: 3, nama: "Vina Erlita", perihal: "Perangkat Keras", masuk: "02/09/2024", selesai: "10/09/2024", status: "Selesai", foto: "/assets/Bokuto.jpg", lampiran: ["/files/lampiran2.pdf"]  },
-    { id: 4, nama: "Faralia April", perihal: "Printer & Peripherals", masuk: "02/09/2024", selesai: "09/09/2024", status: "Selesai", foto: "/assets/shizuku.jpg", lampiran: ["/files/lampiran2.pdf"]  },
-    { id: 5, nama: "Wawan Mujito", perihal: "Perangkat Keras", masuk: "01/09/2024", selesai: "09/09/2024", status: "Re-open", foto: "/assets/Suika.jpg", lampiran: ["/files/lampiran1.pdf", "/files/lampiran2.pdf", "",]  },
-    { id: 6, nama: "Galang Wadi", perihal: "Keamanan", masuk: "01/09/2024", selesai: "08/09/2024", status: "Selesai", foto: "/assets/shizuku.jpg", lampiran: ["/files/lampiran1.pdf", "/files/lampiran2.pdf"]  },
-    { id: 7, nama: "Joko Erwan", perihal: "Email & Komunikasi", masuk: "31/08/2024", selesai: "08/09/2024", status: "Selesai", foto: "/assets/Suika.jpg", lampiran: ["/files/lampiran1.pdf"]  },
-    { id: 8, nama: "Suklistiani", perihal: "Jaringan & Konektivitas", masuk: "31/08/2024", selesai: "07/09/2024", status: "Selesai", foto: "/assets/Bokuto.jpg", lampiran: ["/files/lampiran1.pdf"]  },
-    { id: 9, nama: "Toni Ridho", perihal: "Email & Komunikasi", masuk: "29/08/2024", selesai: "07/09/2024", status: "Re-open", foto: "/assets/shizuku.jpg", lampiran: ["/files/lampiran1.pdf"]  },
-    { id: 10, nama: "Yudi Deriga", perihal: "Perangkat Keras", masuk: "29/08/2024", selesai: "06/09/2024", status: "Selesai", foto: "/assets/Suika.jpg", lampiran: ["/files/lampiran1.pdf", "/files/lampiran2.pdf"]  },
+    {
+  id: 1, aset: "Laptop", tanggal: "02/09/2024", intensitas: "2", status: "normal",
+},
+{
+  id: 2, aset: "Wifi", tanggal: "01/11/2024", intensitas: "7", status: "perlu rfc",
+},
+{
+  id: 3, aset: "Laptop", tanggal: "20/09/2024", intensitas: "4", status: "bermasalah",
+},
+{
+  id: 4, aset: "Printer", tanggal: "05/08/2024", intensitas: "6", status: "perlu rfc",
+},
+{
+  id: 5, aset: "CCTV", tanggal: "12/10/2024", intensitas: "3", status: "normal",
+},
+{
+  id: 6, aset: "Server", tanggal: "25/11/2024", intensitas: "8", status: "bermasalah",
+},
+{
+  id: 7, aset: "Router", tanggal: "14/07/2024", intensitas: "5", status: "perlu rfc",
+},
+{
+  id: 8, aset: "Scanner", tanggal: "30/09/2024", intensitas: "1", status: "normal",
+},
+{
+  id: 9, aset: "Monitor", tanggal: "19/10/2024", intensitas: "9", status: "bermasalah",
+},
+{
+  id: 10, aset: "Access Point", tanggal: "07/12/2024", intensitas: "3", status: "normal",
+},
+
   ];
 
   const statusColor = (status) => {
     switch (status) {
-      case "Selesai":
-        return "bg-green-100 text-green-700";
-      case "Re-open":
-        return "bg-yellow-100 text-yellow-700";
+      case "perlu rfc":
+        return "bg-red-100 text-white-700";
+      case "bermasalah":
+        return "bg-yellow-100 text-white-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-green-100 text-white-700";
     }
   };
 
@@ -64,48 +85,58 @@ export default function ArsipSeksi() {
             </button>
         </div>
 
-        {/* Filter */}
-        <div className="p-4 border-b flex flex-wrap gap-4 items-center">
-          <div className="flex flex-col">
-            <label className="text-gray-600 text-sm mb-1">Pilih Perihal</label>
-            <select className="border rounded-lg p-2 text-sm min-w-[150px]">
-              <option>Semua</option>
-              <option>Keamanan</option>
-              <option>Jaringan</option>
-              <option>Email</option>
-            </select>
-          </div>
+        {/* === FILTER 1 BARIS === */}
+<div className="p-5 border-b bg-gray-50">
+  <h2 className="text-gray-700 font-semibold mb-4">Filter pencarian</h2>
 
-          <div className="flex flex-col">
-            <label className="text-gray-600 text-sm mb-1">Pilih Status</label>
-            <select className="border rounded-lg p-2 text-sm min-w-[150px]">
-              <option>Semua</option>
-              <option>Selesai</option>
-              <option>Re-open</option>
-            </select>
-          </div>
+  <div className="grid grid-cols-3 gap-6">
 
-          <div className="flex flex-col">
-            <label className="text-gray-600 text-sm mb-1">Pilih Prioritas</label>
-            <select className="border rounded-lg p-2 text-sm min-w-[150px]">
-              <option>Semua</option>
-              <option>Rendah</option>
-              <option>Sedang</option>
-              <option>Tinggi</option>
-            </select>
-          </div>
-        </div>
+    {/* === Kategori === */}
+    <div className="flex items-center gap-3">
+      <label className="text-gray-700 text-sm w-24">Kategori</label>
+      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
+        <option>Pilih kategori</option>
+        <option>Keamanan</option>
+        <option>Jaringan</option>
+        <option>Email</option>
+      </select>
+    </div>
+
+    {/* === Jenis === */}
+    <div className="flex items-center gap-3">
+      <label className="text-gray-700 text-sm w-16">Jenis</label>
+      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
+        <option>Pilih jenis</option>
+        <option>Fisik</option>
+        <option>Non-Fisik</option>
+      </select>
+    </div>
+
+    {/* === Rating === */}
+    <div className="flex items-center gap-3">
+      <label className="text-gray-700 text-sm w-20">Rating</label>
+      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
+        <option>Pilih rating</option>
+        <option>5</option>
+        <option>4</option>
+        <option>3</option>
+        <option>2</option>
+        <option>1</option>
+      </select>
+    </div>
+
+  </div>
+</div>
+
 
         {/* Tabel */}
         <div className="p-4 overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
               <tr className="bg-blue-900 text-white">
-                <th className="p-3">Pengirim</th>
-                <th className="p-3">Perihal</th>
-                <th className="p-3">Tanggal Masuk</th>
-                <th className="p-3">Tanggal Selesai</th>
-                <th className="p-3">Lampiran</th>
+                <th className="p-3">Nama Aset</th>
+                <th className="p-3">Terakhir dilaporkan</th>
+                <th className="p-3">Intensitas</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Aksi</th>
               </tr>
@@ -113,22 +144,9 @@ export default function ArsipSeksi() {
             <tbody>
               {dataArsip.map((item) => (
                 <tr key={item.id} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3 flex items-center gap-2">
-                    <img src={item.foto} alt={item.nama} className="w-8 h-8 rounded-full object-cover" />
-                    {item.nama}
-                  </td>
-                  <td className="p-3">{item.perihal}</td>
-                  <td className="p-3">{item.masuk}</td>
-                  <td className="p-3">{item.selesai}</td>
-                  <td className="p-3 flex gap-2">
-  {item.lampiran.map((_, idx) => (
-    <FileText 
-      key={idx} 
-      className="w-4 h-4 text-blue-600 cursor-pointer hover:text-blue-800 transition" 
-    />
-  ))}
-</td>
-
+                  <td className="p-3">{item.aset}</td>
+                  <td className="p-3">{item.tanggal}</td>
+                  <td className="p-3">{item.intensitas}</td>
                   <td className="p-3">
                     <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${statusColor(item.status)}`}>
                       {item.status}
