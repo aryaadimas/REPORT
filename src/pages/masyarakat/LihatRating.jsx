@@ -1,8 +1,5 @@
 import React, { useState } from "react";
 import LayoutPegawai from "../../components/Layout/LayoutPegawai";
-import React from "react";
-import LeftSidebar from "../../components/Layout/LeftSidebar";
-import Header from "../../components/Header";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Star, ChevronDown, ChevronUp } from "lucide-react";
 

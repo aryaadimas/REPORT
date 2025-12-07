@@ -1,7 +1,5 @@
 import React from "react";
 import LayoutPegawai from "../../components/Layout/LayoutPegawai";
-import LeftSidebar from "../../components/Layout/LeftSidebar";
-import Header from "../../components/Header";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FileText } from "lucide-react";
 

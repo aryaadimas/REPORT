@@ -1,13 +1,10 @@
 import { Plus, Menu, X, Bell, Calendar } from "lucide-react";
 import { Calender } from "../../components/beranda/Calender";
-import LeftSidebar from "../../components/LeftSidebar";
 import SidebarMasyarakat from "./SidebarMasyarakat";
-import LeftSidebar from "../../components/Layout/LeftSidebar";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HelpdeskPopup from "../../components/HelpdeskPopup";
 
-export function BerandaMasyarakat() {
 export default function BerandaMasyarakat() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
@@ -155,14 +152,6 @@ export default function BerandaMasyarakat() {
             ))}
           </div>
         </div>
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Sidebar - Always visible on desktop, hidden on mobile unless toggled */}
-      <div
-        className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block w-72`}
-      >
-        <LeftSidebar />
-      </div>
 
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 p-6 overflow-auto">
@@ -200,11 +189,9 @@ export default function BerandaMasyarakat() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
       <div className="w-72">
-        <LeftSidebar />
-        <div className="h-full">
-          <SidebarMasyarakat />
-        </div>
+        <SidebarMasyarakat />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -242,13 +229,17 @@ export default function BerandaMasyarakat() {
             </div>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4 text-left">Layanan</h2>
-            <div className="flex flex-wrap gap-4 justify-start">
+          {/* Layanan Section */}
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-left">
+              Layanan
+            </h2>
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+              {/* Card 1 - Knowledge Base */}
               <div className="flex flex-col items-center">
                 <div
                   onClick={handleKnowledgeBase}
-                  className="w-40 h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
+                  className="w-32 h-32 md:w-40 md:h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
                 >
                   <svg
                     width="50"
@@ -301,10 +292,11 @@ export default function BerandaMasyarakat() {
                 </span>
               </div>
 
+              {/* Card 2 - Cek Status Laporan */}
               <div className="flex flex-col items-center">
                 <div
                   onClick={handlePelacakan}
-                  className="w-40 h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
+                  className="w-32 h-32 md:w-40 md:h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
                 >
                   <svg
                     width="60"
@@ -343,48 +335,24 @@ export default function BerandaMasyarakat() {
             </div>
           </div>
 
-          <div className="mt-8">
+          {/* Riwayat Laporan */}
+          <div className="mt-6 md:mt-8">
             <hr className="border-gray-300 mb-4" />
-            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-left">
-              Riwayat Laporan
-            </h2>
 
-            {/* Card peringatan */}
-            <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center mb-4 shadow-sm border border-gray-200">
-              <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-xs md:text-sm">
-                !
-              </div>
-              <p className="text-gray-600 text-xs md:text-sm text-left">
-                Tidak ada riwayat laporan untuk ditampilkan
-              </p>
-            </div>
-
-            {/* Tombol dengan navigasi */}
-            <button
-              onClick={handlePelaporanOnline}
-              className="relative z-10 self-start px-6 py-3 border border-white rounded-full font-bold hover:bg-white hover:text-[#226597] transition text-sm md:text-base"
-            >
-              Buat Laporan <Plus size={16} className="inline ml-2" />
-            </button>
-          </div>
-        </div>
-
-        {/* Layanan Section */}
-        <div className="mb-6 md:mb-8">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-left">
-            Layanan
-          </h2>
-          <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-            {/* Card 1 - Knowledge Base */}
-            <div className="flex flex-col items-center">
-              <div
-                onClick={handleKnowledgeBase}
-                className="w-32 h-32 md:w-40 md:h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
+            {/* Header Section */}
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl md:text-2xl font-semibold text-left">
+                Riwayat Laporan
+              </h2>
+              <button
+                onClick={() => navigate("/riwayatmasyarakat")}
+                className="text-[#226597] text-sm font-semibold hover:underline"
               >
                 Tampilkan semua
               </button>
             </div>
 
+            {/* Data Riwayat */}
             {(() => {
               const riwayatData = [
                 {
@@ -399,36 +367,15 @@ export default function BerandaMasyarakat() {
                 },
               ];
 
-        {/* Riwayat Laporan */}
-        <div className="mt-6 md:mt-8">
-          <hr className="border-gray-300 mb-4" />
-
-          {/* Header Section */}
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl md:text-2xl font-semibold text-left">
-              Riwayat Laporan
-            </h2>
-            <button
-              onClick={() => navigate("/riwayatmasyarakat")}
-              className="text-[#226597] text-sm font-semibold hover:underline"
-            >
-              Tampilkan semua
-            </button>
-          </div>
-
-          {/* Data Riwayat */}
-          {(() => {
-            const riwayatData = [
-              // contoh: isi atau kosongkan array ini untuk tes
-              { id: "LPR321336", nama: "Gangguan Router", tanggal: "17-07-2025" },
-              { id: "LYN651289", nama: "Permintaan Printer", tanggal: "17-07-2025" },
-            ];
-
-            if (riwayatData.length === 0) {
-              return (
-                <div className="bg-white rounded-xl md:rounded-2xl p-4 flex items-center shadow-sm border border-gray-200">
-                  <div className="w-6 h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-sm">
-                    !
+              if (riwayatData.length === 0) {
+                return (
+                  <div className="bg-white rounded-xl md:rounded-2xl p-4 flex items-center shadow-sm border border-gray-200">
+                    <div className="w-6 h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-sm">
+                      !
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      Tidak ada riwayat laporan untuk ditampilkan
+                    </p>
                   </div>
                 );
               }
@@ -505,7 +452,9 @@ export default function BerandaMasyarakat() {
         </div>
       </div>
 
+      {/* Right Sidebar */}
       <div className="w-80 bg-[#226597] p-6 space-y-4 overflow-y-auto">
+        {/* Notifikasi dan Profile */}
         <div className="flex items-center justify-between gap-2">
           <div ref={notificationRef} className="relative">
             <div
@@ -643,7 +592,7 @@ export default function BerandaMasyarakat() {
                       >
                         <rect width="56" height="56" rx="8" fill="#113F67" />
                         <path
-                          d="M34.4401 29.7913L28.9411 20.2063C28.8035 19.9673 28.6202 19.7578 28.4016 19.5896C28.183 19.4215 27.9334 19.298 27.6671 19.2263C27.1253 19.0814 26.5482 19.1551 26.0601 19.4313L24.8641 20.1273C24.8335 20.1405 24.8067 20.1611 24.7861 20.1873L24.7171 20.2743C24.6447 20.3514 24.594 20.4463 24.5701 20.5493C24.1437 21.8511 23.6126 23.1162 22.9821 24.3323C22.539 25.0808 21.941 25.7259 21.2281 26.2243L19.4341 27.8123C19.0705 28.1368 18.8285 28.5757 18.7481 29.0563C18.697 29.3834 18.7172 29.7177 18.8071 30.0363C18.5611 30.1723 18.3471 30.3603 18.1801 30.5863C18.011 30.8078 17.8876 31.0607 17.8171 31.3303C17.7641 31.6055 17.7641 31.8882 17.8171 32.1633C17.8933 32.7163 18.1826 33.2176 18.6231 33.5603C18.8431 33.7283 19.0961 33.8503 19.3661 33.9183C19.5421 33.9657 19.7218 33.9883 19.9051 33.9863C20.0025 33.9963 20.1005 33.9963 20.1991 33.9863C20.4711 33.9533 20.7321 33.8593 20.9631 33.7123C21.1791 33.9553 21.4521 34.1403 21.7571 34.2523C21.9941 34.3453 22.2471 34.3923 22.5021 34.3883C22.6415 34.3917 22.7788 34.3753 22.9141 34.3393L24.5111 37.1923C24.7018 37.5119 24.9715 37.7771 25.2943 37.9624C25.617 38.1477 25.982 38.2468 26.3541 38.2503C26.8193 38.2447 27.27 38.0876 27.6379 37.8029C28.0059 37.5181 28.271 37.1212 28.3931 36.6723C28.5314 36.13 28.4577 35.5553 28.1871 35.0653L26.9911 32.9873C27.3138 32.9153 27.6405 32.876 27.9711 32.8693C29.3661 32.9283 30.7531 33.1053 32.1171 33.3993H32.4601L32.6171 33.3293L32.7641 33.2413L33.8131 32.6343C34.2951 32.3553 34.6481 31.8973 34.7931 31.3603C34.8839 30.8113 34.7573 30.2485 34.4401 29.7913ZM22.5511 32.9483C22.4116 32.9973 22.2596 32.9973 22.1201 32.9483C21.9822 32.8993 21.867 32.8015 21.7961 32.6733L20.3061 30.0663L20.2091 29.8993C20.1337 29.7674 20.1061 29.6134 20.1311 29.4634C20.1561 29.3135 20.232 29.1768 20.3461 29.0763L21.4531 28.0963L21.8651 28.8213L23.9921 32.5463L22.5511 32.9483ZM33.2251 30.9883C33.177 31.1551 33.0687 31.298 32.9211 31.3893L32.3721 31.7033L26.2361 21.0093L26.7951 20.6863C26.8667 20.6437 26.9463 20.6165 27.0289 20.6063C27.1116 20.5962 27.1954 20.6033 27.2751 20.6273C27.3568 20.6477 27.4336 20.6842 27.5009 20.7347C27.5682 20.7852 27.6247 20.8486 27.6671 20.9213L33.1661 30.4973C33.215 30.5792 33.2456 30.6706 33.2558 30.7654C33.266 30.8601 33.2555 30.956 33.2251 31.0463V30.9883ZM32.9701 25.1653C32.8413 25.1675 32.7142 25.1351 32.6021 25.0714C32.4901 25.0077 32.3972 24.9152 32.3331 24.8033C32.2428 24.6373 32.2199 24.4427 32.2693 24.2602C32.3186 24.0777 32.4364 23.9212 32.5981 23.8233L35.0481 22.4013C35.2137 22.3084 35.409 22.2841 35.5923 22.3337C35.7755 22.3832 35.932 22.5027 36.0281 22.6663C36.1185 22.8324 36.1414 23.0269 36.092 23.2094C36.0427 23.3919 35.9249 23.5484 35.7631 23.6463L33.3131 25.0673C33.2092 25.1291 33.091 25.1628 32.9701 25.1653ZM37.4881 28.6353H34.6561C34.5596 28.6353 34.464 28.6163 34.3749 28.5794C34.2857 28.5424 34.2047 28.4883 34.1364 28.4201C34.0682 28.3518 34.014 28.2708 33.9771 28.1816C33.9401 28.0924 33.9211 27.9969 33.9211 27.9003C33.9211 27.8038 33.9401 27.7082 33.9771 27.6191C34.014 27.5299 34.0682 27.4489 34.1364 27.3806C34.2047 27.3124 34.2857 27.2582 34.3749 27.2213C34.464 27.1843 34.5596 27.1653 34.6561 27.1653H37.4881C37.6831 27.1653 37.87 27.2428 38.0079 27.3806C38.1457 27.5184 38.2231 27.7054 38.2231 27.9003C38.2231 28.0953 38.1457 28.2822 38.0079 28.4201C37.87 28.5579 37.6831 28.6353 37.4881 28.6353ZM30.6571 21.6663C30.5295 21.6674 30.4039 21.6335 30.2941 21.5683C30.1291 21.4735 30.0079 21.3177 29.9567 21.1344C29.9055 20.9511 29.9282 20.755 30.0201 20.5883L31.4311 18.1183C31.5326 17.9576 31.6924 17.8424 31.877 17.7969C32.0615 17.7513 32.2565 17.7789 32.4212 17.8739C32.5858 17.9689 32.7073 18.1239 32.7603 18.3065C32.8132 18.489 32.7934 18.685 32.7051 18.8533L31.2941 21.3133C31.2281 21.4228 31.1346 21.513 31.0228 21.5749C30.911 21.6369 30.7849 21.6684 30.6571 21.6663Z"
+                          d="M34.4401 29.7913L28.9411 20.2063C28.8035 19.9673 28.6202 19.7578 28.4016 19.5896C28.183 19.4215 27.9334 19.298 27.6671 19.2263C27.1253 19.0814 26.5482 19.1551 26.0601 19.4313L24.8641 20.1273C24.8335 20.1405 24.8067 20.1611 24.7861 20.1873L24.7171 20.2743C24.6447 20.3514 24.594 20.4463 24.5701 20.5493C24.1437 21.8511 23.6126 23.1162 22.9821 24.3323C22.539 25.0808 21.941 25.7259 21.2281 26.2243L19.4341 27.8123C19.0705 28.1368 18.8285 28.5757 18.7481 29.0563C18.697 29.3834 18.7172 29.7177 18.8071 30.0363C18.5611 30.1723 18.3471 30.3603 18.1801 30.5863C18.011 30.8078 17.8876 31.0607 17.8171 31.3303C17.7641 31.6055 17.7641 31.8882 17.8171 32.1633C17.8933 32.7163 18.1826 33.2176 18.6231 33.5603C18.8431 33.7283 19.0961 33.8503 19.3661 33.9183C19.5421 33.9657 19.7218 33.9883 19.9051 33.9863C20.0025 33.9963 20.1005 33.9963 20.1991 33.9863C20.4711 33.9533 20.7321 33.8593 20.9631 33.7123C21.1791 33.9553 21.4521 34.1403 21.7571 34.2523C21.9941 34.3453 22.2471 34.3923 22.5021 34.3883C22.6415 34.3917 22.7788 34.3753 22.9141 34.3393L24.5111 37.1923C24.7018 37.5119 24.9715 37.7771 25.2943 37.9624C25.617 38.1477 25.982 38.2468 26.3541 38.2503C26.8193 38.2447 27.27 38.0876 27.6379 37.8029C28.0059 37.5181 28.271 37.1212 28.3931 36.6723C28.5314 36.13 28.4577 35.5553 28.1871 35.0653L26.9911 32.9873C27.3138 32.9153 27.6405 32.876 27.9711 32.8693C29.3661 32.9283 30.7531 33.1053 32.1171 33.3993H32.4601L32.6171 33.3293L32.7641 33.2413L33.8131 32.6343C34.2951 32.3553 34.6481 31.8973 34.7931 31.3603C34.8839 30.8113 34.7573 30.2485 34.4401 29.7913ZM22.5511 32.9483C22.4116 32.9973 22.2596 32.9973 22.1201 32.9483C21.9822 32.8993 21.867 32.8015 21.7961 32.6733L20.3061 30.0663L20.2091 29.8993C20.1337 29.7674 20.1061 29.6134 20.1311 29.4634C20.1561 29.3135 20.232 29.1768 20.3461 29.0763L21.4531 28.0963L21.8651 28.8213L23.9921 32.5463L22.5511 32.9483ZM33.2251 30.9883C33.177 31.1551 33.0687 31.298 32.9211 31.3893L32.3721 31.7033L26.2361 21.0093L26.7951 20.6863C26.8667 20.6437 26.9463 20.6165 27.0289 20.6063C27.1116 20.5962 27.1954 20.6033 27.2751 20.6273C27.3568 20.6477 27.4336 20.6842 27.5009 20.7347C27.5682 20.7852 27.6247 20.8486 27.6671 20.9213L33.1661 30.4973C33.215 30.5792 33.2456 30.6706 33.2558 30.7654C33.266 30.8601 33.2555 30.956 33.2251 31.0463V30.9883ZM32.9701 25.1653C32.8413 25.1675 32.7142 25.1351 32.6021 25.0714C32.4901 25.0077 32.3972 24.9152 32.3331 24.8033C32.2428 24.6373 32.2199 24.4427 32.2693 24.2602C32.3186 24.0777 32.4364 23.9212 32.5981 23.8233L35.0481 22.4013C35.2137 22.3084 35.409 22.2841 35.5923 22.3337C35.7755 22.3832 35.932 22.5027 36.0281 22.6663C36.1185 22.8324 36.1414 23.0269 36.092 23.2094C36.0427 23.3919 35.9249 23.5484 35.7631 23.6463L33.3131 25.0673C33.2092 25.1291 33.091 25.1628 32.9701 25.1653ZM37.4881 28.6353H34.6561C34.5596 28.6353 34.464 28.6163 34.3749 28.5794C34.2857 28.5424 34.2047 28.4883 34.1364 28.4201C34.0682 28.3518 34.014 28.2708 33.9771 28.1816C33.9401 28.0924 33.9211 27.9969 33.9211 27.9003C33.9211 27.8038 33.9401 27.7082 33.9771 27.6191C34.014 27.5299 34.0682 27.4489 34.1364 27.3806C34.2047 27.3124 34.2857 27.2582 34.3749 27.2213C34.464 27.1843 34.5596 27.1653 34.6561 27.1653H37.4881C37.6831 27.1653 37.87 27.2428 38.0079 27.3806C38.1457 27.5184 38.2231 27.7054 38.2231 27.9003C38.2231 28.0953 38.1457 28.2822 38.0079 28.4201C37.87 28.5579 37.6831 28.6353 37.4881 28.6353ZM30.6571 21.6663C30.5295 21.6674 30.4039 21.6335 30.2941 21.5683C30.1291 21.4735 30.0079 21.3177 29.9567 21.1344C29.9055 20.9511 29.9282 20.755 29.9201 20.5883L31.4311 18.1183C31.5326 17.9576 31.6924 17.8424 31.877 17.7969C32.0615 17.7513 32.2565 17.7789 32.4212 17.8739C32.5858 17.9689 32.7073 18.1239 32.7603 18.3065C32.8132 18.489 32.7934 18.685 32.7051 18.8533L31.2941 21.3133C31.2281 21.4228 31.1346 21.513 31.0228 21.5749C30.911 21.6369 30.7849 21.6684 30.6571 21.6663Z"
                           fill="white"
                         />
                       </svg>
@@ -670,6 +619,7 @@ export default function BerandaMasyarakat() {
             )}
           </div>
 
+          {/* Profile Dropdown */}
           <div ref={dropdownRef} className="flex-1 relative">
             <div
               className="bg-white rounded-full flex items-center justify-between px-2 py-1.5 shadow-sm cursor-pointer"
@@ -794,6 +744,7 @@ export default function BerandaMasyarakat() {
           </div>
         </div>
 
+        {/* Calendar */}
         <div className="min-h-0">
           <Calender />
         </div>
@@ -819,7 +770,6 @@ export default function BerandaMasyarakat() {
             Tanya Helpdesk
           </span>
         </div>
-        
       </div>
 
       {/* Modal Konfirmasi Logout */}

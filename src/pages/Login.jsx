@@ -86,25 +86,24 @@ const LogIn = () => {
 
     const matched = dummyUsers.find(
       (user) =>
-        user.email === formData.email &&
-        user.password === formData.password
+        user.email === formData.email && user.password === formData.password
     );
 
     if (matched) {
       localStorage.setItem("role", matched.role);
       Swal.fire({
-  title: `Anda login sebagai ${matched.role}`,
-  icon: "success",
-  timer: 2000,
-  showConfirmButton: false,
-  allowOutsideClick: false,
-  allowEscapeKey: false,
-  didClose: () => {
-    navigate(matched.redirect);
-  }
-});
-return;
-
+        title: `Anda login sebagai ${matched.role}`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didClose: () => {
+          navigate(matched.redirect);
+        },
+      });
+      setIsLoading(false);
+      return;
     }
     // === END DUMMY LOGIN ===
 
@@ -121,10 +120,7 @@ return;
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email: email,
-            password: formData.password,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -144,6 +140,7 @@ return;
         } else {
           throw new Error("Login gagal!");
         }
+        setIsLoading(false);
         return;
       }
 
@@ -196,6 +193,8 @@ return;
         }
       } catch (profileError) {
         console.warn("Error saat fetch profil:", profileError);
+      }
+
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
@@ -221,7 +220,7 @@ return;
           localStorage.setItem(
             "user",
             JSON.stringify({
-              email: email,
+              email: formData.email,
               full_name: "Demo User",
               nik: "3515085606040001",
               address: "Alamat demo",
@@ -234,14 +233,13 @@ return;
       } else {
         alert("Tidak bisa terhubung ke server. Pastikan internet stabil.");
       }
-    } finally {
-      setIsLoading(false);
-      console.error("Error:", error);
 
       setErrors({
         email: "Terjadi kesalahan",
         password: "Terjadi kesalahan",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -249,7 +247,6 @@ return;
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
-
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"
@@ -378,7 +375,9 @@ return;
                 console.log("User data:", localStorage.getItem("user"));
               }}
               className="text-blue-500 underline"
-            ></button>
+            >
+              Debug Info
+            </button>
           </div>
         </div>
 
