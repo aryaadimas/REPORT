@@ -103,13 +103,13 @@ const DashboardOpd = () => {
     { name: "30", value: 90 },
   ];
 
-  // Data tabel sesuai gambar dengan gambar profil
+  // Data tabel sesuai dengan gambar PNG yang diberikan
   const dataTabel = [
     {
       teknisi: "Arjuna Wirata",
       gambar: "/assets/Heungmin.jpg",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
+      dataAset: "Laptop Lenovo ThinkPad X230",
+      nameSeri: "LNV-TP-X230-001",
       sla: "Sesuai SLA",
       prioritas: "Tinggi",
       status: "Diproses",
@@ -117,8 +117,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Fadil Ishak",
       gambar: "/assets/Jaemin.jpg",
-      kategori: "Sistem Operasi",
-      jenis: "IT",
+      dataAset: "PC Dell OptiPlex 3020",
+      nameSeri: "DELL-OP-3020-001",
       sla: "Peringatan SLA",
       prioritas: "Tinggi",
       status: "Diproses",
@@ -126,8 +126,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Katrina Wilan",
       gambar: "/assets/Ella.jpg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "Laptop HP EliteBook 840",
+      nameSeri: "HP-EB-840-001",
       sla: "Sesuai SLA",
       prioritas: "Rendah",
       status: "Diproses",
@@ -135,8 +135,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Ian Farizki",
       gambar: "/assets/Jeno.jpg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "PC Dell OptiPlex 3020",
+      nameSeri: "DELL-OP-3020-002",
       sla: "Peringatan SLA",
       prioritas: "Sedang",
       status: "Diproses",
@@ -144,8 +144,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Dewi Inwanto",
       gambar: "/assets/Lia.jpg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "Printer HP LaserJet Pro P1102w",
+      nameSeri: "HP-LJ-P1102W-001",
       sla: "Sesuai SLA",
       prioritas: "Rendah",
       status: "Diproses",
@@ -153,8 +153,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Seiya Windara",
       gambar: "/assets/Ryujin.jpg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "-",
+      nameSeri: "-",
       sla: "Sesuai SLA",
       prioritas: "Sedang",
       status: "Diproses",
@@ -162,8 +162,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Willy Dewaza",
       gambar: "/assets/Rio.jpeg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "Laptop ASUS ZenBook UX305FA",
+      nameSeri: "ASUS-ZB-UX305-001",
       sla: "Sesuai SLA",
       prioritas: "Rendah",
       status: "Diproses",
@@ -171,17 +171,17 @@ const DashboardOpd = () => {
     {
       teknisi: "Coki Farezi",
       gambar: "/assets/Rudiono.jpeg",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "Printer Canon PIXMA MP287",
+      nameSeri: "CANON-MP-287-001",
       sla: "Sesuai SLA",
       prioritas: "Sedang",
       status: "Diproses",
     },
     {
-      teknisi: "Inwandi Putra",
+      teknisi: "Irwandi Putra",
       gambar: "/assets/Ikbal Rasyid.png",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "Laptop Lenovo ThinkPad X230",
+      nameSeri: "LNV-TP-X230-002",
       sla: "Sesuai SLA",
       prioritas: "Rendah",
       status: "Diproses",
@@ -189,8 +189,8 @@ const DashboardOpd = () => {
     {
       teknisi: "Julius Simon",
       gambar: "/assets/Lomon.png",
-      kategori: "Email",
-      jenis: "IT",
+      dataAset: "-",
+      nameSeri: "-",
       sla: "Sesuai SLA",
       prioritas: "Rendah",
       status: "Diproses",
@@ -418,7 +418,7 @@ const DashboardOpd = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Jenis
+                      No. Seri
                     </label>
                     <select
                       className="w-full p-2 border border-gray-300 rounded-lg bg-white"
@@ -427,9 +427,9 @@ const DashboardOpd = () => {
                         handleFilterChange("jenis", e.target.value)
                       }
                     >
-                      <option value="">Pilih jenis</option>
-                      <option value="IT">IT</option>
-                      <option value="Non-IT">Non-IT</option>
+                      <option value="">Pilih nomor seri aset</option>
+                      <option value="IT">LNV-TP-X230-001</option>
+                      <option value="Non-IT">DELL-OP-3020-001</option>
                     </select>
                   </div>
                   <div>
@@ -506,8 +506,8 @@ const DashboardOpd = () => {
                   <thead>
                     <tr className="bg-[#226597] text-white">
                       <th className="p-3 font-semibold">Teknisi</th>
-                      <th className="p-3 font-semibold">Kategori</th>
-                      <th className="p-3 font-semibold">Jenis</th>
+                      <th className="p-3 font-semibold">Data Aset</th>
+                      <th className="p-3 font-semibold">Nomor Seri</th>
                       <th className="p-3 font-semibold">SLA</th>
                       <th className="p-3 font-semibold">Prioritas</th>
                       <th className="p-3 font-semibold">Status</th>
@@ -543,8 +543,8 @@ const DashboardOpd = () => {
                             <span>{item.teknisi}</span>
                           </div>
                         </td>
-                        <td className="p-3">{item.kategori}</td>
-                        <td className="p-3">{item.jenis}</td>
+                        <td className="p-3">{item.dataAset}</td>
+                        <td className="p-3">{item.nameSeri}</td>
                         <td className="p-3">
                           <span
                             className={`inline-flex items-center gap-1 ${

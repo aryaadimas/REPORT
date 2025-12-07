@@ -21,18 +21,18 @@ export default function StatistikKotaTT() {
 
   // === Dummy Data untuk Chart & Tabel ===
   const dataTahun = [
-    { name: "jan", value: 101 },
-    { name: "feb", value: 121 },
-    { name: "mar", value: 92 },
-    { name: "apr", value: 131 },
-    { name: "mei", value: 125 },
-    { name: "jun", value: 103 },
-    { name: "jul", value: 161 },
-    { name: "agu", value: 141 },
-    { name: "sep", value: 128 },
-    { name: "okt", value: 125 },
-    { name: "nov", value: 121 },
-    { name: "des", value: 100 },
+    { name: "Jan", value: 101 },
+    { name: "Feb", value: 121 },
+    { name: "Mar", value: 92 },
+    { name: "Apr", value: 131 },
+    { name: "Mei", value: 125 },
+    { name: "Jun", value: 103 },
+    { name: "Jul", value: 161 },
+    { name: "Agu", value: 141 },
+    { name: "Sep", value: 128 },
+    { name: "Okt", value: 125 },
+    { name: "Nov", value: 121 },
+    { name: "Des", value: 100 },
   ];
 
   const total = dataTahun.reduce((sum, d) => sum + d.value, 0);

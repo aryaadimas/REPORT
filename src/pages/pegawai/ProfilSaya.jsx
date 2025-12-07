@@ -56,7 +56,7 @@ const ProfilePage = () => {
             {/* Header + garis tipis */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-gray-300 gap-2 sm:gap-0">
               <h3 className="text-lg font-semibold text-[#226597]">
-                Info Pribadi
+                Informasi Dasar
               </h3>
               <button className="bg-[#226597] hover:bg-blue-900 text-white text-xs md:text-sm font-medium px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center space-x-1 self-end sm:self-auto">
                 <span>Ubah</span>
@@ -91,9 +91,9 @@ const ProfilePage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
-                  Tanggal Lahir
+                  Dinas
                 </label>
-                <p className="text-gray-500 text-sm md:text-base">06-06-2000</p>
+                <p className="text-gray-500 text-sm md:text-base">Dinas Kependudukan dan Pencatatan Sipil</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
@@ -105,64 +105,10 @@ const ProfilePage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
-                  Nomor Telepon
-                </label>
-                <p className="text-gray-500 text-sm md:text-base">
-                  0877-9362-1634
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
                   Alamat
                 </label>
                 <p className="text-gray-500 text-sm md:text-base">
-                  Asemrowo Surabaya
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Work Info Section */}
-          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
-            {/* Header  */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-gray-300 gap-2 sm:gap-0">
-              <h3 className="text-lg font-semibold text-[#226597]">
-                Info Pekerjaan
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 text-left mt-4 md:mt-6">
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Nomor Induk Pegawai
-                </label>
-                <p className="text-gray-500 text-sm md:text-base break-all">
-                  200011142023062053
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Divisi
-                </label>
-                <p className="text-gray-500 text-sm md:text-base">
-                  Divisi Sumber Daya Manusia
-                </p>
-              </div>
-              <div className="hidden lg:block">
-                {/* Empty div untuk menjaga alignment grid di desktop */}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  Jabatan
-                </label>
-                <p className="text-gray-500 text-sm md:text-base">Pegawai</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-black mb-1">
-                  OPD
-                </label>
-                <p className="text-gray-500 text-sm md:text-base">
-                  Dinas Kependudukan dan Pencatatan Sipil
+                  Asemrowo, Surabaya
                 </p>
               </div>
             </div>

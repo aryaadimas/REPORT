@@ -13,8 +13,6 @@ import KataSandiBaru from "./pages/KataSandiBaru";
 import Profil from "./pages/pegawai/ProfilSaya";
 import Tampilan from "./pages/pegawai/Tampilan";
 import KnowledgeBase from "./pages/pegawai/KnowledgeBase";
-// import PelaporanOnline from "./pages/beranda/pelaporan/PelaporanOnline"; // KOMENTARI DULU
-import PelaporanOnline from "./pages/beranda/pelaporan/PelaporanOnline";
 import FormLaporan from "./pages/beranda/pelaporan/FormLaporan";
 import Pelacakan from "./pages/beranda/pelaporan/Pelacakan";
 import Pengajuan from "./pages/beranda/pengajuan/Pengajuan";
@@ -22,9 +20,7 @@ import FormPengajuan from "./pages/beranda/pengajuan/FormPengajuan";
 import SuksesPelayanan from "./pages/beranda/pengajuan/SuksesPelayanan";
 import SuksesPelaporan from "./pages/beranda/pelaporan/SuksesPelaporan";
 import DataDitemukan from "./pages/beranda/pelaporan/DataDitemukan";
-<<<<<<< HEAD
 import LayoutPegawai from "./components/Layout/LayoutPegawai";
-=======
 import Riwayat from "./pages/masyarakat/riwayat";
 import LihatHistory from "./pages/masyarakat/LihatHistory";
 import LihatRating from "./pages/masyarakat/LihatRating";
@@ -32,7 +28,6 @@ import BeriRating from "./pages/masyarakat/BeriRating";
 import ReopenPegawai from "./pages/masyarakat/ReopenPegawai";
 import ReopenMasyarakat from "./pages/masyarakat/ReopenMasyarakat";
 import RiwayatMasyarakat from "./pages/masyarakat/riwayatmasyarakat";
->>>>>>> Riwayathd
 
 //*-- Seksi --*/
 import BerandaSeksi from "./pages/beranda/Seksi/BerandaSeksi";
@@ -60,6 +55,7 @@ import CekDetailKota from "./pages/beranda/AdminKota/CekDetailKota";
 import StatistikKotaKL from "./pages/beranda/AdminKota/StatistikKotaKL";
 import StatistikKotaLP from "./pages/beranda/AdminKota/StatistikKotaLP";
 import StatistikKotaTT from "./pages/beranda/AdminKota/StatistikKotaTT";
+import StatistikKotaTB from "./pages/beranda/AdminKota/StatistikKotaTB";
 import RateKota from "./pages/beranda/AdminKota/RateKota";
 import RateKotaOpd from "./pages/beranda/AdminKota/RateKotaOpd";
 import KnowledgeBaseKota from "./pages/beranda/AdminKota/KnowledgeBaseKota";
@@ -68,6 +64,11 @@ import KBEditorKota from "./pages/beranda/AdminKota/KBEditorKota";
 import LihatArtikelKota from "./pages/beranda/AdminKota/LihatArtikelKota";
 import PengumumanKota from "./pages/beranda/AdminKota/PengumumanKota";
 import BuatPengumumanKota from "./pages/beranda/AdminKota/BuatPengumumanKota";
+import LihatRatingKota from "./pages/beranda/AdminKota/LihatRatingKota";
+import KotakMasukKota from "./pages/beranda/AdminKota/KotakMasukKota"
+import WarRoom from "./pages/beranda/AdminKota/WarRoom";
+import AksiTiketCritical from "./pages/beranda/AdminKota/AksiTiketCritical";
+import NotifWarRoom from "./pages/beranda/AdminKota/NotifWarRoom";
 
 //*-- Masyarakat --*/
 import SidebarMasyarakat from "./components/Layout/SidebarMasyarakat";
@@ -114,7 +115,7 @@ import NotifDiproses from "./pages/notifikasi/NotifDiproses";
 import NotifMaintenance from "./pages/notifikasi/NotifMaintenance";
 import NotifDarurat from "./pages/notifikasi/NotifDarurat";
 import NotifUmum from "./pages/notifikasi/NotifUmum";
-import LihatRating from "./pages/bidang/LihatRating";
+import LihatRatingBidang from "./pages/bidang/LihatRatingBidang";
 import LihatRatingOpd from "./pages/adminopd/LihatRatingOpd";
 import KBMasyarakat from "./pages/masyarakat/KBMasyarakat";
 import TampilanMasyarakat from "./pages/masyarakat/TampilanMasyarakat";
@@ -184,6 +185,7 @@ function App() {
           <Route path="statistikkotakl" element={<StatistikKotaKL />} />
           <Route path="statistikkotalp" element={<StatistikKotaLP />} />
           <Route path="statistikkotatt" element={<StatistikKotaTT />} />
+          <Route path="statistikkotatb" element={<StatistikKotaTB />} />
           <Route path="ratekota" element={<RateKota />} />
           <Route path="ratekotaopd/:opdName" element={<RateKotaOpd />} />
           <Route path="ratekotaopd" element={<RateKotaOpd />} />
@@ -193,6 +195,11 @@ function App() {
           <Route path="lihatartikelkota" element={<LihatArtikelKota />} />
           <Route path="pengumumankota" element={<PengumumanKota />} />
           <Route path="buatpengumumankota" element={<BuatPengumumanKota />} />
+          <Route path="lihatratingkota" element={<LihatRatingKota />} />
+          <Route path="kotakmasukkota" element={<KotakMasukKota />} />
+          <Route path="warroom" element={<WarRoom />} />
+          <Route path="aksitiketcritical" element={<AksiTiketCritical />} />
+          <Route path="notifwarroom" element={<NotifWarRoom />} />
         </Route>
 
         {/* Layout PEGAWAI */}
@@ -217,8 +224,6 @@ function App() {
         {/* <Route path="/beranda" element={<Beranda />} /> */}
 
         {/* KOMENTARI DULU SAMPAI FILE NYA DIPERBAIKI: */}
-        {/* <Route path="/pelaporanonline" element={<PelaporanOnline />} /> */}
-        <Route path="/pelaporanonline" element={<PelaporanOnline />} />
         <Route path="/formlaporan" element={<FormLaporan />} />
         <Route path="/pelacakan" element={<Pelacakan />} />
         <Route path="/pengajuan" element={<Pengajuan />} />
@@ -256,7 +261,6 @@ function App() {
         <Route path="/notifmaintenance" element={<NotifMaintenance />} />
         <Route path="/notifdarurat" element={<NotifDarurat />} />
         <Route path="/notifumum" element={<NotifUmum />} />
-<<<<<<< HEAD
 
         <Route path="/detailbidang" element={<DetailBidang />} />
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
@@ -300,15 +304,13 @@ function App() {
         />
         <Route path="/kotakmasukbidang" element={<KotakMasukBidang />} />
         <Route path="/kotakmasukopd" element={<KotakMasukOpd />} />
-=======
         <Route path="riwayat" element={<Riwayat />} />
         <Route path="lihathistory" element={<LihatHistory />} />
-        <Route path="lihatrating" element={<LihatRating />} />
+        <Route path="lihatratingbidang" element={<LihatRatingBidang />} />
         <Route path="berirating" element={<BeriRating />} />
         <Route path="reopenpegawai" element={<ReopenPegawai />} />
         <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
         <Route path="riwayatmasyarakat" element={<RiwayatMasyarakat />} />
->>>>>>> Riwayathd
       </Routes>
     </Router>
   );

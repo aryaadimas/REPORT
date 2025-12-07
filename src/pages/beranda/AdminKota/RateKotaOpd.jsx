@@ -4,68 +4,113 @@ import { useParams, useNavigate } from "react-router-dom";
 
 export default function RateKotaOpd() {
   const [activeTab, setActiveTab] = useState("Pelaporan");
-  const { opdName } = useParams(); // ambil nama dinas dari URL
+  const { opdName } = useParams();
   const navigate = useNavigate();
 
-  // === Dummy Data ===
+  // === Dummy Data sesuai gambar ===
   const data = [
     {
-      nama: "Budi Winarto",
+      nama: "Doni Ridho",
       foto: "/assets/Bokuto.jpg",
-      perihal: "Jaringan & Konektivitas",
-      masuk: "02/09/2024",
-      selesai: "10/09/2024",
-      rating: 5,
+      tglAwal: "18/09/2024",
+      tglSelesai: "18/09/2024",
+      dataAset: "Laptop Lenovo ThinkPad X230",
+      noSeri: "INV-TP-X230-001",
+      rating: 4,
     },
     {
-      nama: "Eliy Serlia",
+      nama: "Rio Widoro",
       foto: "/assets/Suika.jpg",
-      perihal: "Jaringan & Konektivitas",
-      masuk: "02/09/2024",
-      selesai: "10/09/2024",
+      tglAwal: "18/09/2024",
+      tglSelesai: "18/09/2024",
+      dataAset: "Printer HP LaserJet Pro P1102w",
+      noSeri: "HP-LJ-P1102W-001",
       rating: 4,
     },
     {
-      nama: "Vina Brita",
+      nama: "La Yustia",
       foto: "/assets/shizuku.jpg",
-      perihal: "Perangkat Keras",
-      masuk: "02/09/2024",
-      selesai: "10/09/2024",
-      rating: 5,
+      tglAwal: "17/09/2024",
+      tglSelesai: "17/09/2024",
+      dataAset: "PC Dell OptiPlex 3020",
+      noSeri: "DELL-OP-3020-001",
+      rating: 3,
     },
     {
-      nama: "Faradia April",
+      nama: "Ridwan Yusuf",
       foto: "/assets/Bokuto.jpg",
-      perihal: "Printer & Peripherals",
-      masuk: "02/09/2024",
-      selesai: "10/09/2024",
+      tglAwal: "17/09/2024",
+      tglSelesai: "17/09/2024",
+      dataAset: "-",
+      noSeri: "-",
       rating: 4,
     },
     {
-      nama: "Wawan Mulyto",
+      nama: "Elia Meisya",
       foto: "/assets/Suika.jpg",
-      perihal: "Perangkat Keras",
-      masuk: "02/09/2024",
-      selesai: "10/09/2024",
-      rating: 5,
+      tglAwal: "17/09/2024",
+      tglSelesai: "17/09/2024",
+      dataAset: "Printer Canon PIXMA MP287",
+      noSeri: "CANON-MP-287-001",
+      rating: 3,
     },
     {
-      nama: "Galang Wadi",
+      nama: "Sri Wulandari",
       foto: "/assets/shizuku.jpg",
-      perihal: "Keamanan",
-      masuk: "01/09/2024",
-      selesai: "09/09/2024",
-      rating: 5,
+      tglAwal: "16/09/2024",
+      tglSelesai: "16/09/2024",
+      dataAset: "Laptop HP EliteBook 840",
+      noSeri: "HP-EB-840-001",
+      rating: 4,
     },
     {
-      nama: "Joko Erwan",
+      nama: "Supriatno",
       foto: "/assets/Bokuto.jpg",
-      perihal: "Email & Komunikasi",
-      masuk: "31/08/2024",
-      selesai: "07/09/2024",
+      tglAwal: "16/09/2024",
+      tglSelesai: "16/09/2024",
+      dataAset: "Printer Epson L310",
+      noSeri: "EPSON-L310-001",
+      rating: 3,
+    },
+    {
+      nama: "Anya Rosalina",
+      foto: "/assets/Suika.jpg",
+      tglAwal: "16/09/2024",
+      tglSelesai: "16/09/2024",
+      dataAset: "-",
+      noSeri: "-",
       rating: 4,
+    },
+    {
+      nama: "Widya Karim",
+      foto: "/assets/shizuku.jpg",
+      tglAwal: "15/09/2024",
+      tglSelesai: "15/09/2024",
+      dataAset: "PC Dell OptiPlex 3020",
+      noSeri: "DELL-OP-3020-002",
+      rating: 4,
+    },
+    {
+      nama: "Rudiono",
+      foto: "/assets/Bokuto.jpg",
+      tglAwal: "15/09/2024",
+      tglSelesai: "15/09/2024",
+      dataAset: "-",
+      noSeri: "-",
+      rating: 3,
     },
   ];
+
+  // === Unique No. Seri from data for dropdown ===
+  const uniqueNoSeri = Array.from(
+    new Set(data.map((item) => item.noSeri).filter((noSeri) => noSeri !== "-"))
+  );
+
+  // Fungsi untuk handle klik ikon aksi (Eye)
+  const handleLihatRating = (item) => {
+    console.log("Lihat rating untuk:", item.nama);
+    navigate("/lihatratingkota");
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -100,23 +145,38 @@ export default function RateKotaOpd() {
       {/* === Filter Section === */}
       <div className="bg-white shadow rounded-xl p-4 space-y-3">
         <div className="flex justify-between items-center">
-          <h2 className="text-sm font-semibold text-gray-700">Filter Pencarian</h2>
+          <h2 className="text-sm font-semibold text-gray-700">
+            Filter pencarian
+          </h2>
           <button className="flex items-center gap-2 bg-[#0F2C59] text-white px-3 py-1.5 rounded-lg text-sm hover:bg-[#15397A]">
             <RefreshCcw size={14} />
             Refresh
           </button>
         </div>
 
-        <div className="flex gap-3">
-          <select className="border border-gray-300 rounded-lg p-2 text-sm w-1/2">
-            <option>Semua</option>
-            <option>Jaringan & Konektivitas</option>
-            <option>Perangkat Keras</option>
-            <option>Email & Komunikasi</option>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Data Aset */}
+          <select className="border border-gray-300 rounded-lg p-2 text-sm">
+            <option>Data Aset</option>
+            <option>Laptop</option>
+            <option>Printer</option>
+            <option>PC</option>
+            <option>Monitor</option>
           </select>
 
-          <select className="border border-gray-300 rounded-lg p-2 text-sm w-1/2">
-            <option>Semua</option>
+          {/* No. Seri - Changed to dropdown */}
+          <select className="border border-gray-300 rounded-lg p-2 text-sm">
+            <option>No. Seri</option>
+            {uniqueNoSeri.map((noSeri, index) => (
+              <option key={index} value={noSeri}>
+                {noSeri}
+              </option>
+            ))}
+          </select>
+
+          {/* Rating */}
+          <select className="border border-gray-300 rounded-lg p-2 text-sm">
+            <option>Rating</option>
             <option>⭐⭐⭐⭐⭐</option>
             <option>⭐⭐⭐⭐</option>
             <option>⭐⭐⭐</option>
@@ -133,9 +193,10 @@ export default function RateKotaOpd() {
             <tr>
               {[
                 "Pengirim",
-                "Perihal",
-                "Tanggal Masuk",
-                "Tanggal Selesai",
+                "Tgl. Awal",
+                "Tgl. Selesai",
+                "Data Aset",
+                "Nomor Seri",
                 "Rating",
                 "Aksi",
               ].map((header) => (
@@ -155,12 +216,15 @@ export default function RateKotaOpd() {
                       alt={item.nama}
                       className="w-10 h-10 rounded-full object-cover"
                     />
-                    <span className="text-gray-800 font-medium">{item.nama}</span>
+                    <span className="text-gray-800 font-medium">
+                      {item.nama}
+                    </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-700">{item.perihal}</td>
-                <td className="px-4 py-3 text-gray-700">{item.masuk}</td>
-                <td className="px-4 py-3 text-gray-700">{item.selesai}</td>
+                <td className="px-4 py-3 text-gray-700">{item.tglAwal}</td>
+                <td className="px-4 py-3 text-gray-700">{item.tglSelesai}</td>
+                <td className="px-4 py-3 text-gray-700">{item.dataAset}</td>
+                <td className="px-4 py-3 text-gray-700">{item.noSeri}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
                     {[...Array(5)].map((_, idx) => (
@@ -177,7 +241,11 @@ export default function RateKotaOpd() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <button className="text-[#0F2C59] hover:text-[#15397A]">
+                  <button
+                    onClick={() => handleLihatRating(item)}
+                    className="text-[#0F2C59] hover:text-[#15397A] p-1 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Lihat Detail Rating"
+                  >
                     <Eye size={16} />
                   </button>
                 </td>
@@ -189,14 +257,14 @@ export default function RateKotaOpd() {
         {/* === Tombol Kembali & Pagination === */}
         <div className="flex justify-between items-center p-4 border-t text-sm text-gray-600">
           <button
-            onClick={() => navigate("/RateKota")}
+            onClick={() => navigate("/ratekota")}
             className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-all"
           >
             Kembali
           </button>
 
           <div className="flex items-center gap-6">
-            <p>Menampilkan 1 - 10 dari 40 data</p>
+            <p>Menampilkan data 1 sampai 10 dari 33 data</p>
             <div className="flex gap-2">
               <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">
                 &lt;

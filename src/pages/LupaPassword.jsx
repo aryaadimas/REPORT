@@ -55,7 +55,7 @@ const LupaPassword = () => {
       localStorage.setItem("resetEmail", formData.email);
 
       // Navigasi langsung ke halaman MasukKode
-      navigate("/MasukKode", {
+      navigate("/KataSandiBaru", {
         state: { email: formData.email },
       });
     } catch (error) {

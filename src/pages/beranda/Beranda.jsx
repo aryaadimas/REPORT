@@ -1,6 +1,6 @@
 import { Plus, Menu, X, Bell, Calendar } from "lucide-react";
 import { Calender } from "../../components/beranda/Calender";
-import LeftSidebar from "../../components/Layout/LeftSidebar";
+import LeftSidebar from "../../components/LeftSidebar";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Eye } from "lucide-react";
@@ -11,12 +11,13 @@ export function Beranda() {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [showLogoutWarning, setShowLogoutWarning] = useState(false); // State untuk modal logout
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const navigate = useNavigate();
   const handleTampilkanSemua = () => {
-  navigate("/riwayat");
-};
+    navigate("/riwayat");
+  };
 
   // Menutup dropdown ketika klik di luar
   useEffect(() => {
@@ -47,8 +48,25 @@ export function Beranda() {
     } else if (item === "Tampilan") {
       navigate("/tampilan");
     } else if (item === "Keluar") {
-      navigate("/login");
+      // Tampilkan modal konfirmasi logout
+      setShowLogoutWarning(true);
     }
+  };
+
+  // Fungsi untuk konfirmasi logout
+  const handleConfirmLogout = () => {
+    // Lakukan proses logout di sini (clear token, dll)
+    // Contoh: localStorage.removeItem("token");
+    // localStorage.removeItem("userData");
+
+    setShowLogoutWarning(false);
+    setIsDropdownOpen(false);
+    navigate("/login");
+  };
+
+  // Fungsi untuk membatalkan logout
+  const handleCancelLogout = () => {
+    setShowLogoutWarning(false);
   };
 
   // Fungsi untuk toggle notifikasi
@@ -90,12 +108,12 @@ export function Beranda() {
 
   // Fungsi untuk navigasi ke halaman Pelaporan Online
   const handlePelaporanOnline = () => {
-    navigate("/PelaporanOnline");
+    navigate("/FormLaporan");
   };
 
   // Fungsi untuk navigasi ke halaman Pengajuan
   const handlePengajuan = () => {
-    navigate("/Pengajuan");
+    navigate("/FormPengajuan");
   };
 
   // Fungsi untuk navigasi ke halaman Knowledge Base
@@ -109,64 +127,61 @@ export function Beranda() {
   };
 
   // === Tambahkan di atas return ===
-const riwayatLaporan = [
-  {
-    id: "LPR321336",
-    nama: "Gangguan Router",
-    tanggalSelesai: "17-07-2025",
-  },
-  {
-    id: "LYN651289",
-    nama: "Permintaan Printer",
-    tanggalSelesai: "17-07-2025",
-  },
-  // kamu bisa tambahkan data lain di sini untuk testing
-];
+  const riwayatLaporan = [
+    {
+      id: "LPR321336",
+      nama: "Gangguan Router",
+      tanggalSelesai: "17-07-2025",
+    },
+    {
+      id: "LYN651289",
+      nama: "Permintaan Printer",
+      tanggalSelesai: "17-07-2025",
+    },
+    // kamu bisa tambahkan data lain di sini untuk testing
+  ];
 
-// Ambil hanya 2 data terbaru
-const dataTerbaru = riwayatLaporan.slice(0, 2);
+  // Ambil hanya 2 data terbaru
+  const dataTerbaru = riwayatLaporan.slice(0, 2);
 
-const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
-const popupRef = useRef(null);
-const [isDragging, setIsDragging] = useState(false);
-const [position, setPosition] = useState({
-  x: window.innerWidth - 380, // posisi awal di kanan bawah
-  y: window.innerHeight - 450, 
-});
-const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-const handleMouseDown = (e) => {
-  setIsDragging(true);
-  const rect = popupRef.current.getBoundingClientRect();
-  setOffset({
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
+  const popupRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({
+    x: window.innerWidth - 380, // posisi awal di kanan bawah
+    y: window.innerHeight - 450,
   });
-};
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-useEffect(() => {
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setPosition({
-      x: e.clientX - offset.x,
-      y: e.clientY - offset.y,
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    const rect = popupRef.current.getBoundingClientRect();
+    setOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     });
   };
 
-  const handleMouseUp = () => setIsDragging(false);
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - offset.x,
+        y: e.clientY - offset.y,
+      });
+    };
 
-  document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("mouseup", handleMouseUp);
+    const handleMouseUp = () => setIsDragging(false);
 
-  return () => {
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
-  };
-}, [isDragging, offset]);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
-
-
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, offset]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
@@ -507,77 +522,74 @@ useEffect(() => {
 
         {/* riwayat laporan */}
         <div className="mt-6 md:mt-8">
-  <hr className="border-gray-300 mb-4" />
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-lg md:text-xl font-semibold text-left">
-      Riwayat Laporan
-    </h2>
-    <button
-  onClick={handleTampilkanSemua}
-  className="text-[#226597] text-sm font-medium hover:underline transition"
->
-  Tampilkan semua
-</button>
-
-  </div>
-
-  {/* Jika tidak ada data */}
-  {dataTerbaru.length === 0 ? (
-    <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center mb-4 shadow-sm border border-gray-200">
-      <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-xs md:text-sm">
-        !
-      </div>
-      <p className="text-gray-600 text-xs md:text-sm text-left">
-        Tidak ada riwayat laporan untuk ditampilkan
-      </p>
-    </div>
-  ) : (
-    <div className="bg-white rounded-xl md:rounded-2xl p-4 shadow-sm border border-gray-200">
-      {dataTerbaru.slice(0, 2).map((laporan, index) => (
-        <div
-          key={index}
-          className="flex justify-between items-center border-b last:border-0 py-4"
-        >
-          {/* Bagian kiri (info laporan) */}
-          <div className="grid grid-cols-3 gap-4 w-full">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">ID:</p>
-              <p className="text-sm font-semibold text-gray-800">
-                {laporan.id}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Nama:</p>
-              <p className="text-sm font-semibold text-gray-800">
-                {laporan.nama}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Tanggal Selesai:</p>
-              <p className="text-sm font-semibold text-gray-800">
-                {laporan.tanggalSelesai}
-              </p>
-            </div>
-          </div>
-
-          {/* Aksi di kanan */}
-          <div className="flex gap-4 ml-6 pr-2">
+          <hr className="border-gray-300 mb-4" />
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg md:text-xl font-semibold text-left">
+              Riwayat Laporan
+            </h2>
             <button
-              className="text-[#226597] hover:text-[#153d6a] transition transform hover:scale-110"
-              title="Lihat Detail"
+              onClick={handleTampilkanSemua}
+              className="text-[#226597] text-sm font-medium hover:underline transition"
             >
-              <Eye size={20} />
+              Tampilkan semua
             </button>
           </div>
+
+          {/* Jika tidak ada data */}
+          {dataTerbaru.length === 0 ? (
+            <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center mb-4 shadow-sm border border-gray-200">
+              <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-xs md:text-sm">
+                !
+              </div>
+              <p className="text-gray-600 text-xs md:text-sm text-left">
+                Tidak ada riwayat laporan untuk ditampilkan
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl md:rounded-2xl p-4 shadow-sm border border-gray-200">
+              {dataTerbaru.slice(0, 2).map((laporan, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border-b last:border-0 py-4"
+                >
+                  {/* Bagian kiri (info laporan) */}
+                  <div className="grid grid-cols-3 gap-4 w-full">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">ID:</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {laporan.id}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Nama:</p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {laporan.nama}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">
+                        Tanggal Selesai:
+                      </p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {laporan.tanggalSelesai}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Aksi di kanan */}
+                  <div className="flex gap-4 ml-6 pr-2">
+                    <button
+                      className="text-[#226597] hover:text-[#153d6a] transition transform hover:scale-110"
+                      title="Lihat Detail"
+                    >
+                      <Eye size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      ))}
-    </div>
-  )}
-</div>
-
-
-
-
       </div>
 
       {/* Right Sidebar - Responsif untuk semua perangkat */}
@@ -680,7 +692,10 @@ useEffect(() => {
                   </div>
 
                   {/* Status Tiket Diperbarui */}
-                  <div className="px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => navigate("/notifdiproses")}>
+                  <div
+                    className="px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate("/notifdiproses")}
+                  >
                     <div className="flex items-start gap-2">
                       <svg
                         width="32"
@@ -725,7 +740,10 @@ useEffect(() => {
                   </div>
 
                   {/* Pengumuman */}
-                  <div className="px-3 py-2 hover:bg-gray-50 cursor-pointer" onClick={() => navigate("/notifmaintenance")}> 
+                  <div
+                    className="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate("/notifmaintenance")}
+                  >
                     <div className="flex items-start gap-2">
                       <svg
                         width="32"
@@ -897,8 +915,6 @@ useEffect(() => {
         <div className="bg-white lg:bg-transparent rounded-xl p-4 lg:p-0">
           <Calender />
         </div>
-
-
       </div>
 
       {/* Overlay for right sidebar di mobile */}
@@ -908,8 +924,54 @@ useEffect(() => {
           onClick={() => setIsRightSidebarOpen(false)}
         ></div>
       )}
-      <HelpdeskPopup />
 
+      {/* Modal Konfirmasi Logout */}
+      {showLogoutWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <svg
+                  width="70"
+                  height="70"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
+                    fill="#FF5F57"
+                  />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Apakah Anda yakin ingin keluar?
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Anda akan diarahkan ke halaman login.
+              </p>
+
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <button
+                  onClick={handleConfirmLogout}
+                  className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors"
+                >
+                  Ya, keluar
+                </button>
+                <button
+                  onClick={handleCancelLogout}
+                  className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <HelpdeskPopup />
     </div>
   );
 }

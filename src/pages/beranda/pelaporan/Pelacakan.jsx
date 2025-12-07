@@ -128,7 +128,6 @@ const Pelacakan = () => {
                       value={reportId}
                       onChange={handleReportIdChange}
                       className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm md:text-base"
-                      placeholder="Masukkan ID Laporan"
                     />
                   </div>
                 </div>
