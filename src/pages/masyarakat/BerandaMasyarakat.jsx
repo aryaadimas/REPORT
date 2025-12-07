@@ -2,11 +2,14 @@ import { Plus, Menu, X, Bell, Calendar } from "lucide-react";
 import { Calender } from "../../components/beranda/Calender";
 import LeftSidebar from "../../components/LeftSidebar";
 import SidebarMasyarakat from "./SidebarMasyarakat";
+import LeftSidebar from "../../components/Layout/LeftSidebar";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HelpdeskPopup from "../../components/HelpdeskPopup";
 
 export function BerandaMasyarakat() {
+export default function BerandaMasyarakat() {
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -152,6 +155,14 @@ export function BerandaMasyarakat() {
             ))}
           </div>
         </div>
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Sidebar - Always visible on desktop, hidden on mobile unless toggled */}
+      <div
+        className={`${isMobileSidebarOpen ? "block" : "hidden"} md:block w-72`}
+      >
+        <LeftSidebar />
+      </div>
 
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 p-6 overflow-auto">
@@ -334,13 +345,41 @@ export function BerandaMasyarakat() {
 
           <div className="mt-8">
             <hr className="border-gray-300 mb-4" />
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-2xl font-semibold text-left">
-                Riwayat Laporan
-              </h2>
-              <button
-                onClick={() => navigate("/riwayatmasyarakat")}
-                className="text-[#226597] text-sm font-semibold hover:underline"
+            <h2 className="text-xl md:text-2xl font-semibold mb-4 text-left">
+              Riwayat Laporan
+            </h2>
+
+            {/* Card peringatan */}
+            <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center mb-4 shadow-sm border border-gray-200">
+              <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-xs md:text-sm">
+                !
+              </div>
+              <p className="text-gray-600 text-xs md:text-sm text-left">
+                Tidak ada riwayat laporan untuk ditampilkan
+              </p>
+            </div>
+
+            {/* Tombol dengan navigasi */}
+            <button
+              onClick={handlePelaporanOnline}
+              className="relative z-10 self-start px-6 py-3 border border-white rounded-full font-bold hover:bg-white hover:text-[#226597] transition text-sm md:text-base"
+            >
+              Buat Laporan <Plus size={16} className="inline ml-2" />
+            </button>
+          </div>
+        </div>
+
+        {/* Layanan Section */}
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-left">
+            Layanan
+          </h2>
+          <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+            {/* Card 1 - Knowledge Base */}
+            <div className="flex flex-col items-center">
+              <div
+                onClick={handleKnowledgeBase}
+                className="w-32 h-32 md:w-40 md:h-40 bg-[#226597] rounded-2xl flex items-center justify-center hover:shadow cursor-pointer transition-transform hover:scale-105"
               >
                 Tampilkan semua
               </button>
@@ -360,15 +399,36 @@ export function BerandaMasyarakat() {
                 },
               ];
 
-              if (riwayatData.length === 0) {
-                return (
-                  <div className="bg-white rounded-2xl p-4 flex items-center shadow-sm border border-gray-200">
-                    <div className="w-6 h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-sm">
-                      !
-                    </div>
-                    <p className="text-gray-600 text-base">
-                      Tidak ada riwayat laporan untuk ditampilkan
-                    </p>
+        {/* Riwayat Laporan */}
+        <div className="mt-6 md:mt-8">
+          <hr className="border-gray-300 mb-4" />
+
+          {/* Header Section */}
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl md:text-2xl font-semibold text-left">
+              Riwayat Laporan
+            </h2>
+            <button
+              onClick={() => navigate("/riwayatmasyarakat")}
+              className="text-[#226597] text-sm font-semibold hover:underline"
+            >
+              Tampilkan semua
+            </button>
+          </div>
+
+          {/* Data Riwayat */}
+          {(() => {
+            const riwayatData = [
+              // contoh: isi atau kosongkan array ini untuk tes
+              { id: "LPR321336", nama: "Gangguan Router", tanggal: "17-07-2025" },
+              { id: "LYN651289", nama: "Permintaan Printer", tanggal: "17-07-2025" },
+            ];
+
+            if (riwayatData.length === 0) {
+              return (
+                <div className="bg-white rounded-xl md:rounded-2xl p-4 flex items-center shadow-sm border border-gray-200">
+                  <div className="w-6 h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-sm">
+                    !
                   </div>
                 );
               }
@@ -737,6 +797,29 @@ export function BerandaMasyarakat() {
         <div className="min-h-0">
           <Calender />
         </div>
+
+        {/* ChatBot */}
+        <div className="bg-white rounded-lg border p-3 flex items-center gap-2">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 58 59"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-8 h-8"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M52.0548 15.2007V38.2556C52.0548 39.7842 51.4476 41.2502 50.3667 42.3311C49.2858 43.412 47.8198 44.0193 46.2911 44.0193H31.8818L17.4726 55.5467V44.0193H11.7089C10.1802 44.0193 8.71422 43.412 7.63331 42.3311C6.55241 41.2502 5.94516 39.7842 5.94516 38.2556V15.2007C5.94516 13.6721 6.55241 12.2061 7.63331 11.1252C8.71422 10.0443 10.1802 9.43701 11.7089 9.43701H46.2911C47.8198 9.43701 49.2858 10.0443 50.3667 11.1252C51.4476 12.2061 52.0548 13.6721 52.0548 15.2007ZM20.3544 23.8463H14.5907V29.61H20.3544V23.8463ZM26.1181 23.8463H31.8818V29.61H26.1181V23.8463ZM43.4093 23.8463H37.6456V29.61H43.4093V23.8463Z"
+              fill="#226597"
+            />
+          </svg>
+          <span className="font-medium text-[#226597] text-sm md:text-base">
+            Tanya Helpdesk
+          </span>
+        </div>
+        
       </div>
 
       {/* Modal Konfirmasi Logout */}

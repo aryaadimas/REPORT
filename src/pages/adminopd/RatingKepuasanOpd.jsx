@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 const RatingKepuasanOPD = () => {
   const [activeTab, setActiveTab] = useState("pelaporan");

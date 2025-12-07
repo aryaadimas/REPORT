@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { NavLink } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 export default function StatistikPrioritas() {
   const [mainTab, setMainTab] = useState("Pelaporan");

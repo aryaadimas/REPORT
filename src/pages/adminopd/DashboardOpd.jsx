@@ -13,7 +13,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 const DashboardOpd = () => {
   const [activeTab, setActiveTab] = useState("pelaporan");

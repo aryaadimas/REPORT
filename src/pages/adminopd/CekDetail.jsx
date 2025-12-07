@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { XCircle, Menu, X, Bell } from "lucide-react";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 const CekDetail = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);

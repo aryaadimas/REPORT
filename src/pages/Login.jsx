@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const LogIn = () => {
   const [formData, setFormData] = useState({
@@ -32,7 +33,85 @@ const LogIn = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const email = formData.email.toLowerCase().trim();
+    setErrors({
+      email: "",
+      password: "",
+    });
+
+    // === DUMMY LOGIN (TAMBAHAN) ===
+    const dummyUsers = [
+      {
+        email: "masyarakat@gmail.com",
+        password: "masyarakat123",
+        role: "masyarakat",
+        redirect: "/berandamasyarakat",
+      },
+      {
+        email: "seksi@gmail.com",
+        password: "seksi123",
+        role: "seksi",
+        redirect: "/berandaseksi",
+      },
+      {
+        email: "bidang@gmail.com",
+        password: "bidang123",
+        role: "bidang",
+        redirect: "/dashboardbidang",
+      },
+      {
+        email: "adminkota@gmail.com",
+        password: "adminkota123",
+        role: "admin kota",
+        redirect: "/dashboardkota",
+      },
+      {
+        email: "adminopd@gmail.com",
+        password: "adminopd123",
+        role: "admin opd",
+        redirect: "/dashboardopd",
+      },
+      {
+        email: "teknisi@gmail.com",
+        password: "teknisi123",
+        role: "teknisi",
+        redirect: "/dashboardteknisi",
+      },
+      {
+        email: "pegawai@gmail.com",
+        password: "pegawai123",
+        role: "pegawai",
+        redirect: "/beranda",
+      },
+    ];
+
+    const matched = dummyUsers.find(
+      (user) =>
+        user.email === formData.email &&
+        user.password === formData.password
+    );
+
+    if (matched) {
+      localStorage.setItem("role", matched.role);
+      Swal.fire({
+  title: `Anda login sebagai ${matched.role}`,
+  icon: "success",
+  timer: 2000,
+  showConfirmButton: false,
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  didClose: () => {
+    navigate(matched.redirect);
+  }
+});
+return;
+
+    }
+    // === END DUMMY LOGIN ===
+
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+    };
 
     try {
       const response = await fetch(
@@ -53,13 +132,18 @@ const LogIn = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("Login error data:", errorData);
-        alert(
-          `Login gagal: ${
-            errorData.detail || errorData.message || "Email atau password salah"
-          }`
-        );
-        setIsLoading(false);
+
+        if (response.status === 401) {
+          if (errorData.message?.toLowerCase().includes("email")) {
+            setErrors({ email: "Email salah", password: "" });
+          } else if (errorData.message?.toLowerCase().includes("password")) {
+            setErrors({ email: "", password: "Kata sandi salah" });
+          } else {
+            setErrors({ email: "Email salah", password: "Kata sandi salah" });
+          }
+        } else {
+          throw new Error("Login gagal!");
+        }
         return;
       }
 
@@ -112,6 +196,8 @@ const LogIn = () => {
         }
       } catch (profileError) {
         console.warn("Error saat fetch profil:", profileError);
+      if (data.token) {
+        localStorage.setItem("token", data.token);
       }
 
       alert("Login berhasil!");
@@ -150,6 +236,12 @@ const LogIn = () => {
       }
     } finally {
       setIsLoading(false);
+      console.error("Error:", error);
+
+      setErrors({
+        email: "Terjadi kesalahan",
+        password: "Terjadi kesalahan",
+      });
     }
   };
 
@@ -157,6 +249,7 @@ const LogIn = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
+
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"

@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 export default function StatistikBulanan() {
   const [mainTab, setMainTab] = useState("Pelaporan");

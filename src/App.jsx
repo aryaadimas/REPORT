@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"; // 🔹 TAMBAH Navigate DI SINI
 import { Beranda } from "./pages/beranda/Beranda";
-import { BerandaMasyarakat } from "./pages/masyarakat/BerandaMasyarakat";
+import  BerandaMasyarakat from "./pages/masyarakat/BerandaMasyarakat";
 
 //*-- Auth --*/
 import Register from "./pages/Register";
@@ -138,6 +138,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* 🔹 INI YANG BIKIN PERTAMA KALI BUKA LANGSUNG KE LOGIN */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Halaman dengan Layout */}
         <Route path="/" element={<LayoutSeksi />}>
           <Route path="berandaseksi" element={<BerandaSeksi />} />
@@ -220,10 +223,8 @@ function App() {
           <Route path="kbmasyarakat" element={<KBMasyarakat />} />
         </Route>
 
-        {/* HAPUS DUPLIKAT INI: */}
-        {/* <Route path="/beranda" element={<Beranda />} /> */}
-
-        {/* KOMENTARI DULU SAMPAI FILE NYA DIPERBAIKI: */}
+        {/* KOMENTAR DULU DULU: */}
+        <Route path="/pelaporanonline" element={<PelaporanOnline />} />
         <Route path="/formlaporan" element={<FormLaporan />} />
         <Route path="/pelacakan" element={<Pelacakan />} />
         <Route path="/pengajuan" element={<Pengajuan />} />
@@ -239,7 +240,6 @@ function App() {
         <Route path="/dashboardopd" element={<DashboardOpd />} />
         <Route path="/cekdetail" element={<CekDetail />} />
         <Route path="/knowledgebasedraft" element={<KnowledgeBaseDraft />} />
-
         <Route
           path="/knowledgebasediajukan"
           element={<KnowledgeBaseDiajukan />}
@@ -251,7 +251,6 @@ function App() {
         <Route path="/formmasyarakat" element={<FormMasyarakat />} />
         <Route path="/landingpage" element={<LandingPage />} />
         <Route path="/helpdesk" element={<HelpdeskChat />} />
-
         <Route path="/statistikkategori" element={<StatistikKategori />} />
         <Route path="/statistikprioritas" element={<StatistikPrioritas />} />
         <Route path="/statistiktahunan" element={<StatistikTahunan />} />
@@ -264,9 +263,7 @@ function App() {
 
         <Route path="/detailbidang" element={<DetailBidang />} />
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
-
         <Route path="/layoutpegawai" element={<LayoutPegawai />} />
-
         <Route path="/profilsaya" element={<Profil />} />
         <Route path="/tampilan" element={<Tampilan />} />
         <Route path="/tampilanmasyarakat" element={<TampilanMasyarakat />} />
@@ -284,10 +281,6 @@ function App() {
           element={<NotifDaruratMasyarakat />}
         />
         <Route path="/ndibuatmasyarakat" element={<NotifDibuatMasyarakat />} />
-        <Route
-          path="/ndiprosesmasyarakat"
-          element={<NotifDiprosesMasyarakat />}
-        />
         <Route
           path="/ndiprosesmasyarakat"
           element={<NotifDiprosesMasyarakat />}

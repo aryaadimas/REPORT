@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import LayoutOpd from "../../components/Layout/LayoutOpd";
+import LayoutOpd from "../../components/Layout/LayoutOPD";
 import KnowledgeBaseDiajukan from "./KnowledgeBaseDiajukan";
 
 const KnowledgeBaseDraft = () => {

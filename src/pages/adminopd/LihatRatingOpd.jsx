@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from "react";
-import {
-  StarIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/24/solid";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { StarIcon } from "@heroicons/react/24/solid";
+import { useNavigate } from "react-router-dom";
 import LayoutOpd from "../../components/Layout/LayoutOpd";
 
 const LihatRatingOpd = () => {
