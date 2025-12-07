@@ -7,10 +7,12 @@ export default function FormMasyarakat() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showCancelWarning, setShowCancelWarning] = useState(false); // Tambahkan state untuk warning
   const [formData, setFormData] = useState({
     nama: "Lomon Kahiel",
     nik: "3578651360230002",
     email: "lomonkahiel@gmail.com",
+    judulPelaporan: "",
     rincianMasalah: "",
   });
 
@@ -28,6 +30,7 @@ export default function FormMasyarakat() {
       formData.nama.trim() !== "" &&
       formData.nik.trim() !== "" &&
       formData.email.trim() !== "" &&
+      formData.judulPelaporan.trim() !== "" &&
       formData.rincianMasalah.trim() !== "" &&
       uploadedFiles.length > 0
     );
@@ -109,13 +112,19 @@ export default function FormMasyarakat() {
   };
 
   const handleBatalkan = () => {
-    if (
-      window.confirm(
-        "Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang."
-      )
-    ) {
-      navigate(-1);
-    }
+    // Tampilkan popup warning ketika tombol batalkan diklik
+    setShowCancelWarning(true);
+  };
+
+  const handleConfirmCancel = () => {
+    // Konfirmasi batalkan dan navigasi
+    setShowCancelWarning(false);
+    navigate(-1);
+  };
+
+  const handleCancelCancel = () => {
+    // Batal konfirmasi, tutup popup
+    setShowCancelWarning(false);
   };
 
   return (
@@ -124,8 +133,7 @@ export default function FormMasyarakat() {
         {/* Main Content - Simple structure tanpa complex positioning */}
         <div className="pt-4 pb-8">
           {/* Header Section - Simple tanpa background complex */}
-          <div className="px-4 mb-8">
-          </div>
+          <div className="px-4 mb-8"></div>
 
           {/* Form Section */}
           <div className="px-4">
@@ -190,6 +198,22 @@ export default function FormMasyarakat() {
                         {formData.email}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Judul Pelaporan */}
+                  <div className="space-y-2 text-left">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Judul Pelaporan
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ketik disini"
+                      value={formData.judulPelaporan}
+                      onChange={(e) =>
+                        handleInputChange("judulPelaporan", e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-sm"
+                    />
                   </div>
 
                   {/* Rincian Masalah */}
@@ -350,6 +374,52 @@ export default function FormMasyarakat() {
                   </button>
                   <button
                     onClick={() => setShowConfirmation(false)}
+                    className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Batalkan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div> 
+        )}
+
+        {/* Popup Warning Batalkan */}
+        {showCancelWarning && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <svg
+                    width="70"
+                    height="70"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
+                      fill="#FF5F57"
+                    />
+                  </svg>
+                </div>
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Apakah Anda yakin ingin kembali?
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Data yang Anda inputkan tidak akan tersimpan!
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors"
+                  >
+                    Ya, saya yakin!
+                  </button>
+                  <button
+                    onClick={handleCancelCancel}
                     className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
                   >
                     Batalkan

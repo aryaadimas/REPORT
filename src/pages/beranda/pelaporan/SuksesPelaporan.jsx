@@ -1,10 +1,12 @@
 import { Download } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 
 export default function SuksesPelayanan() {
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Ambil data dari FormLaporan melalui state navigasi
   const laporanData = location.state?.laporanData || {};
@@ -12,15 +14,214 @@ export default function SuksesPelayanan() {
   // Data tiket dengan OPD tujuan dari form
   const ticketData = {
     noTiket: "LPR318728",
-    pin: "228973",
+    tanggal: "18-10-2025",
+    waktu: "08:14 A.M.",
     jenisLayanan: "Pelaporan Online",
-    jenisPermohonan: laporanData.opdTujuan || "Dinas Pendidikan", // Ambil dari form
+    opdTujuan: laporanData.opdTujuan || "Dinas Pendidikan",
+    judulPelaporan: laporanData.judulPelaporan || "Router Terganggu",
+    dataAset: laporanData.dataAset || "Printer HP LaserJet Pro P1102w",
+    nomorSeri: laporanData.nomorSeri || "HP-LJ-P1102W-001",
+    kategoriAset: laporanData.kategoriAset || "TI",
+    subKategoriAset: laporanData.subKategoriAset || "Jaringan",
+    jenisAset: laporanData.jenisAset || "Barang",
+    lokasiKejadian: laporanData.lokasiKejadian || "Dispendik Pusat",
+    nama: laporanData.nama || "Sri Wulandari",
+    nip: laporanData.nip || "20001142023052053",
+    divisi: laporanData.divisi || "Divisi Sumber Daya Manusia",
+  };
+
+  // Fungsi untuk generate dan download PDF menggunakan jsPDF
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGenerating(true);
+
+      // Dynamic import jsPDF untuk mengurangi bundle size
+      const { jsPDF } = await import("jspdf");
+
+      // Buat PDF baru
+      const doc = new jsPDF();
+
+      // Set font
+      doc.setFont("helvetica");
+
+      // Header - persis seperti gambar
+      doc.setFontSize(20);
+      doc.setTextColor(0, 0, 0); // Hitam
+      doc.text("Tiket Anda Berhasil Dibuat", 105, 20, { align: "center" });
+
+      doc.setFontSize(16);
+      doc.text("Laporan Anda Telah Berhasil Dikirim", 105, 30, {
+        align: "center",
+      });
+
+      // Deskripsi bahasa Indonesia
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100); // Abu-abu
+      const description =
+        "Terima kasih atas laporan Anda. Laporan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan. Silakan pantau perkembangan laporan melalui menu Cek Status Layanan.";
+      doc.text(description, 105, 45, { align: "center", maxWidth: 180 });
+
+      // Garis pemisah
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 60, 190, 60);
+
+      // No. Tiket - tanpa kotak, seperti gambar
+      doc.setFontSize(14);
+      doc.setTextColor(100, 100, 100);
+      doc.text("No. Tiket:", 20, 75);
+
+      doc.setFontSize(24);
+      doc.setTextColor(34, 101, 151); // Warna biru #226597
+      doc.setFont("helvetica", "bold");
+      doc.text(ticketData.noTiket, 105, 75, { align: "center" });
+
+      // Garis pemisah kedua
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 85, 190, 85);
+
+      // Detail tiket: - Header
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.text("Detail tiket:", 20, 95);
+
+      // Data detail - Format tabel seperti gambar (hanya 1 kolom)
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      let yPos = 105;
+      const leftColumnX = 20;
+      const valueColumnX = 80; // Posisi untuk nilai setelah ":"
+
+      // Fungsi untuk menambahkan baris data seperti gambar
+      const addDataRow = (label, value) => {
+        doc.setTextColor(100, 100, 100);
+        doc.text(`${label}`, leftColumnX, yPos);
+        doc.setTextColor(0, 0, 0);
+        // Format dengan titik dua di tengah seperti gambar
+        const labelWidth = doc.getTextWidth(label);
+        const colonX = leftColumnX + labelWidth + 2;
+        doc.text(":", colonX, yPos);
+        doc.text(value, valueColumnX, yPos);
+        yPos += 7;
+      };
+
+      // Data sesuai urutan gambar
+      addDataRow("Nomor Tiket", ticketData.noTiket);
+      addDataRow(
+        "Tanggal / waktu laporan dibuat",
+        `${ticketData.tanggal} / ${ticketData.waktu}`
+      );
+      addDataRow("Jenis Layanan", ticketData.jenisLayanan);
+      addDataRow("Ditujukan ke OPD", ticketData.opdTujuan);
+      addDataRow("Judul Pelaporan", ticketData.judulPelaporan);
+      addDataRow("Data Aset", ticketData.dataAset);
+      addDataRow("Nomor Seri", ticketData.nomorSeri);
+      addDataRow("Kategori Aset", ticketData.kategoriAset);
+      addDataRow("Sub Kategori Aset", ticketData.subKategoriAset);
+      addDataRow("Jenis Aset", ticketData.jenisAset);
+      addDataRow("Nama Aset", "Router"); // Hardcoded seperti gambar
+      addDataRow("Lokasi Kejadian", ticketData.lokasiKejadian);
+
+      // Garis pemisah footer
+      yPos += 5;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, yPos, 190, yPos);
+      yPos += 10;
+
+      // Footer - persis seperti gambar
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+
+      const footerText1 =
+        "Mohon simpan nomor tiket Anda untuk melacak status penyelesaian.";
+      const footerText2 = "Tim kami akan segera menindaklanjuti laporan Anda.";
+      const footerText3 =
+        "Anda dapat memantau progres tiket di menu Cek Status Layanan.";
+
+      doc.text(footerText1, 20, yPos);
+      yPos += 5;
+      doc.text(footerText2, 20, yPos);
+      yPos += 5;
+      doc.text(footerText3, 20, yPos);
+      yPos += 10;
+
+      // Copyright
+      doc.setFontSize(8);
+      doc.text("© 2025 REPORT – Sistem Pelaporan Layanan.", 105, yPos, {
+        align: "center",
+      });
+      yPos += 4;
+      doc.text(
+        "Dokumen dicetak otomatis dan sah tanpa tanda tangan.",
+        105,
+        yPos,
+        { align: "center" }
+      );
+
+      // Simpan PDF
+      doc.save(`Tiket_${ticketData.noTiket}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Gagal mengunduh PDF. Silakan coba lagi.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Fallback jika jsPDF gagal diimport
+  const handleDownloadFallback = () => {
+    // Buat konten teks sederhana
+    const content = `
+TIKET LAPORAN - ${ticketData.noTiket}
+=========================================
+
+Laporan Anda Telah Berhasil Dikirim
+Terima kasih atas laporan Anda. Laporan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan.
+
+No. Tiket: ${ticketData.noTiket}
+
+DETAIL TIKET:
+=============
+Nomor Tiket: ${ticketData.noTiket}
+Tanggal / waktu: ${ticketData.tanggal} / ${ticketData.waktu}
+Jenis Layanan: ${ticketData.jenisLayanan}
+Ditujukan ke OPD: ${ticketData.opdTujuan}
+Judul Pelaporan: ${ticketData.judulPelaporan}
+Data Aset: ${ticketData.dataAset}
+Nomor Seri: ${ticketData.nomorSeri}
+Kategori Aset: ${ticketData.kategoriAset}
+Sub Kategori: ${ticketData.subKategoriAset}
+Jenis Aset: ${ticketData.jenisAset}
+Nama: ${ticketData.nama}
+NIP: ${ticketData.nip}
+Divisi: ${ticketData.divisi}
+Lokasi Kejadian: ${ticketData.lokasiKejadian}
+
+INFORMASI:
+==========
+Mohon simpan nomor tiket Anda untuk melacak status penyelesaian.
+Tim kami akan segera menindaklanjuti laporan Anda.
+Anda dapat memantau progres tiket di menu Cek Status Layanan.
+
+© 2025 REPORT – Sistem Pelaporan Layanan.
+Dokumen dicetak otomatis dan sah tanpa tanda tangan.
+    `;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Tiket_${ticketData.noTiket}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <LayoutPegawai>
       <div className="min-h-screen bg-gray-50 pt-20">
-        {" "}
         {/* Main Content Area */}
         <div className="flex-1 relative overflow-hidden">
           {/* Custom SVG Background */}
@@ -274,7 +475,7 @@ export default function SuksesPelayanan() {
                               OPD Tujuan:
                             </label>
                             <div className="text-sm text-gray-800 bg-gray-50 px-4 py-3 rounded-md text-left">
-                              {ticketData.jenisPermohonan}
+                              {ticketData.opdTujuan}
                             </div>
                           </div>
                         </div>
@@ -285,9 +486,22 @@ export default function SuksesPelayanan() {
 
                 {/* Tombol Unduh Tiket */}
                 <div className="text-right">
-                  <button className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 px-0 py-2 text-sm font-medium transition-colors underline">
-                    <Download className="w-4 h-4" />
-                    Unduh tiket
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isGenerating}
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 px-0 py-2 text-sm font-medium transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                        Membuat PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Unduh tiket
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

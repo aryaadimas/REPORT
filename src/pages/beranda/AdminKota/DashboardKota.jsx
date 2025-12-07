@@ -5,9 +5,9 @@ import {
   Cell,
   Tooltip,
   LineChart,
-  Line, 
+  Line,
   XAxis,
-  YAxis, 
+  YAxis,
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
@@ -18,9 +18,18 @@ export default function DashboardAdminKota() {
   const navigate = useNavigate();
   const [bulanIndex, setBulanIndex] = useState(7); // 7 = Agustus
   const bulanList = [
-    "Januari", "Februari", "Maret", "April",
-    "Mei", "Juni", "Juli", "Agustus",
-    "September", "Oktober", "November", "Desember"
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   const gantiBulan = (arah) => {
@@ -74,21 +83,99 @@ export default function DashboardAdminKota() {
     { name: "30", value: 90 },
   ];
 
+  // Data tabel SESUAI GAMBAR
   const dataTabel = [
-    { nama: "Agung Winarto", perihal: "Email & Komunikasi", tanggal: "22/09/2024", sla: "Tepat waktu", prioritas: "Tinggi", status: "Selesai", foto: "/assets/shizuku.jpg" },
-    { nama: "Fadil Ibrahim", perihal: "Perangkat Lunak", tanggal: "21/09/2024", sla: "Terlambat", prioritas: "Sedang", status: "Proses", foto: "/assets/Suika.jpg" },
-    { nama: "Rama Putra", perihal: "Email", tanggal: "18/09/2024", sla: "Peringatan SLA", prioritas: "Tinggi", status: "Diproses", foto: "/assets/Bokuto.jpg" },
-    { nama: "Dewi Anggraini", perihal: "Komunikasi", tanggal: "15/09/2024", sla: "Sesuai SLA", prioritas: "Sedang", status: "Selesai", foto: "/assets/Bokuto.jpg" },
-    { nama: "Budi Santoso", perihal: "Perangkat Lunak", tanggal: "21/09/2024", sla: "Peringatan SLA", prioritas: "Tinggi", status: "Diproses", foto: "/assets/shizuku.jpg" },
-    { nama: "Ayu Lestari", perihal: "Keamanan", tanggal: "19/09/2024", sla: "Sesuai SLA", prioritas: "Rendah", status: "Selesai", foto: "/assets/Suika.jpg" },
-    { nama: "Dimas Adi", perihal: "Email", tanggal: "17/09/2024", sla: "Sesuai SLA", prioritas: "Sedang", status: "Diproses", foto: "/assets/Suika.jpg" },
-    { nama: "Siti Marlina", perihal: "Komunikasi", tanggal: "22/09/2024", sla: "Peringatan SLA", prioritas: "Tinggi", status: "Selesai", foto: "/assets/shizuku.jpg" },
-    { nama: "Andre Wijaya", perihal: "Perangkat Lunak", tanggal: "16/09/2024", sla: "Sesuai SLA", prioritas: "Rendah", status: "Selesai", foto: "/assets/Suika.jpg" },
-    { nama: "Rani Oktavia", perihal: "Keamanan", tanggal: "23/09/2024", sla: "Peringatan SLA", prioritas: "Sedang", status: "Diproses", foto: "/assets/Bokuto.jpg" },
+    {
+      teknisi: "Arjuna Wirata",
+      dataAset: "Laptop Lenovo ThinkPad X230",
+      nomorSeri: "LNV-TP-X230-001",
+      sla: "Sesuai SLA",
+      prioritas: "Tinggi",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Fadil Ishak",
+      dataAset: "PC Dell OptiPlex 3020",
+      nomorSeri: "DELL-OP-3020-001",
+      sla: "Peringatan SLA",
+      prioritas: "Tinggi",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Katrina Wilan",
+      dataAset: "Laptop HP EliteBook 840",
+      nomorSeri: "HP-EB-840-001",
+      sla: "Sesuai SLA",
+      prioritas: "Rendah",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Ian Farizki",
+      dataAset: "PC Dell OptiPlex 3020",
+      nomorSeri: "DELL-OP-3020-002",
+      sla: "Peringatan SLA",
+      prioritas: "Sedang",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Dewi Inwanto",
+      dataAset: "Printer HP LaserJet Pro PII02w",
+      nomorSeri: "IHP-LJ-PII02W-00IT",
+      sla: "Sesuai SLA",
+      prioritas: "Rendah",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Setya Windara",
+      dataAset: "-",
+      nomorSeri: "-",
+      sla: "Sesuai SLA",
+      prioritas: "Sedang",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Willy Dewaza",
+      dataAset: "Laptop ASUS ZenBook UX305FA",
+      nomorSeri: "ASUS-ZB-UX305-001",
+      sla: "Sesuai SLA",
+      prioritas: "Rendah",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Coki Farezi",
+      dataAset: "Printer Canon PIXMA MP287",
+      nomorSeri: "CANON-MP-287-001",
+      sla: "Sesuai SLA",
+      prioritas: "Sedang",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Irwandi Putra",
+      dataAset: "Laptop Lenovo ThinkPad X230",
+      nomorSeri: "LNV-TP-X230-002",
+      sla: "Sesuai SLA",
+      prioritas: "Rendah",
+      status: "Diproses",
+    },
+    {
+      teknisi: "Julius Simon",
+      dataAset: "-",
+      nomorSeri: "-",
+      sla: "Sesuai SLA",
+      prioritas: "Rendah",
+      status: "Diproses",
+    },
   ];
 
   // === Label Persentase di Dalam Donut ===
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -148,7 +235,9 @@ export default function DashboardAdminKota() {
 
           <div className="bg-gray-50 rounded-xl p-6">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="font-semibold text-gray-800 text-lg">Chart Laporan</h2>
+              <h2 className="font-semibold text-gray-800 text-lg">
+                Chart Laporan
+              </h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => gantiBulan("kiri")}
@@ -182,14 +271,21 @@ export default function DashboardAdminKota() {
                   label={renderCustomizedLabel}
                 >
                   {currentPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={2} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      stroke="#fff"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
 
-            <p className="text-sm text-blue-600 cursor-pointer mt-2">Cek selengkapnya →</p>
+            <p className="text-sm text-blue-600 cursor-pointer mt-2">
+              Cek selengkapnya →
+            </p>
           </div>
         </div>
 
@@ -220,7 +316,9 @@ export default function DashboardAdminKota() {
 
           <div className="bg-gray-50 rounded-xl p-6">
             <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={ticketTab === "tahunan" ? dataTahunan : dataBulanan}>
+              <LineChart
+                data={ticketTab === "tahunan" ? dataTahunan : dataBulanan}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} width={30} />
@@ -244,27 +342,119 @@ export default function DashboardAdminKota() {
               </LineChart>
             </ResponsiveContainer>
 
-            <p className="text-sm text-blue-600 cursor-pointer mt-2">Cek selengkapnya →</p>
+            <p className="text-sm text-blue-600 cursor-pointer mt-2">
+              Cek selengkapnya →
+            </p>
           </div>
         </div>
       </div>
 
-      {/* === MONITORING OPD === */}
+      {/* === MONITORING OPD === (Bagian yang direvisi sesuai gambar) */}
       <div className="bg-white shadow rounded-2xl p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-gray-800 text-lg">Monitoring OPD</h2>
-          <button className="flex items-center gap-2 bg-[#0F2C59] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#15397A] transition">
-            <RefreshCcw size={16} /> Refresh
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-semibold text-gray-800 text-lg">
+            Monitoring OPD
+          </h2>
+          <div className="flex items-center gap-4">
+            <select className="p-2 border border-gray-300 rounded-lg bg-white text-sm">
+              <option>Pilin OPD</option>
+              <option>Dinas Kesehatan</option>
+              <option>Dinas Perhubungan</option>
+              <option>Dinas Pendidikan</option>
+              <option>Dinas Sosial</option>
+              <option>Dinas Lingkungan</option>
+            </select>
+            <button className="flex items-center gap-2 bg-[#0F2C59] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#15397A] transition">
+              <RefreshCcw size={16} /> Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs Pelaporan/Pelayanan */}
+        <div className="flex gap-3 mb-6">
+          <button className="px-4 py-2 rounded-lg text-sm font-medium bg-[#0F2C59] text-white">
+            Pelaporan
+          </button>
+          <button className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200">
+            Pelayanan
           </button>
         </div>
 
+        {/* Filter Pencarian */}
+        <div className="mb-6">
+          <h3 className="font-semibold text-gray-800 mb-4">Filter pencarian</h3>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Kolom Kiri */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data Aset
+                </label>
+                <select className="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                  <option>Pilih data aset</option>
+                  <option>Laptop</option>
+                  <option>PC</option>
+                  <option>Printer</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  No. Seri
+                </label>
+                <select className="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                  <option>Pilih nomor seri aset</option>
+                  <option>LNV-TP-X230-001</option>
+                  <option>DELL-OP-3020-001</option>
+                  <option>HP-EB-840-001</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SLA
+                </label>
+                <select className="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                  <option>Pilih status SLA</option>
+                  <option>Sesuai SLA</option>
+                  <option>Peringatan SLA</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Kolom Kanan */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prioritas
+                </label>
+                <select className="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                  <option>Pilih prioritas</option>
+                  <option>Tinggi</option>
+                  <option>Sedang</option>
+                  <option>Rendah</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select className="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                  <option>Pilih status</option>
+                  <option>Diproses</option>
+                  <option>Selesai</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabel Monitoring */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
             <thead>
               <tr className="bg-[#0F2C59] text-white">
                 <th className="p-3 font-semibold">Teknisi</th>
-                <th className="p-3 font-semibold">Perihal</th>
-                <th className="p-3 font-semibold">Tenggat</th>
+                <th className="p-3 font-semibold">Data Aset</th>
+                <th className="p-3 font-semibold">Nomor Seri</th>
                 <th className="p-3 font-semibold">SLA</th>
                 <th className="p-3 font-semibold">Prioritas</th>
                 <th className="p-3 font-semibold">Status</th>
@@ -274,18 +464,19 @@ export default function DashboardAdminKota() {
             <tbody>
               {dataTabel.map((item, index) => (
                 <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="p-3 flex items-center gap-2">
-                    <img src={item.foto} alt={item.nama} className="w-8 h-8 rounded-full object-cover" />
-                    {item.nama}
-                  </td>
-                  <td className="p-3">{item.perihal}</td>
-                  <td className="p-3">{item.tanggal}</td>
-                  <td
-                    className={`p-3 font-semibold ${
-                      item.sla === "Terlambat" ? "text-red-600" : "text-green-600"
-                    }`}
-                  >
-                    {item.sla === "Terlambat" ? "Peringatan SLA" : "Sesuai SLA"}
+                  <td className="p-3 font-medium">{item.teknisi}</td>
+                  <td className="p-3">{item.dataAset}</td>
+                  <td className="p-3">{item.nomorSeri}</td>
+                  <td className="p-3">
+                    <span
+                      className={`inline-flex items-center gap-1 ${
+                        item.sla === "Sesuai SLA"
+                          ? "text-green-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      ● {item.sla}
+                    </span>
                   </td>
                   <td className="p-3">
                     <span
@@ -301,13 +492,7 @@ export default function DashboardAdminKota() {
                     </span>
                   </td>
                   <td className="p-3">
-                    <span
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                        item.status === "Selesai"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
+                    <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-yellow-100 text-yellow-700">
                       {item.status}
                     </span>
                   </td>

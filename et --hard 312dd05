@@ -1,0 +1,24 @@
+[33ma553798[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: reset: moving to origin/main
+[33m312dd05[m HEAD@{1}: reset: moving to HEAD
+[33m312dd05[m HEAD@{2}: commit: first commit
+[33mce9df9b[m HEAD@{3}: pull origin main: Fast-forward
+[33m77bf96f[m HEAD@{4}: commit: first commit
+[33me88a130[m HEAD@{5}: pull: Fast-forward
+[33mc4ef9ec[m HEAD@{6}: checkout: moving from main to main
+[33mc4ef9ec[m HEAD@{7}: commit: notif
+[33m64df598[m HEAD@{8}: pull --tags origin main: Fast-forward
+[33md5604d5[m HEAD@{9}: checkout: moving from main to main
+[33md5604d5[m HEAD@{10}: checkout: moving from main to main
+[33md5604d5[m HEAD@{11}: checkout: moving from main to main
+[33md5604d5[m HEAD@{12}: checkout: moving from main to main
+[33md5604d5[m HEAD@{13}: commit: senin
+[33m89ec33b[m HEAD@{14}: commit: bidang clear
+[33m60ff41b[m HEAD@{15}: pull origin main: Fast-forward
+[33m046763b[m HEAD@{16}: commit: Zewu
+[33m4d81c8d[m HEAD@{17}: commit: First Commit
+[33m32562c8[m HEAD@{18}: commit: 24 Oktober
+[33m5ef827a[m HEAD@{19}: Branch: renamed refs/heads/main to refs/heads/main
+[33m5ef827a[m HEAD@{21}: commit: First commit
+[33m729dd9a[m HEAD@{22}: commit: terbaru
+[33m794bb1c[m HEAD@{23}: commit: baru
+[33m4dec2c8[m HEAD@{24}: commit (initial): bismillah

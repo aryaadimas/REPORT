@@ -190,13 +190,9 @@ const CekDetail = () => {
   return (
     <LayoutOpd>
       <div className="min-h-screen bg-gray-50">
-        {/* Main Content - Simple structure */}
         <div className="pt-4 pb-8">
-          {/* Content Container */}
           <div className="px-4">
             <div className="max-w-3xl mx-auto">
-
-              {/* Form Card */}
               <div className="bg-white rounded-lg shadow-md border border-gray-200">
                 <form onSubmit={handleSubmit}>
                   <div className="p-4 md:p-6 space-y-4 md:space-y-6">
@@ -293,20 +289,52 @@ const CekDetail = () => {
                         Judul Pelaporan
                       </label>
                       <div className="bg-gray-100 p-3 rounded border border-gray-300">
-                        <p className="text-gray-800 text-sm md:text-base">
-                          Router bermasalah
+                        <p className="text-gray-800 text-sm md:text-base font-medium">
+                          Printer Sekarat
                         </p>
                       </div>
                     </div>
 
-                    {/* Kategori Aset */}
-                    <div className="space-y-2 text-left">
+                    {/* Data Aset dan Nomor Seri - Sebelahan */}
+                    <div className="space-y-4 text-left">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            Data Aset
+                          </p>
+                          <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                            <p className="text-gray-800 text-sm">
+                              Printer HP LaserJet Pro P1102w
+                            </p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            Nomor Seri
+                          </p>
+                          <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                            <p className="text-gray-800 text-sm font-medium">
+                              HP-LJ-P1102W-001
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Kategori, Sub-Kategori, dan Jenis Aset - Sebelahan bertiga */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <p className="text-sm font-semibold text-gray-700 mb-2">
                             Kategori Aset
                           </p>
-                          <div className="bg-gray-100 p-3 rounded border border-gray-300 text-center">
+                          <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                            <p className="text-gray-800 text-sm">Non TI</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            Sub-Kategori Aset
+                          </p>
+                          <div className="bg-gray-100 p-3 rounded border border-gray-300">
                             <p className="text-gray-800 text-sm">Jaringan</p>
                           </div>
                         </div>
@@ -314,28 +342,8 @@ const CekDetail = () => {
                           <p className="text-sm font-semibold text-gray-700 mb-2">
                             Jenis Aset
                           </p>
-                          <div className="bg-gray-100 p-3 rounded border border-gray-300 text-center">
-                            <p className="text-gray-800 text-sm">TI</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Bentuk Aset
-                          </p>
-                          <div className="bg-gray-100 p-3 rounded border border-gray-300 text-center">
-                            <p className="text-gray-800 text-sm">Fisik</p>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Data Aset
-                          </p>
-                          <div className="bg-gray-100 p-3 rounded border border-gray-300 text-center">
-                            <p className="text-gray-800 text-sm">
-                              Router TP-link
-                            </p>
+                          <div className="bg-gray-100 p-3 rounded border border-gray-300">
+                            <p className="text-gray-800 text-sm">Barang</p>
                           </div>
                         </div>
                       </div>
@@ -346,35 +354,31 @@ const CekDetail = () => {
                       <label className="text-sm font-medium text-gray-700 block">
                         Lokasi Kejadian
                       </label>
-                      <div className="bg-gray-100 p-3 rounded border border-gray-300 text-center">
+                      <div className="bg-gray-100 p-3 rounded border border-gray-300">
                         <p className="text-gray-800 text-sm md:text-base">
-                          Dinas Pendidikan Kantor B Lantai 2
+                          Dinas Pendidikan Kantor Pusat
                         </p>
                       </div>
                     </div>
 
                     {/* Pengerjaan Awal */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                      <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 w-full">
-                        <div className="flex items-center gap-2 w-full sm:flex-1">
-                          <span className="text-sm font-semibold text-gray-700 whitespace-nowrap sm:w-32">
-                            Pengerjaan awal
+                    <div className="space-y-2 text-left">
+                      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                        <label className="text-sm font-medium text-gray-700 text-left sm:w-32">
+                          Pengerjaan awal
+                        </label>
+                        <div className="flex-1 flex items-center bg-gray-100 rounded p-2 md:p-3">
+                          <span className="w-full text-sm text-gray-700 text-center">
+                            IB-09-2025
                           </span>
-                          <div className="flex-1 flex items-center bg-gray-100 rounded p-2 md:p-3">
-                            <span className="w-full text-sm text-gray-700 text-center">
-                              15-09-2025
-                            </span>
-                          </div>
                         </div>
-                        <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                           Sampai
                         </span>
-                        <div className="flex items-center gap-2 w-full sm:flex-1">
-                          <div className="flex-1 flex items-center bg-gray-100 rounded p-2 md:p-3">
-                            <span className="w-full text-sm text-gray-700 text-center">
-                              16-09-2025
-                            </span>
-                          </div>
+                        <div className="flex-1 flex items-center bg-gray-100 rounded p-2 md:p-3">
+                          <span className="w-full text-sm text-gray-700 text-center">
+                            IB-09-2025
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -461,6 +465,7 @@ const CekDetail = () => {
       </div>
     </LayoutOpd>
   );
+
 };
 
 export default CekDetail;

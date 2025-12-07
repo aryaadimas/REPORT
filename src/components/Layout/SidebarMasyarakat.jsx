@@ -17,7 +17,7 @@ const SidebarMasyarakat = () => {
     {
       name: "Riwayat",
       icon: "/assets/Logo Riwayat.png",
-      path: "/riwayat",
+      path: "/riwayatmasyarakat",
     },
   ];
 

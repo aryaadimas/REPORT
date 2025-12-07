@@ -2,7 +2,7 @@ import LayoutBidang from "../../components/Layout/LayoutBidang";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 
-const LihatRating = () => {
+const LihatRatingBidang = () => {
   const navigate = useNavigate();
 
   // Data untuk halaman detail rating
@@ -111,4 +111,4 @@ const LihatRating = () => {
   );
 };
 
-export default LihatRating;
+export default LihatRatingBidang;

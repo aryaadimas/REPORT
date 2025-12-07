@@ -8,6 +8,7 @@ const LogIn = () => {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -20,7 +21,6 @@ const LogIn = () => {
       ...formData,
       [name]: value,
     });
-
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -31,6 +31,7 @@ const LogIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     setErrors({
       email: "",
@@ -85,25 +86,24 @@ const LogIn = () => {
 
     const matched = dummyUsers.find(
       (user) =>
-        user.email === formData.email &&
-        user.password === formData.password
+        user.email === formData.email && user.password === formData.password
     );
 
     if (matched) {
       localStorage.setItem("role", matched.role);
       Swal.fire({
-  title: `Anda login sebagai ${matched.role}`,
-  icon: "success",
-  timer: 2000,
-  showConfirmButton: false,
-  allowOutsideClick: false,
-  allowEscapeKey: false,
-  didClose: () => {
-    navigate(matched.redirect);
-  }
-});
-return;
-
+        title: `Anda login sebagai ${matched.role}`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didClose: () => {
+          navigate(matched.redirect);
+        },
+      });
+      setIsLoading(false);
+      return;
     }
     // === END DUMMY LOGIN ===
 
@@ -114,7 +114,7 @@ return;
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/login`,
+        `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`,
         {
           method: "POST",
           headers: {
@@ -123,6 +123,8 @@ return;
           body: JSON.stringify(payload),
         }
       );
+
+      console.log("Login response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -138,25 +140,106 @@ return;
         } else {
           throw new Error("Login gagal!");
         }
+        setIsLoading(false);
         return;
       }
 
       const data = await response.json();
-      console.log("Login success:", data);
+      console.log("Login success data:", data);
+
+      const token =
+        data.access_token ||
+        data.token ||
+        data.jwt_token ||
+        data.auth_token ||
+        data.Authorization?.replace("Bearer ", "") ||
+        data.authorization?.replace("Bearer ", "");
+
+      if (!token) {
+        console.error("Token tidak ditemukan dalam response:", data);
+        alert(
+          "Login berhasil tetapi token tidak ditemukan. Response: " +
+            JSON.stringify(data)
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      console.log("Token disimpan:", token.substring(0, 20) + "...");
+
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      try {
+        const profileResponse = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/me/masyarakat`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          console.log("Profile data setelah login:", profileData);
+          localStorage.setItem("user_profile", JSON.stringify(profileData));
+        } else {
+          console.warn("Gagal fetch profil setelah login, tapi login berhasil");
+        }
+      } catch (profileError) {
+        console.warn("Error saat fetch profil:", profileError);
+      }
 
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
       alert("Login berhasil!");
-      navigate("/beranda");
+      navigate("/berandamasyarakat");
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Login network error:", error);
+
+      if (
+        error.message.includes("Failed to fetch") ||
+        error.message.includes("Network")
+      ) {
+        const confirmDevMode = window.confirm(
+          "Tidak bisa terhubung ke server. Ingin masuk ke mode development dengan akun demo?"
+        );
+
+        if (confirmDevMode) {
+          const dummyToken =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0YjBjMDUyYi1iNDFlLTQ4MDAtYjQ3YS1jYWE4MGQ1Nzc2MGQiLCJlbWFpbCI6ImVyaW5kYXB1d3RyaUBnbWFpbC5jb20iLCJyb2xlX2lkIjo5LCJyb2xlX25hbWUiOiJtYXN5YXJha2F0IiwiZXhwIjoxNzY1NTkxMDM3fQ.QtWkhdA1Nvwcg-LDPC6UbBKy8Tr40XnnStXGV5HCYpM";
+
+          localStorage.setItem("token", dummyToken);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              email: formData.email,
+              full_name: "Demo User",
+              nik: "3515085606040001",
+              address: "Alamat demo",
+            })
+          );
+
+          alert("Masuk ke mode development. Token dummy digunakan.");
+          navigate("/beranda");
+        }
+      } else {
+        alert("Tidak bisa terhubung ke server. Pastikan internet stabil.");
+      }
 
       setErrors({
         email: "Terjadi kesalahan",
         password: "Terjadi kesalahan",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -164,7 +247,6 @@ return;
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
-
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"
@@ -198,9 +280,10 @@ return;
                 value={formData.email}
                 onChange={handleInputChange}
                 required
+                disabled={isLoading}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] focus:border-transparent ${
                   errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                } ${isLoading ? "bg-gray-100" : ""}`}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -221,9 +304,10 @@ return;
                 value={formData.password}
                 onChange={handleInputChange}
                 required
+                disabled={isLoading}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] focus:border-transparent ${
                   errors.password ? "border-red-500" : "border-gray-300"
-                }`}
+                } ${isLoading ? "bg-gray-100" : ""}`}
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
@@ -234,6 +318,7 @@ return;
                   id="showPassword"
                   checked={showPassword}
                   onChange={(e) => setShowPassword(e.target.checked)}
+                  disabled={isLoading}
                   className="w-4 h-4 text-[#226597] border-gray-300 rounded focus:ring-[#226597]"
                 />
                 <label
@@ -256,9 +341,17 @@ return;
 
             <button
               type="submit"
-              className="w-full bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-full font-medium transition-colors"
+              disabled={isLoading}
+              className="w-full bg-[#226597] hover:bg-[#1a507a] disabled:bg-gray-400 text-white py-3 rounded-full font-medium transition-colors flex items-center justify-center"
             >
-              Masuk
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Memproses...
+                </>
+              ) : (
+                "Masuk"
+              )}
             </button>
           </form>
 
@@ -272,6 +365,19 @@ return;
                 Daftar di sini
               </Link>
             </p>
+          </div>
+
+          <div className="mt-4 text-xs text-gray-500">
+            <button
+              type="button"
+              onClick={() => {
+                console.log("Token saat ini:", localStorage.getItem("token"));
+                console.log("User data:", localStorage.getItem("user"));
+              }}
+              className="text-blue-500 underline"
+            >
+              Debug Info
+            </button>
           </div>
         </div>
 
