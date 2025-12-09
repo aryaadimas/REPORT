@@ -32,208 +32,87 @@ const LogIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrors({ email: "", password: "" });
 
-    setErrors({
-      email: "",
-      password: "",
-    });
-
-    // === DUMMY LOGIN (TAMBAHAN) ===
-    const dummyUsers = [
-      {
-        email: "masyarakat@gmail.com",
-        password: "masyarakat123",
-        role: "masyarakat",
-        redirect: "/berandamasyarakat",
-      },
-      {
-        email: "seksi@gmail.com",
-        password: "seksi123",
-        role: "seksi",
-        redirect: "/berandaseksi",
-      },
-      {
-        email: "bidang@gmail.com",
-        password: "bidang123",
-        role: "bidang",
-        redirect: "/dashboardbidang",
-      },
-      {
-        email: "adminkota@gmail.com",
-        password: "adminkota123",
-        role: "admin kota",
-        redirect: "/dashboardkota",
-      },
-      {
-        email: "adminopd@gmail.com",
-        password: "adminopd123",
-        role: "admin opd",
-        redirect: "/dashboardopd",
-      },
-      {
-        email: "teknisi@gmail.com",
-        password: "teknisi123",
-        role: "teknisi",
-        redirect: "/dashboardteknisi",
-      },
-      {
-        email: "pegawai@gmail.com",
-        password: "pegawai123",
-        role: "pegawai",
-        redirect: "/beranda",
-      },
-    ];
-
-    const matched = dummyUsers.find(
-      (user) =>
-        user.email === formData.email && user.password === formData.password
-    );
-
-    if (matched) {
-      localStorage.setItem("role", matched.role);
-      Swal.fire({
-        title: `Anda login sebagai ${matched.role}`,
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didClose: () => {
-          navigate(matched.redirect);
-        },
-      });
-      setIsLoading(false);
-      return;
-    }
-    // === END DUMMY LOGIN ===
-
+    // Integrasi login dengan API
     const payload = {
-      email: formData.email,
+      login: formData.email,
       password: formData.password,
     };
 
-    try {
+     try {
+      console.log("Payload login:", payload);
+
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`,
+        "https://service-desk-be-production.up.railway.app/login/sso",
         {
           method: "POST",
           headers: {
+            "Accept": "application/json",
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
         }
       );
 
-      console.log("Login response status:", response.status);
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorData = await response.json();
-
-        if (response.status === 401) {
-          if (errorData.message?.toLowerCase().includes("email")) {
-            setErrors({ email: "Email salah", password: "" });
-          } else if (errorData.message?.toLowerCase().includes("password")) {
-            setErrors({ email: "", password: "Kata sandi salah" });
-          } else {
-            setErrors({ email: "Email salah", password: "Kata sandi salah" });
-          }
-        } else {
-          throw new Error("Login gagal!");
-        }
+        console.log("Login error:", data);
+        setErrors({
+          email: "Email atau password salah",
+          password: "",
+        });
         setIsLoading(false);
         return;
       }
 
-      const data = await response.json();
-      console.log("Login success data:", data);
-
-      const token =
-        data.access_token ||
-        data.token ||
-        data.jwt_token ||
-        data.auth_token ||
-        data.Authorization?.replace("Bearer ", "") ||
-        data.authorization?.replace("Bearer ", "");
-
+      // Simpan token
+      const token = data.access_token;
       if (!token) {
-        console.error("Token tidak ditemukan dalam response:", data);
-        alert(
-          "Login berhasil tetapi token tidak ditemukan. Response: " +
-            JSON.stringify(data)
-        );
+        alert("Login berhasil tetapi token tidak ditemukan.");
         setIsLoading(false);
         return;
       }
 
       localStorage.setItem("token", token);
-      console.log("Token disimpan:", token.substring(0, 20) + "...");
+      console.log("Token tersimpan:", token.substring(0, 15) + "...");
 
+      // Simpan user
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
-      }
 
-      try {
-        const profileResponse = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/me/masyarakat`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }
-        );
+        const roleId = data.user.role_id;
 
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json();
-          console.log("Profile data setelah login:", profileData);
-          localStorage.setItem("user_profile", JSON.stringify(profileData));
-        } else {
-          console.warn("Gagal fetch profil setelah login, tapi login berhasil");
-        }
-      } catch (profileError) {
-        console.warn("Error saat fetch profil:", profileError);
-      }
-
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      alert("Login berhasil!");
-      navigate("/berandamasyarakat");
-    } catch (error) {
-      console.error("Login network error:", error);
-
-      if (
-        error.message.includes("Failed to fetch") ||
-        error.message.includes("Network")
-      ) {
-        const confirmDevMode = window.confirm(
-          "Tidak bisa terhubung ke server. Ingin masuk ke mode development dengan akun demo?"
-        );
-
-        if (confirmDevMode) {
-          const dummyToken =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0YjBjMDUyYi1iNDFlLTQ4MDAtYjQ3YS1jYWE4MGQ1Nzc2MGQiLCJlbWFpbCI6ImVyaW5kYXB1d3RyaUBnbWFpbC5jb20iLCJyb2xlX2lkIjo5LCJyb2xlX25hbWUiOiJtYXN5YXJha2F0IiwiZXhwIjoxNzY1NTkxMDM3fQ.QtWkhdA1Nvwcg-LDPC6UbBKy8Tr40XnnStXGV5HCYpM";
-
-          localStorage.setItem("token", dummyToken);
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              email: formData.email,
-              full_name: "Demo User",
-              nik: "3515085606040001",
-              address: "Alamat demo",
-            })
-          );
-
-          alert("Masuk ke mode development. Token dummy digunakan.");
-          navigate("/beranda");
+        // Redirect berdasarkan role
+        switch (roleId) {
+          case "1":
+            navigate("/dashboardkota");
+            break;
+          case "5":
+            navigate("/dashboardopd");
+            break;
+          case "6":
+            navigate("/dashboardteknisi");
+            break;
+          case "7":
+            navigate("/dashboardbidang");
+            break;
+          case "8":
+            navigate("/berandaseksi");
+            break;
+          case "9":
+            navigate("/berandamasyarakat");
+            break;
+          default:
+            navigate("/");
         }
       } else {
-        alert("Tidak bisa terhubung ke server. Pastikan internet stabil.");
+        navigate("/");
       }
-
+    } catch (error) {
+      console.error("ERROR LOGIN:", error);
+      alert("Terjadi kesalahan pada jaringan atau server.");
       setErrors({
         email: "Terjadi kesalahan",
         password: "Terjadi kesalahan",

@@ -118,22 +118,32 @@ const DraftBaru = () => {
     }
   };
 
-  const handleKirimDraft = () => {
+  const handleKirimDraft = async () => {
     const draftData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
+      title: formData.judul,
+      category: formData.layanan,
+      content: formData.isiArtikel,
       status: "dikirim",
+      // Tambahkan field lain sesuai kebutuhan API
     };
 
-    console.log("Data draft:", draftData);
-    setShowConfirmation(false);
-    setShowSuccessPopup(true);
-    localStorage.setItem("draftArtikel", JSON.stringify(draftData));
+    try {
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/articles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(draftData),
+        }
+      );
+      if (!response.ok) throw new Error("Gagal mengirim draft");
+      setShowConfirmation(false);
+      setShowSuccessPopup(true);
+    } catch (err) {
+      alert("Gagal mengirim draft: " + err.message);
+    }
   };
 
   const handleSuccessOk = () => {
@@ -141,21 +151,31 @@ const DraftBaru = () => {
     navigate("/dashboardopd");
   };
 
-  const handleSimpanDraft = () => {
+  const handleSimpanDraft = async () => {
     const draftData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
+      title: formData.judul,
+      category: formData.layanan,
+      content: formData.isiArtikel,
       status: "draft",
+      // Tambahkan field lain sesuai kebutuhan API
     };
 
-    console.log("Data draft:", draftData);
-    localStorage.setItem("draftArtikel", JSON.stringify(draftData));
-    alert("Draft berhasil disimpan!");
+    try {
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/articles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(draftData),
+        }
+      );
+      if (!response.ok) throw new Error("Gagal menyimpan draft");
+      alert("Draft berhasil disimpan!");
+    } catch (err) {
+      alert("Gagal menyimpan draft: " + err.message);
+    }
   };
 
   const handleBatalkan = () => {
