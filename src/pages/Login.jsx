@@ -367,18 +367,7 @@ const LogIn = () => {
             </p>
           </div>
 
-          <div className="mt-4 text-xs text-gray-500">
-            <button
-              type="button"
-              onClick={() => {
-                console.log("Token saat ini:", localStorage.getItem("token"));
-                console.log("User data:", localStorage.getItem("user"));
-              }}
-              className="text-blue-500 underline"
-            >
-              Debug Info
-            </button>
-          </div>
+          
         </div>
 
         <div className="w-full md:w-1/2 bg-[#226597] flex items-start justify-start order-1 md:order-2">

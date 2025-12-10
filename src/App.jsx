@@ -11,6 +11,7 @@ import BerandaMasyarakat from "./pages/masyarakat/BerandaMasyarakat";
 //*-- Auth --*/
 import Register from "./pages/Register";
 import LogIn from "./pages/Login";
+import LoginSso from "./pages/LoginSso";
 import LupaPassword from "./pages/LupaPassword";
 import MasukKode from "./pages/MasukKode";
 import KataSandiBaru from "./pages/KataSandiBaru";
@@ -36,11 +37,11 @@ import ReopenMasyarakat from "./pages/masyarakat/ReopenMasyarakat";
 import RiwayatMasyarakat from "./pages/masyarakat/riwayatmasyarakat";
 
 //*-- Seksi --*/
-import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang"
-import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi"
-import DetailRating from "./pages/beranda/Seksi/DetailRating"
-import LayananPesan from "./pages/beranda/Seksi/LayananPesan"
-import LayananChat from "./pages/beranda/Seksi/LayananChat"
+import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang";
+import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi";
+import DetailRating from "./pages/beranda/Seksi/DetailRating";
+import LayananPesan from "./pages/beranda/Seksi/LayananPesan";
+import LayananChat from "./pages/beranda/Seksi/LayananChat";
 import BerandaSeksi from "./pages/beranda/Seksi/BerandaSeksi";
 import LayoutSeksi from "./components/Layout/LayoutSeksi";
 import PengajuanSeksi from "./pages/beranda/Seksi/PengajuanSeksi";
@@ -57,7 +58,7 @@ import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
 import BuatFormRFC from "./pages/beranda/Teknisi/BuatFormRFC";
 import EditFormRFC from "./pages/beranda/Teknisi/EditFormRFC";
-import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC"
+import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC";
 import RFCTeknisi from "./pages/beranda/Teknisi/RFCTeknisi";
 import DashboardTeknisi from "./pages/beranda/Teknisi/DashboardTeknisi";
 import CekDetailTeknisi from "./pages/beranda/Teknisi/CekDetailTeknisi";
@@ -92,6 +93,10 @@ import NotifWarRoom from "./pages/beranda/AdminKota/NotifWarRoom";
 import ProfilMasyarakat from "./pages/masyarakat/ProfilMasyarakat";
 import LandingPage from "./pages/masyarakat/LandingPage";
 import LayoutMasyarakat from "./components/Layout/LayoutMasyarakat";
+import BeriRatingMasyarakat from "./pages/masyarakat/BeriRatingMasyarakat";
+import LihatRiwayatMasyarakat from "./pages/masyarakat/LihatRiwayatMasyarakat";
+import LihatRatingMasyarakat from "./pages/masyarakat/LihatRatingMasyarakat";
+import FormMasyarakat from "./pages/masyarakat/FormMasyarakat";
 
 //*-- Helpdesk --*/
 import HelpdeskChat from "./components/beranda/Helpdesk";
@@ -159,8 +164,14 @@ function App() {
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
-          <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />} />
-          <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
+          <Route
+            path="monitoringtiketseksi"
+            element={<MonitoringTiketSeksi />}
+          />
+          <Route
+            path="/monitoring-tiket/:id"
+            element={<MonitoringTiketSeksi />}
+          />
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
           <Route path="layananpesan" element={<LayananPesan />} />
@@ -248,12 +259,26 @@ function App() {
             path="kotakmasukmasyarakat"
             element={<KotakMasukMasyarakat />}
           />
+          <Route
+            path="beriratingmasyarakat"
+            element={<BeriRatingMasyarakat />}
+          />
+          <Route
+            path="lihatriwayatmasyarakat"
+            element={<LihatRiwayatMasyarakat />}
+          />
+          <Route
+            path="lihatratingmasyarakat"
+            element={<LihatRatingMasyarakat />}
+          />
+          <Route path="formmasyarakat" element={<FormMasyarakat />} />
         </Route>
 
         {/* Halaman tanpa Layout (Auth) */}
         <Route path="/beranda" element={<Beranda />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<LogIn />} />
+        <Route path="/loginsso" element={<LoginSso />} />
         <Route path="/lupapassword" element={<LupaPassword />} />
         <Route path="/masukkode" element={<MasukKode />} />
         <Route path="/katasandibaru" element={<KataSandiBaru />} />
@@ -292,7 +317,6 @@ function App() {
         <Route path="/notifmaintenance" element={<NotifMaintenance />} />
         <Route path="/notifdarurat" element={<NotifDarurat />} />
         <Route path="/notifumum" element={<NotifUmum />} />
-
 
         <Route path="/detailbidang" element={<DetailBidang />} />
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
