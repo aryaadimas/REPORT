@@ -36,11 +36,11 @@ import ReopenMasyarakat from "./pages/masyarakat/ReopenMasyarakat";
 import RiwayatMasyarakat from "./pages/masyarakat/riwayatmasyarakat";
 
 //*-- Seksi --*/
-import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang"
-import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi"
-import DetailRating from "./pages/beranda/Seksi/DetailRating"
-import LayananPesan from "./pages/beranda/Seksi/LayananPesan"
-import LayananChat from "./pages/beranda/Seksi/LayananChat"
+import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang";
+import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi";
+import DetailRating from "./pages/beranda/Seksi/DetailRating";
+import LayananPesan from "./pages/beranda/Seksi/LayananPesan";
+import LayananChat from "./pages/beranda/Seksi/LayananChat";
 import BerandaSeksi from "./pages/beranda/Seksi/BerandaSeksi";
 import LayoutSeksi from "./components/Layout/LayoutSeksi";
 import PengajuanSeksi from "./pages/beranda/Seksi/PengajuanSeksi";
@@ -57,7 +57,7 @@ import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
 import BuatFormRFC from "./pages/beranda/Teknisi/BuatFormRFC";
 import EditFormRFC from "./pages/beranda/Teknisi/EditFormRFC";
-import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC"
+import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC";
 import RFCTeknisi from "./pages/beranda/Teknisi/RFCTeknisi";
 import DashboardTeknisi from "./pages/beranda/Teknisi/DashboardTeknisi";
 import CekDetailTeknisi from "./pages/beranda/Teknisi/CekDetailTeknisi";
@@ -92,6 +92,9 @@ import NotifWarRoom from "./pages/beranda/AdminKota/NotifWarRoom";
 import ProfilMasyarakat from "./pages/masyarakat/ProfilMasyarakat";
 import LandingPage from "./pages/masyarakat/LandingPage";
 import LayoutMasyarakat from "./components/Layout/LayoutMasyarakat";
+
+//*-- Universal Profil --*/
+import ProfilUniversal from "./pages/Profil";
 
 //*-- Helpdesk --*/
 import HelpdeskChat from "./components/beranda/Helpdesk";
@@ -159,8 +162,14 @@ function App() {
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
-          <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />} />
-          <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
+          <Route
+            path="monitoringtiketseksi"
+            element={<MonitoringTiketSeksi />}
+          />
+          <Route
+            path="/monitoring-tiket/:id"
+            element={<MonitoringTiketSeksi />}
+          />
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
           <Route path="layananpesan" element={<LayananPesan />} />
@@ -215,7 +224,6 @@ function App() {
         {/* Layout MASYARAKAT */}
         <Route path="/" element={<LayoutMasyarakat />}>
           <Route path="berandamasyarakat" element={<BerandaMasyarakat />} />
-          <Route path="profilmasyarakat" element={<ProfilMasyarakat />} />
           <Route path="tampilanmasyarakat" element={<TampilanMasyarakat />} />
           <Route path="kbmasyarakat" element={<KBMasyarakat />} />
           <Route path="pelaporanmasyarakat" element={<PelaporanMasyarakat />} />
@@ -292,7 +300,7 @@ function App() {
         <Route path="/notifmaintenance" element={<NotifMaintenance />} />
         <Route path="/notifdarurat" element={<NotifDarurat />} />
         <Route path="/notifumum" element={<NotifUmum />} />
-       
+
         <Route path="/detailbidang" element={<DetailBidang />} />
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
         <Route path="/profilsaya" element={<Profil />} />
@@ -308,6 +316,15 @@ function App() {
         <Route path="berirating" element={<BeriRating />} />
         <Route path="reopenpegawai" element={<ReopenPegawai />} />
         <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
+
+        {/* Universal Profile Routes - untuk semua role */}
+        <Route path="/profil" element={<ProfilUniversal />} />
+        <Route path="/profilopd" element={<ProfilUniversal />} />
+        <Route path="/profilteknisi" element={<ProfilUniversal />} />
+        <Route path="/profilbidang" element={<ProfilUniversal />} />
+        <Route path="/profilseksi" element={<ProfilUniversal />} />
+        <Route path="/profilkota" element={<ProfilUniversal />} />
+        <Route path="/profilmasyarakat" element={<ProfilUniversal />} />
       </Routes>
     </Router>
   );

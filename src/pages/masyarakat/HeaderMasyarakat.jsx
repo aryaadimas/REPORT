@@ -26,7 +26,7 @@ const HeaderMasyarakat = () => {
 
     // Tambahkan logika navigasi di sini
     if (item === "Profil Saya") {
-      navigate("/profilmasyarakat");
+      navigate("/ProfilSaya");
     } else if (item === "Tampilan") {
       navigate("/tampilan");
     } else if (item === "Keluar") {

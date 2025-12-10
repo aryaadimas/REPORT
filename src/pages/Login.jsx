@@ -40,20 +40,17 @@ const LogIn = () => {
       password: formData.password,
     };
 
-     try {
+    try {
       console.log("Payload login:", payload);
 
-      const response = await fetch(
-        "https://service-desk-be-production.up.railway.app/login/sso",
-        {
-          method: "POST",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch("/api/login/sso", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
@@ -85,23 +82,27 @@ const LogIn = () => {
         const roleId = data.user.role_id;
 
         // Redirect berdasarkan role
+        // Backend mapping: 1=diskominfo(Kota), 2=opd(Pegawai), 3=verifikator,
+        // 5=admin dinas(Admin OPD), 6=teknisi, 7=bidang, 8=seksi, 9=masyarakat
         switch (roleId) {
-          case "1":
+          case "1": // diskominfo = Admin Kota
             navigate("/dashboardkota");
             break;
-          case "5":
+          case "2": // opd = Pegawai OPD
+          case "3": // verifikator = diarahkan ke OPD
+          case "5": // admin dinas = Admin OPD
             navigate("/dashboardopd");
             break;
-          case "6":
+          case "6": // teknisi
             navigate("/dashboardteknisi");
             break;
-          case "7":
+          case "7": // bidang
             navigate("/dashboardbidang");
             break;
-          case "8":
+          case "8": // seksi
             navigate("/berandaseksi");
             break;
-          case "9":
+          case "9": // masyarakat (database terpisah)
             navigate("/berandamasyarakat");
             break;
           default:

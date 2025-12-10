@@ -17,6 +17,67 @@ const Navbar = ({ profileData }) => {
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
 
+  // Fallback ke localStorage jika profileData belum tersedia
+  const getUserData = () => {
+    console.log("🔍 getUserData - profileData:", profileData);
+
+    // Handle jika profileData adalah response wrapper dengan property 'data' atau 'user'
+    let actualData = profileData;
+
+    if (profileData) {
+      // Jika ada property 'user', data ada di dalamnya
+      if (profileData.user) {
+        actualData = profileData.user;
+        console.log(
+          "📦 getUserData - extracted from profileData.user:",
+          actualData
+        );
+      }
+      // Jika ada property 'data', data ada di dalamnya
+      else if (profileData.data) {
+        actualData = profileData.data;
+        console.log(
+          "📦 getUserData - extracted from profileData.data:",
+          actualData
+        );
+      }
+      // Jika profileData sudah correct format (punya full_name atau name)
+      else if (profileData.full_name || profileData.name) {
+        actualData = profileData;
+        console.log("📦 getUserData - using profileData directly:", actualData);
+      }
+    }
+
+    // Jika actualData punya data yang valid, gunakan itu
+    if (actualData && (actualData.full_name || actualData.name)) {
+      console.log("✅ getUserData - returning actualData:", actualData);
+      return actualData;
+    }
+
+    // Fallback ke user yang disimpan saat login
+    const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+    console.log("🔄 getUserData - fallback to localStorage user:", localUser);
+
+    if (localUser && Object.keys(localUser).length > 0) {
+      const mappedUser = {
+        full_name: localUser.name || "Pengguna",
+        role: localUser.role?.nama || localUser.role || "User",
+        profile_url: localUser.avatar || "/assets/Lomon.png",
+        email: localUser.email,
+      };
+      console.log(
+        "✅ getUserData - returning mapped localStorage user:",
+        mappedUser
+      );
+      return mappedUser;
+    }
+
+    console.log("❌ getUserData - no data available, returning null");
+    return null;
+  };
+
+  const currentUserData = getUserData();
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,6 +93,25 @@ const Navbar = ({ profileData }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Debug: Monitor perubahan profileData
+  useEffect(() => {
+    console.log("🔄 Navbar useEffect - profileData:", profileData);
+    console.log(
+      "🔄 Navbar useEffect - localStorage user:",
+      localStorage.getItem("user")
+    );
+
+    const userData = getUserData();
+    console.log("🔄 Navbar useEffect - userData result:", userData);
+
+    if (userData) {
+      console.log("✅ Navbar - full_name:", userData.full_name);
+      console.log("✅ Navbar - role:", userData.role);
+    } else {
+      console.log("❌ Navbar - No user data available");
+    }
+  }, [profileData]);
 
   const handleLogoutClick = () => {
     setShowLogoutWarning(true);
@@ -50,7 +130,126 @@ const Navbar = ({ profileData }) => {
   };
 
   const goToProfile = () => {
-    navigate("/profilmasyarakat");
+    // Ambil data dari berbagai sumber dengan fallback
+    const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    // profileData bisa punya struktur berbeda:
+    // 1. {status: 'success', user: {...}} - dari API response
+    // 2. {role_id: 5, role: '...'} - data langsung
+    let userData = profileData;
+
+    // Jika profileData punya property 'user', ambil dari sana
+    if (profileData?.user) {
+      userData = profileData.user;
+    }
+
+    // Fallback ke localStorage jika profileData tidak ada
+    if (!userData || Object.keys(userData).length === 0) {
+      userData = localUser;
+    }
+
+    // Ambil role_id dan convert ke string (handle number & string)
+    let roleId = String(userData.role_id || localUser.role_id || "");
+
+    // Ambil role dari berbagai kemungkinan lokasi
+    // BE structure: data.role.nama (object) → dimapping jadi data.role (string)
+    let role = (
+      userData.role ||
+      userData.role?.nama ||
+      localUser.role ||
+      localUser.role?.nama ||
+      ""
+    ).toLowerCase();
+
+    // Debug log untuk melihat data yang digunakan
+    console.log("🔍 Debug goToProfile:");
+    console.log("- profileData:", profileData);
+    console.log("- userData hasil extract:", userData);
+    console.log("- localUser dari localStorage:", localUser);
+    console.log("- userData.role:", userData.role);
+    console.log("- localUser.role:", localUser.role);
+    console.log(
+      "- roleId yang digunakan:",
+      roleId,
+      "(type:",
+      typeof roleId,
+      ")"
+    );
+    console.log("- role:", role);
+
+    // Routing berdasarkan role_id (sudah diconvert ke string)
+    // Backend mapping: 1=diskominfo(Kota), 2=opd(Pegawai), 3=verifikator, 4=auditor,
+    // 5=admin dinas(Admin OPD), 6=teknisi, 7=bidang, 8=seksi, 9=masyarakat
+    switch (roleId) {
+      case "1": // diskominfo = Admin Kota
+        console.log("✅ Navigating to /profilkota");
+        navigate("/profilkota");
+        break;
+      case "2": // opd = Pegawai OPD
+      case "3": // verifikator = diarahkan ke OPD
+        console.log("✅ Navigating to /profilopd (OPD/Pegawai)");
+        navigate("/profilopd");
+        break;
+      case "5": // admin dinas = Admin OPD
+        console.log("✅ Navigating to /profilopd (Admin Dinas)");
+        navigate("/profilopd");
+        break;
+      case "6": // teknisi
+        console.log("✅ Navigating to /profilteknisi");
+        navigate("/profilteknisi");
+        break;
+      case "7": // bidang
+        console.log("✅ Navigating to /profilbidang");
+        navigate("/profilbidang");
+        break;
+      case "8": // seksi
+        console.log("✅ Navigating to /profilseksi");
+        navigate("/profilseksi");
+        break;
+      case "9": // masyarakat (database terpisah)
+        console.log("✅ Navigating to /profilmasyarakat");
+        navigate("/profilmasyarakat");
+        break;
+      default:
+        console.log("⚠️ Masuk ke default case, roleId:", roleId);
+        // Fallback: coba detect dari role name
+        if (role?.includes("masyarakat")) {
+          console.log(
+            "✅ Fallback: Navigating to /profilmasyarakat (via role)"
+          );
+          navigate("/profilmasyarakat");
+        } else if (
+          role?.includes("opd") ||
+          role?.includes("dinas") ||
+          role?.includes("verifikator") ||
+          role?.includes("admin dinas")
+        ) {
+          console.log("✅ Fallback: Navigating to /profilopd (via role)");
+          navigate("/profilopd");
+        } else if (role?.includes("teknisi")) {
+          console.log("✅ Fallback: Navigating to /profilteknisi (via role)");
+          navigate("/profilteknisi");
+        } else if (role?.includes("bidang")) {
+          console.log("✅ Fallback: Navigating to /profilbidang (via role)");
+          navigate("/profilbidang");
+        } else if (role?.includes("seksi")) {
+          console.log("✅ Fallback: Navigating to /profilseksi (via role)");
+          navigate("/profilseksi");
+        } else if (
+          role?.includes("kota") ||
+          role?.includes("admin kota") ||
+          role?.includes("diskominfo")
+        ) {
+          console.log("✅ Fallback: Navigating to /profilkota (via role)");
+          navigate("/profilkota");
+        } else {
+          // Ultimate fallback
+          console.log("⚠️ Ultimate fallback: Navigating to /profilmasyarakat");
+          console.log("⚠️ roleId:", roleId, "role:", role);
+          navigate("/profilmasyarakat");
+        }
+        break;
+    }
   };
 
   const goToTampilan = () => {
@@ -228,22 +427,31 @@ const Navbar = ({ profileData }) => {
             {/* User Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => setShowDropdown(!showDropdown)}
+                onClick={() => {
+                  // Debug log setiap kali dropdown dibuka
+                  console.log("🔍 Navbar - profileData:", profileData);
+                  console.log("🔍 Navbar - currentUserData:", currentUserData);
+                  console.log(
+                    "🔍 Navbar - localStorage user:",
+                    JSON.parse(localStorage.getItem("user") || "{}")
+                  );
+                  setShowDropdown(!showDropdown);
+                }}
                 className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100"
               >
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-medium text-gray-800">
-                    {profileData?.full_name || "Pengguna"}
+                    {currentUserData?.full_name || ""}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {profileData?.role_name === "masyarakat"
-                      ? "Publik"
-                      : profileData?.role_name || "User"}
+                    {currentUserData?.role === ""
+                      ? ""
+                      : currentUserData?.role || ""}
                   </span>
                 </div>
 
                 <img
-                  src={profileData?.profile_url || "/assets/Lomon.png"}
+                  src={currentUserData?.profile_url || "/assets/Lomon.png"}
                   alt="Profile"
                   className="h-10 w-10 rounded-full border-2 border-[#226597]"
                   onError={(e) => {
