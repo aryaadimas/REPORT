@@ -37,6 +37,7 @@ import RiwayatMasyarakat from "./pages/masyarakat/riwayatmasyarakat";
 
 //*-- Seksi --*/
 import PengajuanBidang from "./pages/beranda/Seksi/PengajuanBidang"
+import PelayananBidang from "./pages/beranda/Seksi/PelayananBidang"
 import MonitoringTiketSeksi from "./pages/beranda/Seksi/MonitoringTiketSeksi"
 import DetailRating from "./pages/beranda/Seksi/DetailRating"
 import LayananPesan from "./pages/beranda/Seksi/LayananPesan"
@@ -52,6 +53,8 @@ import ArsipSeksi from "./pages/beranda/Seksi/ArsipSeksi";
 import ReopenSeksi from "./pages/beranda/Seksi/ReopenSeksi";
 import RatingSeksi from "./pages/beranda/Seksi/RatingSeksi";
 import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
+import FormPelayanan from "./pages/beranda/Seksi/FormPelayanan";
+import PengajuanMasyarakat from "./pages/beranda/Seksi/PengajuanMasyarakat"
 
 //*-- Teknisi --*/
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
@@ -158,12 +161,20 @@ function App() {
           <Route path="reopenseksi" element={<ReopenSeksi />} />
           <Route path="ratingseksi" element={<RatingSeksi />} />
           <Route path="pengajuanbidang" element={<PengajuanBidang />} />
+          <Route path="/pengajuanbidang/:id" element={<PengajuanBidang />} />
+          <Route path="/pengajuanmasyarakat/:id" element={<PengajuanMasyarakat />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
+          <Route path="formpelayanan" element={<FormPelayanan />} />
+          <Route path="/formpenugasanseksi/:ticket_id" element={<FormPenugasanSeksi />} />
+          <Route path="/formpelayanan/:ticket_id" element={<FormPelayanan />} />
           <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />} />
-          <Route path="/monitoring-tiket/:id" element={<MonitoringTiketSeksi />}/>
+          <Route path="/monitoringtiketseksi/:ticketId" element={<MonitoringTiketSeksi />} />
           <Route path="detailrating" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
+          <Route path="pelayananbidang" element={<PelayananBidang />} />
+          <Route path="pelayananbidang/:id" element={<PelayananBidang />} />
           <Route path="layananpesan" element={<LayananPesan />} />
+          <Route path="pengajuanmasyarakat" element={<PengajuanMasyarakat />} />
         </Route>
 
         {/* Layout TEKNISI */}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DocumentIcon,
   ArrowPathIcon,
@@ -10,123 +10,214 @@ export default function DashboardSeksi() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pelaporan");
 
-  const dataPelaporan = [
-    {
-      id: 1,
-      pengirim: "Doni Ridho",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Revisi",
-      foto: "/assets/Suika.jpg",
-      lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
-    },
-    {
-      id: 2,
-      pengirim: "Hiko Wicakso",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Draft",
-      foto: "/assets/shizuku.jpg",
-      lampiran: ["/assets/doc1.pdf"],
-    },
-    {
-      id: 3,
-      pengirim: "Ella Melisya",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Terverifikasi",
-      foto: "/assets/Bokuto.jpg",
-      lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
-    },
-    {
-      id: 4,
-      pengirim: "Arnya Rosalina",
-      tanggal: "20/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Pending",
-      foto: "/assets/Suika.jpg",
-      lampiran: [],
-    },
-    {
-      id: 5,
-      pengirim: "Arnya Rosalina",
-      tanggal: "20/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Ditolak",
-      foto: "/assets/Suika.jpg",
-      lampiran: [],
-    },
-    {
-      id: 6,
-      pengirim: "Doni Ridho",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Revisi",
-      foto: "/assets/Suika.jpg",
-      lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf"],
-    },
-    {
-      id: 7,
-      pengirim: "Hiko Wicakso",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Draft",
-      foto: "/assets/shizuku.jpg",
-      lampiran: ["/assets/doc1.pdf"],
-    },
-    {
-      id: 8,
-      pengirim: "Ella Melisya",
-      tanggal: "18/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Terverifikasi",
-      foto: "/assets/Bokuto.jpg",
-      lampiran: ["/assets/doc1.pdf", "/assets/doc2.pdf", "/assets/doc3.pdf"],
-    },
-    {
-      id: 9,
-      pengirim: "Arnya Rosalina",
-      tanggal: "20/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Pending",
-      foto: "/assets/Suika.jpg",
-      lampiran: [],
-    },
-    {
-      id: 10,
-      pengirim: "Arnya Rosalina",
-      tanggal: "20/09/2024",
-      Aset: "Lenovo",
-      Seri: "LNV-TP-001",
-      status: "Ditolak",
-      foto: "/assets/Suika.jpg",
-      lampiran: [],
-    },
-  ];
+  const [assetQuery, setAssetQuery] = useState("");
+  const [assetSuggestions, setAssetSuggestions] = useState([]);
+  const [availableSerials, setAvailableSerials] = useState([]);
+  const [selectedAsset, setSelectedAsset] = useState("");
+  const [selectedSerial, setSelectedSerial] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("Semua");
+  
+
+
+  const [assets, setAssets] = useState([]);
+  const [ticketsPelaporan, setTicketsPelaporan] = useState([]);
+  const [ticketsPelayanan, setTicketsPelayanan] = useState([]);
+
+
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const rawTickets =
+  activeTab === "pelaporan" ? ticketsPelaporan : ticketsPelayanan;
+
+const filteredTickets = rawTickets.filter(t => {
+
+  const matchAsset =
+    !selectedAsset || t.asset?.nama_asset === selectedAsset;
+
+  const matchSerial =
+    !selectedSerial || t.asset?.nomor_seri === selectedSerial;
+
+  const matchStatus =
+    selectedStatus === "Semua" ||
+    t.status_ticket_seksi?.toLowerCase() === selectedStatus.toLowerCase();
+
+  return matchAsset && matchSerial && matchStatus;
+});
+
+
+
+  
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+const totalPages = Math.ceil(filteredTickets.length / rowsPerPage);
+const indexOfLastRow = currentPage * rowsPerPage;
+const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+const currentRows = filteredTickets.slice(indexOfFirstRow, indexOfLastRow);
+
+  const [dashboardData, setDashboardData] = useState({
+  total_tickets: 0,
+  pending_tickets: 0,
+  verified_tickets: 0,
+  rejected_tickets: 0,
+  });
+
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Ditolak":
-        return "bg-red-500";
-      case "Draft":
+    if (!status) return "bg-gray-400"; // fallback
+
+    switch (status.toLowerCase()) {
+      case "draft":
         return "bg-gray-500";
-      case "Pending":
-        return "bg-yellow-400";
-      case "Terverifikasi":
+      case "reopen":
+        return "bg-blue-500";
+      case "pending":
+        return "bg-yellow-400 text-black";
+      case "ditolak":
+      case "rejected":
+        return "bg-red-500";
+      case "verified by seksi":
+      case "terverifikasi":
         return "bg-green-500";
       default:
-        return "bg-blue-500";
+        return "bg-gray-400";
     }
   };
+
+ 
+
+function handleAssetSearch(e) {
+  const query = e.target.value;
+  setAssetQuery(query);
+
+  if (!query.trim()) {
+    setAssetSuggestions([]);
+    setSelectedAsset("");
+    setSelectedSerial("");
+    setAvailableSerials([]);
+    setCurrentPage(1);
+    return;
+  }
+
+  const matched = [
+    ...new Set(
+      tickets
+        .map(t => t.asset?.nama_asset)
+        .filter(Boolean)
+        .filter(name =>
+          name.toLowerCase().includes(query.toLowerCase())
+        )
+    )
+  ].slice(0, 5);
+
+  setAssetSuggestions(matched);
+}
+
+    
+  
+  async function fetchDashboard() {
+    try {
+      const res = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/dashboard/seksi",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+      console.log("Dashboard Data:", data);
+
+      setDashboardData(data);
+
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+    }
+  }
+
+async function fetchPelaporan() {
+  try {
+    const res = await fetch(
+      "https://service-desk-be-production.up.railway.app/api/tickets/seksi/pelaporan-online",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    setTicketsPelaporan(json.data);
+
+  } catch (err) {
+    console.error("Error fetch tickets:", err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function fetchPelayanan() {
+  try {
+    const res = await fetch(
+      "https://service-desk-be-production.up.railway.app/api/tickets/seksi/pengajuan-pelayanan",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    setTicketsPelayanan(json.data);
+  } catch (err) {
+    console.error("Error fetch pelayanan:", err);
+  }
+}
+
+
+async function fetchAssets() {
+  try {
+    const res = await fetch(
+      "https://service-desk-be-production.up.railway.app/api/asset-barang",
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const json = await res.json();
+    setAssets(json.data.data); // simpan semua data asset  
+  } catch (err) {
+    console.error("Error fetch assets:", err);
+  }
+}
+
+function updateSerialList(selectedName) {
+  // Ambil nomor seri unik dari tiket yang sesuai aset
+  const serialList = [
+    ...new Set(
+      tickets
+        .filter(t => t.asset?.nama_asset === selectedName)
+        .map(t => t.asset?.nomor_seri)
+        .filter(Boolean)
+    )
+  ];
+
+  setAvailableSerials(serialList);    // <-- simpan daftar No Seri
+}
+
+
+
+ useEffect(() => {
+    fetchPelaporan();
+    fetchPelayanan();
+    fetchDashboard();
+    fetchAssets();
+  }, []);
+
 
   return (
     <div className="p-6 space-y-6">
@@ -135,11 +226,11 @@ export default function DashboardSeksi() {
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Tiket Masuk", value: 33 },
-          { label: "Pending", value: 10 },
-          { label: "Diverifikasi", value: 15 },
-          { label: "Ditolak", value: 1 },
-        ].map((item, i) => (
+            { label: "Tiket Masuk", value: dashboardData.total_tickets },
+            { label: "Pending", value: dashboardData.pending_tickets },
+            { label: "Diverifikasi", value: dashboardData.verified_tickets },
+            { label: "Ditolak", value: dashboardData.rejected_tickets },
+          ].map((item, i) => (
           <div
             key={i}
             className="bg-white rounded-2xl shadow border border-gray-100 flex flex-col justify-center items-center py-5"
@@ -172,10 +263,28 @@ export default function DashboardSeksi() {
             ))}
           </div>
 
-          <button className="flex items-center gap-2 bg-[#0F2C59] hover:bg-[#15397A] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-            <ArrowPathIcon className="w-4 h-4" />
-            Refresh
-          </button>
+         <button 
+          disabled={loading}
+          onClick={() => {
+            setLoading(true);
+            setCurrentPage(1);
+            fetchDashboard();
+            if (activeTab === "pelaporan") fetchPelaporan();
+            else fetchPelayanan();
+          }}
+          className={`flex items-center gap-2 px-4 py-2 mb-3 rounded-lg text-sm font-medium transition
+            ${loading 
+              ? "bg-gray-400 cursor-not-allowed" 
+              : "bg-[#0F2C59] hover:bg-[#15397A] text-white"
+            }`}
+        >
+          <ArrowPathIcon 
+            className={`w-4 h-4 transition-transform ${loading ? "animate-spin" : ""}`}
+          />
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+
+
         </div>
 
         {/* Filter Pencarian */}
@@ -184,41 +293,111 @@ export default function DashboardSeksi() {
             Filter pencarian
           </h2>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+          <div className="grid grid-cols-3 gap-x-6 gap-y-4">
             {/* Baris 1 */}
             <div className="flex items-center justify-between">
-              <label className="w-24 text-sm font-medium text-gray-700">
-                Data Aset
-              </label>
-              <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>-</option>
-                <option>-</option>
-                <option>-</option>
-                <option>-</option>
-              </select>
+              <div className="flex items-center justify-between">
+  <label className="w-20 text-sm font-medium text-gray-700">
+    Data Aset
+  </label>
+
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Cari aset..."
+          value={assetQuery}
+          onChange={handleAssetSearch}
+          className="border w-full px-3 py-2 rounded-lg text-sm pr-8" // ← tambahkan pr-8 untuk space X
+        />
+
+        {/* Tombol X */}
+        {assetQuery && (
+          <button
+            onClick={() => {
+              setAssetQuery("");
+              setSelectedAsset("");
+              setSelectedSerial("");
+              setAvailableSerials([]);
+              setAssetSuggestions([]);
+              setCurrentPage(1);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
+
+        {/* Dropdown Suggestion */}
+        {assetSuggestions.length > 0 && (
+          <ul className="absolute bg-white border rounded-lg shadow-lg w-full z-20 max-h-40 overflow-y-auto">
+            {assetSuggestions.map((name, i) => (
+              <li
+                key={i}
+                onClick={() => {
+                  setAssetQuery(name);
+                  setSelectedAsset(name);
+                  updateSerialList(name);
+                  setSelectedSerial("");
+                  setAssetSuggestions([]);
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              >
+                {name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+
+    </div>
+
             </div>
             {/* Baris 2 */}
             <div className="flex items-center justify-between">
-              <label className="w-24 text-sm font-medium text-gray-700">
+              <label className="w-20 text-sm font-medium text-gray-700">
                 No Seri
               </label>
-              <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>-</option>
-                <option>-</option>
-                <option>-</option>
+              <select
+                value={selectedSerial}
+                onChange={(e) => {
+                  setSelectedSerial(e.target.value);
+                  setCurrentPage(1); // kalau ganti no seri, balik ke halaman 1
+                }}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                disabled={availableSerials.length === 0}
+              >
+                <option value="">
+                  {availableSerials.length === 0 ? "Tidak ada nomor seri" : "Semua"}
+                </option>
+
+                {availableSerials.map((seri, i) => (
+                  <option key={i} value={seri}>
+                    {seri}
+                  </option>
+                ))}
               </select>
             </div>
+
             <div className="flex items-center justify-between">
-              <label className="w-24 text-sm font-medium text-gray-700">
+              <label className="w-20 text-sm font-medium text-gray-700">
                 Status
               </label>
-              <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>Pending</option>
-                <option>Terverifikasi</option>
-                <option>Revisi</option>
-                <option>Ditolak</option>
+              <select
+                value={selectedStatus}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  setCurrentPage(1); // reset pagination
+                }}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="Semua">Semua</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Revisi</option>
+                <option value="draft">Draft</option>
               </select>
+
             </div>
           </div>
         </div>
@@ -238,93 +417,137 @@ export default function DashboardSeksi() {
               </tr>
             </thead>
             <tbody className="text-gray-700">
-              {dataPelaporan.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b last:border-none hover:bg-gray-50"
+              {currentRows.map((item) => (
+                <tr key={item.ticket_id} className="border-b hover:bg-gray-50">
+              
+              {/* PENGIRIM */}
+              <td className="py-3 px-4 flex items-center gap-2">
+                <img
+                  src={item.creator.profile || "/default-avatar.png"}
+                  alt={item.creator.full_name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <span>{item.creator.full_name}</span>
+              </td>
+
+              {/* TANGGAL */}
+              <td className="py-3 px-4">
+                {new Date(item.created_at).toLocaleDateString()}
+              </td>
+
+              {/* DATA ASET */}
+              <td className="py-3 px-4">{item.asset.nama_asset || "-"}</td>
+
+              {/* NO SERI */}
+              <td className="py-3 px-4">{item.asset.nomor_seri || "-"}</td>
+
+              {/* LAMPIRAN */}
+              <td className="py-3 px-4">
+                <div className="flex gap-2">
+                  {item.files.length > 0 ? (
+                    item.files.slice(0, 3).map((file, idx) => (
+                      <DocumentIcon
+                        key={idx}
+                        className="w-5 h-5 text-[#0F2C59] cursor-pointer"
+                        onClick={() => window.open(file.file_path, "_blank")}
+                      />
+                    ))
+                  ) : (
+                    <span className="text-gray-400 italic">Tidak ada</span>
+                  )}
+                </div>
+              </td>
+
+              {/* STATUS */}
+              <td className="py-3 px-4">
+                <span
+                  className={`
+                    inline-flex items-center justify-center
+                    min-w-[80px]    /* lebar minimum biar seragam */
+                    h-[28px]        /* tinggi konsisten */
+                    px-3            /* padding horizontal */
+                    text-xs font-medium text-white
+                    rounded
+                    ${getStatusColor(item.status_ticket_seksi)}
+                  `}
                 >
-                  {/* Avatar + Nama */}
-                  <td className="py-3 px-4 flex items-center gap-2">
-                    <img
-                      src={item.foto}
-                      alt={item.pengirim}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <span>{item.pengirim}</span>
-                  </td>
+                  {item.status_ticket_seksi}
+                </span>
 
-                  <td className="py-3 px-4">{item.tanggal}</td>
-                  <td className="py-3 px-4">{item.Aset}</td>
-                  <td className="py-3 px-4">{item.Seri}</td>
+              </td>
 
-                  {/* Lampiran (1-3 ikon) */}
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      {item.lampiran.length > 0 ? (
-                        item.lampiran
-                          .slice(0, 3)
-                          .map((_, idx) => (
-                            <DocumentIcon
-                              key={idx}
-                              className="w-5 h-5 text-[#0F2C59] hover:text-[#15397A] cursor-pointer"
-                            />
-                          ))
-                      ) : (
-                        <span className="text-gray-400 text-xs italic">
-                          Tidak ada
-                        </span>
-                      )}
-                    </div>
-                  </td>
+              {/* Aksi */}
+              <td className="py-3 px-4">
+               <button
+  onClick={() => {
+    if (activeTab === "pelayanan") {
+      // → HALAMAN KHUSUS PELAYANAN
+      navigate(`/pelayananbidang/${item.ticket_id}`);
+    } else {
+      // → HALAMAN LAMA (pelaporan)
+      if (item.ticket_source?.toLowerCase() === "pegawai") {
+        navigate(`/pengajuanbidang/${item.ticket_id}`);
+      } else {
+        navigate(`/pengajuanmasyarakat/${item.ticket_id}`);
+      }
+    }
+  }}
+  className="text-[#0F2C59] hover:text-[#15397A]"
+>
+  <PencilSquareIcon className="w-5 h-5" />
+</button>
 
-                  <td className="py-3 px-4">
-                    <span
-                      className={`text-xs text-white px-3 py-1 rounded-full ${getStatusColor(
-                        item.status
-                      )}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
 
-                  {/* Aksi */}
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => navigate("/pengajuanbidang")}
-                      className="text-[#0F2C59] hover:text-[#15397A] transition"
-                    >
-                      <PencilSquareIcon className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
+              </td>
+            </tr>
+
               ))}
             </tbody>
           </table>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-          <span>
-            Menampilkan data 1 sampai {dataPelaporan.length} dari 30 data
-          </span>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">
-              &lt;
-            </button>
-            <button className="px-3 py-1 border rounded-lg bg-blue-600 text-white">
-              1
-            </button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">
-              2
-            </button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">
-              3
-            </button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">
-              &gt;
-            </button>
+          <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
+            <span>
+              Menampilkan data {indexOfFirstRow + 1} sampai {Math.min(indexOfLastRow, filteredTickets.length)} dari {filteredTickets.length} data
+            </span>
+
+            <div className="flex gap-2">
+              {/* Prev Button */}
+              <button
+                className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-40"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                &lt;
+              </button>
+
+              {/* Numbered Buttons */}
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <button
+                  key={index}
+                  className={`px-3 py-1 border rounded-lg ${
+                    currentPage === index + 1
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => setCurrentPage(index + 1)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+
+              {/* Next Button */}
+              <button
+                className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-40"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                &gt;
+              </button>
+            </div>
           </div>
-        </div>
+
       </div>
     </div>
   );
