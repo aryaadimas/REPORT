@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LayoutBidang from "../../components/Layout/LayoutBidang";
 import { useNavigate } from "react-router-dom";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
-
 
 // ICON LAMPIRAN
 const DocumentIcon = () => (
@@ -16,7 +15,7 @@ const DocumentIcon = () => (
   </svg>
 );
 
-// ICON AKSI (External Link)
+// ICON AKSI
 const ActionIcon = () => (
   <svg width="22" height="22" fill="#0F2C59" viewBox="0 0 24 24">
     <path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z" />
@@ -24,25 +23,18 @@ const ActionIcon = () => (
   </svg>
 );
 
-
-
-// DROPDOWN FILTER
+// DROPDOWN
 const FilterDropdown = ({ placeholder, options = [] }) => (
   <div className="relative">
     <select
-    className="w-full text-left text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 appearance-none pr-8 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-    defaultValue=""
->
-    <option value="" disabled hidden>
-        {placeholder}
-    </option>
+      className="w-full text-left text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 appearance-none pr-8"
+    >
+      <option value="" disabled hidden>{placeholder}</option>
+      {options.map((opt, i) => (
+        <option key={i} value={opt}>{opt}</option>
+      ))}
+    </select>
 
-    {options.map((opt, index) => (
-        <option key={index} value={opt}>
-            {opt}
-        </option>
-    ))}
-</select>
     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
       <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -52,68 +44,150 @@ const FilterDropdown = ({ placeholder, options = [] }) => (
 );
 
 const FilterRow = ({ label, children }) => (
-    <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-gray-700 whitespace-nowrap w-20">
-            {label}
-        </span>
-        <div className="flex-1">
-            {children}
-        </div>
-    </div>
+  <div className="flex items-center gap-3">
+    <span className="text-sm font-medium text-gray-700 w-20">{label}</span>
+    <div className="flex-1">{children}</div>
+  </div>
 );
 
-
 export default function DashboardBidang() {
-  const [activeTab, setActiveTab] = useState("pelaporan");
   const navigate = useNavigate();
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
+  const token = localStorage.getItem("token");
 
-  const stats = [
-    { number: 82, label: "Tiket Masuk", description: "tiket yang masuk", icon: "/assets/Tiket Masuk.png" },
-    { number: 44, label: "Diverifikasi", description: "tiket telah diverifikasi", icon: "/assets/Diverifikasi.png" },
-    { number: 10, label: "Revisi", description: "menunggu verifikasi", icon: "/assets/Revisi.png" },
-    { number: 3, label: "Ditolak", description: "tiket yang ditolak", icon: "/assets/Ditolak.png" },
-  ];
+  const [activeTab, setActiveTab] = useState("pelaporan");
+  const [loading, setLoading] = useState(false);
 
-  const tableData = [
-    { name: "Haikal Saputra", date: "18/09/2024", aset: "Laptop Dell", seri: "LTP-DL-001", priority: "rendah", avatar: "/assets/Haechan.jpg" },
-    { name: "Jalu Atmaja", date: "01/09/2024", aset: "CCTV", seri: "CV-002", priority: "rendah", avatar: "/assets/Rio.jpeg" },
-    { name: "Kayis Ibrahim", date: "01/09/2024", aset: "PC Samsung", seri: "PC-SMS-010", priority: "rendah", avatar: "/assets/Lia.jpg" },
-    { name: "Nanda Prakoso", date: "09/09/2024", aset: "Printer Epson", seri: "PR-EP-015", priority: "rendah", avatar: "/assets/Haechan.jpg" },
-    { name: "Rizky Mahendra", date: "09/09/2024", aset: "Router TP-Link", seri: "RT-TPL-003", priority: "sedang", avatar: "/assets/Rio.jpeg" },
-    { name: "Fauzan Hakim", date: "12/09/2024", aset: "Laptop Dell", seri: "LTP-DL-001", priority: "tinggi", avatar: "/assets/Haechan.jpg" },
-    { name: "Dewi Lestari", date: "03/10/2024", aset: "CCTV", seri: "CV-002", priority: "rendah", avatar: "/assets/Rio.jpeg" },
-    { name: "Faris Abdullah", date: "15/09/2024", aset: "PC Samsung", seri: "PC-SMS-010", priority: "sedang", avatar: "/assets/Lia.jpg" },
-    { name: "Putri Oktavia", date: "20/10/2024", aset: "Printer Epson", seri: "PR-EP-015", priority: "tinggi", avatar: "/assets/Haechan.jpg" },
-    { name: "Kevin Hartanta", date: "28/09/2024", aset: "Router TP-Link", seri: "RT-TPL-003", priority: "rendah", avatar: "/assets/Rio.jpeg" },
+  const [stats, setStats] = useState({
+    tiketMasuk: 0,
+    diverifikasi: 0,
+    revisi: 0,
+    ditolak: 0,
+  });
 
-  ];
+  const [tableData, setTableData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
+
+  const indexLast = currentPage * itemsPerPage;
+  const indexFirst = indexLast - itemsPerPage;
+
+  const currentData = tableData.slice(indexFirst, indexLast);
+
+  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+
+  // ========================== FETCH DASHBOARD ===================================
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(`${BASE_URL}/api/dashboard/bidang`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const json = await res.json();
+
+      setStats({
+        tiketMasuk: json.total_tickets || 0,
+        diverifikasi: json.verified_tickets || 0,
+        revisi: json.revisi_tickets || 0,
+        ditolak: json.rejected_tickets || 0,
+      });
+    } catch (err) {
+      console.error("Dashboard error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========================== FETCH PELAPORAN ===================================
+  const fetchPelaporan = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `${BASE_URL}/api/tickets/bidang/verified/pelaporan-online`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const json = await res.json();
+      setTableData(json.data || []);
+    } catch (err) {
+      console.error("Pelaporan error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========================== FETCH PELAYANAN ===================================
+  const fetchPelayanan = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `${BASE_URL}/api/tickets/bidang/verified/pengajuan-pelayanan`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const json = await res.json();
+      setTableData(json.data || []);
+    } catch (err) {
+      console.error("Pelayanan error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========================== LOAD DATA BERDASARKAN TAB =========================
+  useEffect(() => {
+    if (activeTab === "pelaporan") {
+      fetchDashboard();
+      fetchPelaporan();
+    } else {
+      fetchPelayanan();
+    }
+  }, [activeTab]);
+
+  // ========================== REFRESH BUTTON ===================================
+  const handleRefresh = () => {
+    if (activeTab === "pelaporan") {
+      fetchDashboard();
+      fetchPelaporan();
+    } else {
+      fetchPelayanan();
+    }
+  };
+
+  // ========================== PRIORITY STYLE ===================================
   const getPriorityStyle = (priority) => {
-  switch (priority.toLowerCase()) {
-    case "tinggi":
-      return "bg-red-100 text-red-700 border border-red-300";
-    case "sedang":
-      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
-    case "rendah":
-      return "bg-green-100 text-green-700 border border-green-300";
-    default:
-      return "bg-gray-100 text-gray-700 border border-gray-300";
-  }
-};
+    if (!priority) return "bg-gray-200 text-gray-700";
 
+    const p = priority.toLowerCase();
+    if (p === "high" || p === "tinggi") return "bg-red-100 text-red-700 border border-red-300";
+    if (p === "medium" || p === "sedang") return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+    if (p === "low" || p === "rendah") return "bg-green-100 text-green-700 border border-green-300";
+
+    return "bg-gray-200 text-gray-700";
+  };
 
   return (
     <LayoutBidang>
       <main className="p-6 bg-gray-50">
 
-        {/* HEADER DASHBOARD */}
+        {/* HEADER */}
         <div className="bg-white shadow-sm border rounded-xl p-6 mb-8">
           <h1 className="text-2xl font-bold text-[#226597]">Dashboard</h1>
         </div>
 
-        {/* STATS CARDS */}
+        {/* STATISTIK ATAS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-          {stats.map((item, i) => (
+          {[
+            { number: stats.tiketMasuk, label: "Tiket Masuk", icon: "/assets/Tiket Masuk.png" },
+            { number: stats.diverifikasi, label: "Diverifikasi", icon: "/assets/Diverifikasi.png" },
+            { number: stats.revisi, label: "Revisi", icon: "/assets/Revisi.png" },
+            { number: stats.ditolak, label: "Ditolak", icon: "/assets/Ditolak.png" },
+          ].map((item, i) => (
             <div
               key={i}
               className="bg-white border rounded-xl p-6 shadow hover:shadow-md transition"
@@ -123,18 +197,16 @@ export default function DashboardBidang() {
                 <h3 className="font-semibold text-gray-800">{item.label}</h3>
               </div>
               <p className="text-3xl font-bold text-[#0F2C59]">{item.number}</p>
-              <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+              <p className="text-sm text-gray-500 mt-1">tiket {item.label}</p>
             </div>
           ))}
         </div>
 
-        {/* CARD – TAB, FILTER, TABLE */}
+        {/* CARD TABLE */}
         <div className="bg-white shadow-md border rounded-xl p-7">
 
           {/* TAB + REFRESH */}
           <div className="flex justify-between items-center border-b pb-3 mb-6">
-
-            {/* TAB */}
             <div className="flex gap-8">
               {["pelaporan", "pelayanan"].map((tab) => (
                 <button
@@ -143,7 +215,7 @@ export default function DashboardBidang() {
                   className={`pb-2 font-semibold text-sm ${
                     activeTab === tab
                       ? "text-[#0F2C59] border-b-2 border-[#0F2C59]"
-                      : "text-gray-500 hover:text-gray-700"
+                      : "text-gray-500"
                   }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -151,50 +223,41 @@ export default function DashboardBidang() {
               ))}
             </div>
 
-            {/* REFRESH BUTTON */}
-            <button className="flex items-center gap-2 bg-[#226597] hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm transition-all text-sm font-medium">
-              <ArrowPathIcon className="w-5 h-5" />
-              Refresh
+            {/* Refresh */}
+            <button
+              onClick={handleRefresh}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition
+                ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#226597] hover:bg-blue-600 text-white"}
+              `}
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+              {loading ? "Refreshing..." : "Refresh"}
             </button>
-
-
           </div>
 
           {/* FILTER */}
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Filter Pencarian</h3>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FilterRow label="Kategori">
+                <FilterDropdown placeholder="Pilih kategori" options={["Hardware", "Software", "Jaringan", "SDM"]} />
+              </FilterRow>
 
-            <FilterRow label="Kategori">
-                <FilterDropdown 
-                    placeholder="Pilih kategori"
-                    options={["Hardware", "Software", "Jaringan", "SDM"]}
-                />
-            </FilterRow>
+              <FilterRow label="Jenis">
+                <FilterDropdown placeholder="Pilih jenis" options={["barang", "SDM"]} />
+              </FilterRow>
 
-            <FilterRow label="Jenis">
-                <FilterDropdown 
-                    placeholder="Pilih jenis"
-                    options={["barang", "SDM"]}
-                />
-            </FilterRow>
-
-            <FilterRow label="Prioritas">
-                <FilterDropdown 
-                    placeholder="Pilih prioritas"
-                    options={["Tinggi", "Sedang", "Rendah"]}
-                />
-            </FilterRow>
-
+              <FilterRow label="Prioritas">
+                <FilterDropdown placeholder="Pilih prioritas" options={["Low", "Medium", "High"]} />
+              </FilterRow>
             </div>
-
-
           </div>
 
-          {/* TABLE */}
+          {/* TABEL */}
           <div className="border rounded-lg overflow-hidden">
 
-            {/* TABLE HEADER */}
+            {/* HEADER TABEL */}
             <div className="grid grid-cols-7 bg-[#0F2C59] text-white font-medium text-sm p-3 text-center">
               <div className="text-left pl-2">Pengirim</div>
               <div>Tgl. Masuk</div>
@@ -205,46 +268,114 @@ export default function DashboardBidang() {
               <div>Aksi</div>
             </div>
 
-            {/* TABLE BODY */}
-            {tableData.map((row, i) => (
+            {/* BODY */}
+            {currentData.map((row, i) => (
               <div
                 key={i}
-                className="grid grid-cols-7 items-center p-3 border-b text-sm hover:bg-gray-50 transition"
+                className="grid grid-cols-7 items-center p-3 border-b text-sm hover:bg-gray-50"
               >
                 {/* Pengirim */}
                 <div className="flex items-center gap-3 pl-2">
-                  <img src={row.avatar} className="w-8 h-8 rounded-full object-cover" />
-                  {row.name}
+                  <img
+                    src={row.creator?.profile || "/assets/default.jpg"}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  {row.creator?.full_name || "Tidak ada nama"}
                 </div>
 
-                <div className="text-center text-gray-700">{row.date}</div>
+                {/* Tanggal */}
+                <div className="text-center">
+                  {row.created_at?.slice(0, 10) || "-"}
+                </div>
 
-                <div className="text-center">{row.aset}</div>
+                {/* Data Aset */}
+                <div className="text-center">
+                  {activeTab === "pelaporan"
+                    ? (row.asset?.nama_asset || "-")
+                    : (row.subkategori_nama || "-")}
+                </div>
 
-                <div className="text-center">{row.seri}</div>
+                {/* Nomor Seri */}
+                <div className="text-center">
+                  {activeTab === "pelaporan"
+                    ? (row.asset?.nomor_seri || "-")
+                    : "-"}
+                </div>
 
-                {/* LAMPIRAN */}
+                {/* Lampiran */}
                 <div className="flex justify-center items-center gap-1 text-[#0F2C59] underline cursor-pointer">
                   <DocumentIcon />
-                  <span className="text-xs">document.pdf</span>
+                  <span className="text-xs">
+                    {row.files?.length > 0 ? "lampiran" : "-"}
+                  </span>
                 </div>
 
-                {/* PRIORITAS */}
+                {/* Priority */}
                 <div className="flex justify-center">
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityStyle(row.priority)}`}>
                     {row.priority}
                   </span>
-
                 </div>
 
-                {/* AKSI */}
-                <div className="flex justify-center cursor-pointer" onClick={() => navigate("/aksitiket")}>
+                {/* Aksi */}
+                <div
+                  className="flex justify-center cursor-pointer"
+                  onClick={() => navigate(`/aksitiket/${row.ticket_id}`)}
+                >
                   <ActionIcon />
                 </div>
               </div>
             ))}
-
           </div>
+
+            {/* PAGINATION */}
+<div className="flex justify-end items-center p-4 gap-3">
+
+
+  {/* Prev Button */}
+  <button
+    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+    className={`px-3 py-1 rounded ${
+      currentPage === 1
+        ? "bg-gray-300 cursor-not-allowed"
+        : "bg-[#0F2C59] text-white"
+    }`}
+  >
+    Prev
+  </button>
+
+  {/* Page Numbers */}
+  <div className="flex gap-2">
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+      <button
+        key={num}
+        onClick={() => setCurrentPage(num)}
+        className={`px-3 py-1 rounded border ${
+          currentPage === num
+            ? "bg-[#0F2C59] text-white"
+            : "bg-white text-gray-700"
+        }`}
+      >
+        {num}
+      </button>
+    ))}
+  </div>
+
+  {/* Next Button */}
+  <button
+    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+    className={`px-3 py-1 rounded ${
+      currentPage === totalPages
+        ? "bg-gray-300 cursor-not-allowed"
+        : "bg-[#0F2C59] text-white"
+    }`}
+  >
+    Next
+  </button>
+
+</div>
+
+
         </div>
       </main>
     </LayoutBidang>

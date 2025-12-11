@@ -1,177 +1,156 @@
-import React, { useState } from "react";
-import { PencilSquareIcon, } from "@heroicons/react/24/outline";
-import { FileText, RefreshCcw} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { RefreshCcw } from "lucide-react";
 
 export default function ArsipSeksi() {
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState("pelaporan");
+  const [loading, setLoading] = useState(false);
+  const [dataPelaporan, setDataPelaporan] = useState([]);
+  const [dataPelayanan, setDataPelayanan] = useState([]);
 
-  const dataArsip = [
-    {
-  id: 1, aset: "Laptop", tanggal: "02/09/2024", intensitas: "2", status: "normal",
-},
-{
-  id: 2, aset: "Wifi", tanggal: "01/11/2024", intensitas: "7", status: "perlu rfc",
-},
-{
-  id: 3, aset: "Laptop", tanggal: "20/09/2024", intensitas: "4", status: "bermasalah",
-},
-{
-  id: 4, aset: "Printer", tanggal: "05/08/2024", intensitas: "6", status: "perlu rfc",
-},
-{
-  id: 5, aset: "CCTV", tanggal: "12/10/2024", intensitas: "3", status: "normal",
-},
-{
-  id: 6, aset: "Server", tanggal: "25/11/2024", intensitas: "8", status: "bermasalah",
-},
-{
-  id: 7, aset: "Router", tanggal: "14/07/2024", intensitas: "5", status: "perlu rfc",
-},
-{
-  id: 8, aset: "Scanner", tanggal: "30/09/2024", intensitas: "1", status: "normal",
-},
-{
-  id: 9, aset: "Monitor", tanggal: "19/10/2024", intensitas: "9", status: "bermasalah",
-},
-{
-  id: 10, aset: "Access Point", tanggal: "07/12/2024", intensitas: "3", status: "normal",
-},
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
+  const token = localStorage.getItem("token");
 
-  ];
-
-  const statusColor = (status) => {
-    switch (status) {
-      case "perlu rfc":
-        return "bg-red-100 text-white-700";
-      case "bermasalah":
-        return "bg-yellow-100 text-white-700";
-      default:
-        return "bg-green-100 text-white-700";
+  // FETCH PELAPORAN
+  const fetchPelaporan = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/tickets/seksi/finished-pelaporan-online`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const result = await res.json();
+      setDataPelaporan(result.data || []);
+    } catch (error) {
+      console.error("Error fetch pelaporan:", error);
     }
+    setLoading(false);
+  };
+
+  // FETCH PELAYANAN
+  const fetchPelayanan = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/tickets/seksi/finished-pengajuan-layanan`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const result = await res.json();
+      setDataPelayanan(result.data || []);
+    } catch (error) {
+      console.error("Error fetch pelayanan:", error);
+    }
+    setLoading(false);
+  };
+
+  // LOAD DEFAULT
+  useEffect(() => {
+    if (activeTab === "pelaporan") fetchPelaporan();
+    if (activeTab === "pelayanan") fetchPelayanan();
+  }, [activeTab]);
+
+  const handleRefresh = () => {
+    if (activeTab === "pelaporan") fetchPelaporan();
+    if (activeTab === "pelayanan") fetchPelayanan();
   };
 
   return (
-    <div className="space-y-6">
-      {/* Judul */}
-      <h1 className="text-3xl font-bold text-gray-800">Daftar Arsip</h1>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-[#0F2C59]">Daftar Arsip</h1>
 
-      {/* Tab */}
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
-        <div className="border-b flex items-center justify-between px-6">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab("pelaporan")}
-              className={`px-5 py-3 text-sm font-semibold border-b-2 ${
-                activeTab === "pelaporan"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-blue-600"
-              }`}
-            >
-              Pelaporan
-            </button>
-            <button
-              onClick={() => setActiveTab("pelayanan")}
-              className={`px-5 py-3 text-sm font-semibold border-b-2 ${
-                activeTab === "pelayanan"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-blue-600"
-              }`}
-            >
-              Pelayanan
-            </button>
-          </div>
-            <button className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                <RefreshCcw size={16} /> Refresh
-            </button>
-        </div>
+      {/* TAB */}
+      <div className="flex gap-6 border-b">
+        <button
+          onClick={() => setActiveTab("pelaporan")}
+          className={`pb-2 text-lg font-medium ${
+            activeTab === "pelaporan"
+              ? "text-[#0F2C59] border-b-2 border-[#0F2C59]"
+              : "text-gray-500"
+          }`}
+        >
+          Pelaporan
+        </button>
+        <button
+          onClick={() => setActiveTab("pelayanan")}
+          className={`pb-2 text-lg font-medium ${
+            activeTab === "pelayanan"
+              ? "text-[#0F2C59] border-b-2 border-[#0F2C59]"
+              : "text-gray-500"
+          }`}
+        >
+          Pelayanan
+        </button>
+      </div>
 
-        {/* === FILTER 1 BARIS === */}
-<div className="p-5 border-b bg-gray-50">
-  <h2 className="text-gray-700 font-semibold mb-4">Filter pencarian</h2>
+      {/* REFRESH */}
+      <button
+        onClick={handleRefresh}
+        className={`flex items-center gap-2 px-4 py-2 mb-3 rounded-lg text-sm font-medium transition
+          ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-[#0F2C59] hover:bg-[#15397A] text-white"
+          }`}
+      >
+        <RefreshCcw
+          className={`w-4 h-4 transition-transform ${
+            loading ? "animate-spin" : ""
+          }`}
+        />
+        {loading ? "Refreshing..." : "Refresh"}
+      </button>
 
-  <div className="grid grid-cols-3 gap-6">
+      {/* TABEL */}
+      <div className="bg-white shadow rounded-xl overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-[#0F2C59] text-white">
+            <tr>
+              <th className="p-3 text-left">Nama Aset</th>
+              <th className="p-3 text-left">Terakhir dilaporkan</th>
+              <th className="p-3 text-left">Intensitas</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-center">Aksi</th>
+            </tr>
+          </thead>
 
-    {/* === Kategori === */}
-    <div className="flex items-center gap-3">
-      <label className="text-gray-700 text-sm w-24">Kategori</label>
-      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
-        <option>Pilih kategori</option>
-        <option>Keamanan</option>
-        <option>Jaringan</option>
-        <option>Email</option>
-      </select>
-    </div>
-
-    {/* === Jenis === */}
-    <div className="flex items-center gap-3">
-      <label className="text-gray-700 text-sm w-16">Jenis</label>
-      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
-        <option>Pilih jenis</option>
-        <option>Fisik</option>
-        <option>Non-Fisik</option>
-      </select>
-    </div>
-
-    {/* === Rating === */}
-    <div className="flex items-center gap-3">
-      <label className="text-gray-700 text-sm w-20">Rating</label>
-      <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white">
-        <option>Pilih rating</option>
-        <option>5</option>
-        <option>4</option>
-        <option>3</option>
-        <option>2</option>
-        <option>1</option>
-      </select>
-    </div>
-
-  </div>
-</div>
-
-
-        {/* Tabel */}
-        <div className="p-4 overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="bg-blue-900 text-white">
-                <th className="p-3">Nama Aset</th>
-                <th className="p-3">Terakhir dilaporkan</th>
-                <th className="p-3">Intensitas</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dataArsip.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3">{item.aset}</td>
-                  <td className="p-3">{item.tanggal}</td>
-                  <td className="p-3">{item.intensitas}</td>
+          <tbody>
+            {(activeTab === "pelaporan" ? dataPelaporan : dataPelayanan).map(
+              (item) => (
+                <tr
+                  key={item.asset.asset_id}
+                  className="border-b hover:bg-gray-50"
+                >
+                  <td className="p-3">{item.asset.nama_asset}</td>
                   <td className="p-3">
-                    <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${statusColor(item.status)}`}>
-                      {item.status}
-                    </span>
+                    {new Date(item.latest_report_date).toLocaleDateString(
+                      "id-ID"
+                    )}
                   </td>
-                  <td className="p-3 flex gap-3">
-                    <PencilSquareIcon className="w-5 h-5 text-gray-600 cursor-pointer" />
+                  <td className="p-3">{item.intensitas_laporan}</td>
+                  <td className="p-3 text-green-700 font-semibold">selesai</td>
+
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() =>
+                        navigate(`/detailarsip/${item.asset.asset_id}`)
+                      }
+                      className="p-2 rounded-full border border-blue-600 text-blue-600 hover:bg-blue-50 transition"
+                    >
+                      <PencilSquareIcon className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center p-4 border-t text-sm text-gray-600">
-          <p>Menampilkan data 1 sampai 10 dari 216 data</p>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">&lt;</button>
-            <button className="px-3 py-1 border rounded-lg bg-blue-600 text-white">1</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">2</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">3</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">&gt;</button>
-          </div>
-        </div>
+              )
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

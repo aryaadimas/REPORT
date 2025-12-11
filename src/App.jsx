@@ -45,12 +45,14 @@ import LayananChat from "./pages/beranda/Seksi/LayananChat"
 import BerandaSeksi from "./pages/beranda/Seksi/BerandaSeksi";
 import LayoutSeksi from "./components/Layout/LayoutSeksi";
 import PengajuanSeksi from "./pages/beranda/Seksi/PengajuanSeksi";
+import DetailTiketSelesai from "./pages/beranda/Seksi/DetailTiketSelesai";
 import PenugasanSeksi from "./pages/beranda/Seksi/PenugasanSeksi";
 import FormPenugasanSeksi from "./pages/beranda/Seksi/FormPenugasanSeksi";
 import MonitoringSeksi from "./pages/beranda/Seksi/MonitoringSeksi";
 import StatistikSeksi from "./pages/beranda/Seksi/StatistikSeksi";
 import ArsipSeksi from "./pages/beranda/Seksi/ArsipSeksi";
 import ReopenSeksi from "./pages/beranda/Seksi/ReopenSeksi";
+import DetailArsip from "./pages/beranda/Seksi/DetailArsip";
 import RatingSeksi from "./pages/beranda/Seksi/RatingSeksi";
 import KotakMasukSeksi from "./pages/beranda/Seksi/kotakmasukseksi";
 import FormPelayanan from "./pages/beranda/Seksi/FormPelayanan";
@@ -165,11 +167,15 @@ function App() {
           <Route path="/pengajuanmasyarakat/:id" element={<PengajuanMasyarakat />} />
           <Route path="kotakmasukseksi" element={<KotakMasukSeksi />} />
           <Route path="formpelayanan" element={<FormPelayanan />} />
+          <Route path="detailarsip" element={<DetailArsip />} />
+          <Route path="/detailarsip/:asset_id" element={<DetailArsip />} />
+          <Route path="/detailtiketselesai/:ticket_id" element={<DetailTiketSelesai />} />
           <Route path="/formpenugasanseksi/:ticket_id" element={<FormPenugasanSeksi />} />
           <Route path="/formpelayanan/:ticket_id" element={<FormPelayanan />} />
           <Route path="monitoringtiketseksi" element={<MonitoringTiketSeksi />} />
           <Route path="/monitoringtiketseksi/:ticketId" element={<MonitoringTiketSeksi />} />
           <Route path="detailrating" element={<DetailRating />} />
+          <Route path="/detailrating/:ticket_id" element={<DetailRating />} />
           <Route path="layananchat" element={<LayananChat />} />
           <Route path="pelayananbidang" element={<PelayananBidang />} />
           <Route path="pelayananbidang/:id" element={<PelayananBidang />} />
@@ -181,10 +187,8 @@ function App() {
         <Route path="/" element={<LayoutTeknisi />}>
           <Route path="dashboardteknisi" element={<DashboardTeknisi />} />
           <Route path="cekdetailteknisi" element={<CekDetailTeknisi />} />
-          <Route
-            path="updateprogresteknisi"
-            element={<UpdateProgressTeknisi />}
-          />
+          <Route path="updateprogresteknisi" element={<UpdateProgressTeknisi />}/>
+          <Route path="/updateprogresteknisi/:ticket_id" element={<UpdateProgressTeknisi />} />
           <Route path="ratingteknisi" element={<RatingTeknisi />} />
           <Route path="rfcteknisi" element={<RFCTeknisi />} />
           <Route path="buatformrfc" element={<BuatFormRFC />} />
@@ -192,6 +196,7 @@ function App() {
           <Route path="lihatformrfc" element={<LihatFormRFC />} />
           <Route path="kotakmasukteknisi" element={<KotakMasukTeknisi />} />
           <Route path="detailratingteknisi" element={<DetailRatingTeknisi />} />
+          <Route path="/detailratingteknisi/:ticket_id" element={<DetailRatingTeknisi />} />
         </Route>
 
         {/* Layout KOTA */}
@@ -317,6 +322,7 @@ function App() {
         <Route path="riwayat" element={<Riwayat />} />
         <Route path="lihathistory" element={<LihatHistory />} />
         <Route path="lihatratingbidang" element={<LihatRatingBidang />} />
+        <Route path="/lihatratingbidang/:ticket_id" element={<LihatRatingBidang />} />
         <Route path="berirating" element={<BeriRating />} />
         <Route path="reopenpegawai" element={<ReopenPegawai />} />
         <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
