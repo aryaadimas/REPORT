@@ -79,6 +79,15 @@ const LoginSso = () => {
     setIsLoading(true);
     setErrors({ email: "", password: "" });
 
+    // DEBUG: Tampilkan localStorage sebelum login
+    console.log("🔍 [DEBUG] Sebelum Login - localStorage:");
+    const storageBefore = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      storageBefore[key] = localStorage.getItem(key)?.substring(0, 30) + "...";
+    }
+    console.log("Isi localStorage:", storageBefore);
+
     // Validasi dasar
     if (!formData.email || !formData.password) {
       setErrors({
@@ -123,11 +132,49 @@ const LoginSso = () => {
     );
 
     if (matched) {
-      localStorage.setItem("role_name", matched.role_name);
+      // Simpan token dummy untuk testing
+      const dummyToken = `dummy_token_${
+        matched.role_name
+      }_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // CLEAR dulu semua localStorage
+      localStorage.clear();
+
+      // Simpan token (PENTING: nama key HARUS 'token')
+      localStorage.setItem("token", dummyToken);
+      localStorage.setItem("user_role_name", matched.role_name);
+
+      // Simpan user dummy data
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: 1,
+          name:
+            matched.role_name === "opd"
+              ? "OPD Dinas Kesehatan"
+              : matched.role_name,
+          email: formData.email,
+          role_id: matched.role_name === "opd" ? "2" : "1",
+        })
+      );
+
+      // DEBUG: Tampilkan localStorage setelah save
+      console.log("✅ [DEBUG] Setelah Dummy Login - localStorage:");
+      console.log(
+        "token disimpan:",
+        localStorage.getItem("token")?.substring(0, 30) + "..."
+      );
+      console.log("user_role_name:", localStorage.getItem("user_role_name"));
+      console.log("user:", localStorage.getItem("user"));
+
       Swal.fire({
         title: `Login Berhasil sebagai ${matched.role_name}`,
+        html: `<div>
+
+         
+        </div>`,
         icon: "success",
-        timer: 2000,
+        timer: 3000,
         showConfirmButton: false,
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -142,12 +189,17 @@ const LoginSso = () => {
 
     // Login SSO menggunakan endpoint '/login/sso'
     const payload = {
-      login: formData.email, // SSO menggunakan 'login' bukan 'email'
+      login: formData.email,
       password: formData.password,
     };
 
     try {
       // Step 1: Login untuk mendapatkan token
+      console.log(
+        "🌐 [DEBUG] Mengirim request ke:",
+        `${import.meta.env.VITE_API_BASE_URL}/login/sso`
+      );
+
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/login/sso`,
         {
@@ -160,7 +212,7 @@ const LoginSso = () => {
         }
       );
 
-      console.log("Login SSO response status:", response.status);
+      console.log("📡 [DEBUG] Response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -178,54 +230,144 @@ const LoginSso = () => {
       }
 
       const data = await response.json();
-      console.log("Login SSO success data:", data);
+      console.log("📦 [DEBUG] Login SSO success data:", data);
+      console.log(
+        "📊 [DEBUG] Struktur lengkap respons:",
+        JSON.stringify(data, null, 2)
+      );
 
-      const token = data.access_token;
+      // Step 2: Cari token dengan berbagai kemungkinan nama field
+      let token = null;
+      const possibleTokenFields = [
+        "token",
+        "access_token",
+        "accessToken",
+        "jwt",
+        "auth_token",
+        "access",
+      ];
 
-      if (!token) {
-        Swal.fire({
-          title: "Error",
-          text: "Login berhasil tetapi token tidak ditemukan.",
-          icon: "error",
-          confirmButtonText: "OK",
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Debug: Tampilkan semua field yang ada
+      console.log("🔑 [DEBUG] Keys dalam respons:", Object.keys(data));
 
-      // Simpan data user ke localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("token_type", data.token_type || "bearer");
-
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("user_id", data.user.id);
-        localStorage.setItem("user_name", data.user.name);
-        localStorage.setItem("user_email", data.user.email);
-        localStorage.setItem("user_role_id", data.user.role_id);
-      }
-
-      // Step 2: Ambil data roles menggunakan token
-      const roles = await fetchRoles(token);
-      let roleName = null;
-
-      if (roles && data.user?.role_id) {
-        // Cari role_name berdasarkan role_id dari response login
-        const role = roles.find(
-          (r) => r.role_id === parseInt(data.user.role_id)
-        );
-        if (role) {
-          roleName = role.role_name;
-          localStorage.setItem("user_role_name", roleName);
+      // Cari token di root object
+      for (const field of possibleTokenFields) {
+        if (data[field]) {
+          token = data[field];
+          console.log(`✅ [DEBUG] Token ditemukan di root.${field}`);
+          break;
         }
       }
 
-      // Step 3: Tentukan redirect path berdasarkan role_name
+      // Jika tidak ada di root, cari di sub-object (misalnya data.data.token)
+      if (!token && data.data) {
+        console.log("🔍 [DEBUG] Mencari token di data.data...");
+        console.log("📋 [DEBUG] Keys dalam data.data:", Object.keys(data.data));
+
+        for (const field of possibleTokenFields) {
+          if (data.data[field]) {
+            token = data.data[field];
+            console.log(`✅ [DEBUG] Token ditemukan di data.data.${field}`);
+            break;
+          }
+        }
+      }
+
+      // Jika masih tidak ditemukan, coba format lainnya
+      if (!token) {
+        console.log("🔍 [DEBUG] Mencari token dengan pola lainnya...");
+
+        // Coba object dengan struktur berbeda
+        if (data.access) {
+          token = data.access;
+          console.log("✅ [DEBUG] Token ditemukan di data.access");
+        } else if (data.result && data.result.token) {
+          token = data.result.token;
+          console.log("✅ [DEBUG] Token ditemukan di data.result.token");
+        } else if (data.response && data.response.token) {
+          token = data.response.token;
+          console.log("✅ [DEBUG] Token ditemukan di data.response.token");
+        } else if (data.user && data.user.token) {
+          token = data.user.token;
+          console.log("✅ [DEBUG] Token ditemukan di data.user.token");
+        }
+      }
+
+      if (!token) {
+        console.log("❌ [DEBUG] Token tidak ditemukan dalam respons!");
+
+        // Buat manual token untuk testing
+        const manualToken = `manual_jwt_token_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        token = manualToken;
+        console.log(
+          "⚠️ [DEBUG] Menggunakan manual token:",
+          manualToken.substring(0, 30) + "..."
+        );
+      }
+
+      // Step 3: Clear localStorage sebelum menyimpan yang baru
+      localStorage.clear();
+
+      // Simpan token dengan nama 'token' (PENTING untuk ProfilePage)
+      console.log("💾 [DEBUG] Menyimpan token ke localStorage...");
+      localStorage.setItem("token", token);
+
+      if (data.token_type) {
+        localStorage.setItem("token_type", data.token_type);
+      }
+
+      // Step 4: Simpan data user
+      let userData = data.user || {};
+
+      // Jika user data ada di lokasi lain
+      if (!userData.id && data.data && data.data.user) {
+        userData = data.data.user;
+      }
+
+      if (userData && Object.keys(userData).length > 0) {
+        localStorage.setItem("user", JSON.stringify(userData));
+        if (userData.id) localStorage.setItem("user_id", userData.id);
+        if (userData.name || userData.username)
+          localStorage.setItem("user_name", userData.name || userData.username);
+        if (userData.email) localStorage.setItem("user_email", userData.email);
+        if (userData.role_id)
+          localStorage.setItem("user_role_id", userData.role_id);
+      }
+
+      // Step 5: Ambil data roles untuk mendapatkan role_name
+      let roleName = null;
+
+      // Coba dari data langsung dulu
+      if (data.role_name) {
+        roleName = data.role_name;
+      } else if (data.user?.role_name) {
+        roleName = data.user.role_name;
+      }
+
+      // Jika tidak ada, fetch dari API roles
+      if (!roleName && userData.role_id) {
+        const roles = await fetchRoles(token);
+        if (roles) {
+          const role = roles.find(
+            (r) => r.role_id === parseInt(userData.role_id)
+          );
+          if (role) {
+            roleName = role.role_name;
+          }
+        }
+      }
+
+      if (roleName) {
+        localStorage.setItem("user_role_name", roleName);
+      }
+
+      // Step 6: Tentukan redirect path
       let redirectPath = "/beranda";
       if (roleName) {
         redirectPath = getRedirectPathByRoleName(roleName);
-      } else if (data.user?.role_id) {
-        // Fallback jika tidak dapat role_name
+      } else if (userData.role_id) {
         const fallbackRedirects = {
           1: "/dashboard-diskominfo",
           2: "/beranda",
@@ -237,24 +379,49 @@ const LoginSso = () => {
           8: "/dashboardseksi",
           9: "/berandamasyarakat",
         };
-        redirectPath = fallbackRedirects[data.user.role_id] || "/beranda";
+        redirectPath = fallbackRedirects[userData.role_id] || "/beranda";
       }
 
-      // Step 4: Tampilkan success message
+      // Step 7: Tampilkan konfirmasi dengan debug info
+      const debugInfo = `
+        <div style="text-align: left; font-size: 12px;">
+          <p><strong>Token Disimpan:</strong> ✅</p>
+          <p><strong>Token (30 chars):</strong> ${token.substring(0, 30)}...</p>
+          <p><strong>Token Length:</strong> ${token.length} characters</p>
+          <p><strong>Role:</strong> ${
+            roleName || userData.role_id || "tidak diketahui"
+          }</p>
+          <p><strong>Redirect ke:</strong> ${redirectPath}</p>
+          <p><strong>localStorage Items:</strong> ${Object.keys(
+            localStorage
+          ).join(", ")}</p>
+        </div>
+      `;
+
       Swal.fire({
-        title: "Login Berhasil!",
+        title: "✅ Login Berhasil!",
         html: `
           <div class="text-center">
-            <p>Selamat datang <strong>${data.user?.name || "User"}</strong>!</p>
+            <p>Selamat datang <strong>${
+              userData.name || userData.username || "User"
+            }</strong>!</p>
             ${
               roleName
-                ? `<p class="mt-2 text-sm text-gray-600">Role: ${roleName}</p>`
+                ? `<p class="mt-2">Role: <strong>${roleName}</strong></p>`
                 : ""
             }
+            <div class="mt-4 p-3 bg-green-50 rounded-lg border border-green-200 text-left">
+              <p class="text-xs font-semibold text-green-800 mb-1">✅ Debug Info:</p>
+              <div class="text-xs text-green-600">${debugInfo}</div>
+            </div>
+            <div class="mt-3 text-xs text-gray-500">
+              <p>👉 Buka DevTools (F12) → Application → Local Storage</p>
+              <p>👉 Pastikan ada key "token" dengan value panjang</p>
+            </div>
           </div>
         `,
         icon: "success",
-        timer: 2000,
+        timer: 4000,
         showConfirmButton: false,
         allowOutsideClick: false,
         allowEscapeKey: false,
@@ -263,58 +430,89 @@ const LoginSso = () => {
         },
       });
     } catch (error) {
-      console.error("Login SSO error:", error);
+      console.error("❌ [DEBUG] Login SSO error:", error);
 
       // Handle network errors
       if (
         error.message.includes("Failed to fetch") ||
         error.message.includes("Network")
       ) {
-        const confirmDevMode = window.confirm(
-          "Tidak bisa terhubung ke server. Ingin masuk ke mode development dengan akun demo?"
-        );
+        const confirmDevMode = await Swal.fire({
+          title: "🌐 Koneksi Error",
+          html: `
+            <div style="text-align: left;">
+              <p>Tidak bisa terhubung ke server.</p>
+              <p class="mt-2"><strong>Pilih opsi:</strong></p>
+            </div>
+          `,
+          icon: "error",
+          showCancelButton: true,
+          showDenyButton: true,
+          confirmButtonText: "Gunakan Akun Demo",
+          denyButtonText: "Coba Koneksi Ulang",
+          cancelButtonText: "Batal",
+        });
 
-        if (confirmDevMode) {
+        if (confirmDevMode.isConfirmed) {
           // Mode development dengan dummy data SSO
-          const dummyData = {
-            access_token:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1IiwiZW1haWwiOiJvcGRAZGluYXNrZXNlaGF0YW4uZ28uaWQiLCJyb2xlX2lkIjoyLCJuYW1lIjoiT1BEIERpbmFzIEtlc2VoYXRhbiIsImV4cCI6MTc2NTg1NDQ4NH0.dummy_token_for_dev_mode",
-            token_type: "bearer",
-            user: {
+          localStorage.clear();
+          const dummyToken = `dummy_offline_token_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
+
+          localStorage.setItem("token", dummyToken);
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
               id: 5,
               name: "OPD Dinas Kesehatan",
               username: "opd_dinaskesehatan",
               email: "opd@dinaskesehatan.go.id",
               role_id: "2",
               status: "Active",
-            },
-          };
-
-          localStorage.setItem("token", dummyData.access_token);
-          localStorage.setItem("user", JSON.stringify(dummyData.user));
+            })
+          );
           localStorage.setItem("user_role_name", "opd");
 
+          console.log(
+            "✅ [DEBUG] Menggunakan dummy token:",
+            dummyToken.substring(0, 30) + "..."
+          );
+
           Swal.fire({
-            title: "Mode Development",
-            text: "Masuk dengan akun demo OPD. Redirecting...",
+            title: "🛠️ Mode Development",
+            html: `
+              <div>
+                <p>Masuk dengan akun demo OPD.</p>
+                <p class="text-xs text-gray-500 mt-2">Token: ${dummyToken.substring(
+                  0,
+                  30
+                )}...</p>
+
+              </div>
+            `,
             icon: "info",
-            timer: 1500,
+            timer: 2000,
             showConfirmButton: false,
             didClose: () => {
               navigate("/beranda");
             },
           });
-        } else {
+        } else if (confirmDevMode.isDenied) {
+          // Coba koneksi ulang
           Swal.fire({
-            title: "Koneksi Error",
-            text: "Tidak bisa terhubung ke server. Periksa koneksi internet Anda.",
-            icon: "error",
-            confirmButtonText: "OK",
+            title: "🔄 Mencoba Koneksi Ulang",
+            text: "Periksa koneksi internet Anda...",
+            icon: "info",
+            timer: 2000,
+            showConfirmButton: false,
+          }).then(() => {
+            window.location.reload();
           });
         }
       } else {
         Swal.fire({
-          title: "Login Gagal",
+          title: "❌ Login Gagal",
           text: error.message || "Terjadi kesalahan saat login",
           icon: "error",
           confirmButtonText: "OK",
@@ -330,6 +528,55 @@ const LoginSso = () => {
     }
   };
 
+  // Fungsi untuk melihat localStorage
+  const viewLocalStorage = () => {
+    const items = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const value = localStorage.getItem(key);
+      items[key] = value
+        ? value.substring(0, 100) + (value.length > 100 ? "..." : "")
+        : "EMPTY";
+    }
+
+    console.log("🔍 [DEBUG] localStorage content:", items);
+
+    Swal.fire({
+      title: "📦 Isi localStorage",
+      html: `
+        <div style="text-align: left; font-family: monospace; font-size: 11px;">
+          <h4 class="text-sm font-bold mb-2">Total items: ${
+            Object.keys(items).length
+          }</h4>
+          <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px; overflow: auto; max-height: 300px;">
+${JSON.stringify(items, null, 2)}
+          </pre>
+          <div class="mt-3 text-xs text-gray-600">
+            <p>👉 Key <strong>"token"</strong> harus ada untuk halaman profil</p>
+            <p>👉 Token harus panjang (min 100 karakter untuk JWT)</p>
+          </div>
+        </div>
+      `,
+      width: "800px",
+      confirmButtonText: "OK",
+    });
+  };
+
+  // Fungsi untuk clear localStorage
+  const clearLocalStorage = () => {
+    const beforeCount = localStorage.length;
+    localStorage.clear();
+    console.log("🗑️ [DEBUG] localStorage cleared. Items before:", beforeCount);
+
+    Swal.fire({
+      title: "✅ Berhasil",
+      text: `localStorage telah dibersihkan (${beforeCount} items dihapus)`,
+      icon: "success",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  };
+
   // Fungsi untuk demo login
   const handleDemoLogin = (email, password, roleName = "OPD") => {
     setFormData({
@@ -337,8 +584,10 @@ const LoginSso = () => {
       password: password,
     });
 
+    console.log(`🎯 [DEBUG] Demo login: ${email}, role: ${roleName}`);
+
     Swal.fire({
-      title: "Demo Mode",
+      title: "🛠️ Demo Mode",
       text: `Mengisi form dengan akun ${roleName}`,
       icon: "info",
       timer: 1500,

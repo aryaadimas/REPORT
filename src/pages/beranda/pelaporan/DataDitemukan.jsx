@@ -6,16 +6,116 @@ export default function SuksesPelayanan() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ambil data dari FormLaporan melalui state navigasi
+  // Ambil data dari state navigasi (dari FormLaporan atau dari Pelacakan)
   const laporanData = location.state?.laporanData || {};
+  const ticketDataFromAPI = location.state?.ticketData || {};
 
-  // Data tiket dengan OPD tujuan dari form
-  const ticketData = {
-    noTiket: "LPR318728",
-    pin: "228973",
-    jenisLayanan: "Pelaporan Online",
-    jenisPermohonan: laporanData.opdTujuan || "Dinas Pendidikan", // Ambil dari form
-    status: "Pending", // Status ditambahkan di sini
+  // Gunakan data dari API jika ada (dari pelacakan), jika tidak gunakan data dari form
+  const ticketData = ticketDataFromAPI.ticket_code
+    ? {
+        noTiket: ticketDataFromAPI.ticket_code || "LPR318728",
+        jenisLayanan: "Pelaporan Online",
+        jenisPermohonan:
+          ticketDataFromAPI.opd_name ||
+          laporanData.opdTujuan ||
+          "Dinas Pendidikan",
+        status: ticketDataFromAPI.status_ticket_pengguna || "Pending",
+      
+        opdId: ticketDataFromAPI.opd_id,
+        // Tambahan jika dari form submission
+        pin: ticketDataFromAPI.pin || "228973",
+      }
+    : {
+        noTiket: "LPR318728",
+        pin: "228973",
+        jenisLayanan: "Pelaporan Online",
+        jenisPermohonan: laporanData.opdTujuan || "Dinas Pendidikan",
+        status: "Pending",
+      };
+
+  // Fungsi untuk menentukan warna status berdasarkan API response
+  const getStatusColor = (status) => {
+    const statusLower = status.toLowerCase();
+    if (
+      statusLower.includes("selesai") ||
+      statusLower.includes("done") ||
+      statusLower.includes("completed")
+    ) {
+      return "bg-green-500";
+    } else if (
+      statusLower.includes("diproses") ||
+      statusLower.includes("process") ||
+      statusLower.includes("in progress")
+    ) {
+      return "bg-yellow-500";
+    } else if (
+      statusLower.includes("ditolak") ||
+      statusLower.includes("rejected")
+    ) {
+      return "bg-red-500";
+    } else if (statusLower.includes("menunggu")) {
+      return "bg-yellow-500";
+    } else {
+      return "bg-yellow-500"; // Default untuk pending
+    }
+  };
+
+  // Fungsi untuk menentukan teks status
+  const getStatusText = (status) => {
+    const statusLower = status.toLowerCase();
+    if (
+      statusLower.includes("selesai") ||
+      statusLower.includes("done") ||
+      statusLower.includes("completed")
+    ) {
+      return "Selesai";
+    } else if (
+      statusLower.includes("diproses") ||
+      statusLower.includes("process") ||
+      statusLower.includes("in progress")
+    ) {
+      return "Diproses";
+    } else if (
+      statusLower.includes("ditolak") ||
+      statusLower.includes("rejected")
+    ) {
+      return "Ditolak";
+    } else if (statusLower.includes("menunggu")) {
+      return "Menunggu Diproses";
+    } else {
+      return "Pending";
+    }
+  };
+
+  // Fungsi untuk download tiket (hanya untuk submission baru)
+  const handleDownloadTicket = () => {
+    console.log("Downloading ticket:", ticketData.noTiket);
+
+    // Simulasi download PDF
+    const ticketContent = `
+      TIKET LAPORAN
+      ========================
+      No. Tiket: ${ticketData.noTiket}
+      ${!ticketDataFromAPI.ticket_code ? `PIN: ${ticketData.pin}` : ""}
+      Jenis Layanan: ${ticketData.jenisLayanan}
+      OPD Tujuan: ${ticketData.jenisPermohonan}
+      Status: ${getStatusText(ticketData.status)}
+      Jenis Permohonan: ${ticketData.requestType}
+      ${ticketData.opdId ? `OPD ID: ${ticketData.opdId}` : ""}
+      Tanggal: ${new Date().toLocaleDateString("id-ID")}
+      
+      Simpan tiket ini untuk melacak status laporan Anda.
+    `;
+
+    const blob = new Blob([ticketContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tiket-${ticketData.noTiket}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -87,44 +187,86 @@ export default function SuksesPelayanan() {
                 </svg>
               </div>
               <h1 className="text-2xl font-semibold text-[#000000] text-center">
-                Data Ditemukan
+                {ticketDataFromAPI.ticket_code
+                  ? "Data Ditemukan"
+                  : "Laporan Berhasil Dikirim"}
               </h1>
+              {!ticketDataFromAPI.ticket_code && (
+                <p className="text-center text-gray-600 mt-2">
+                  Laporan Anda telah berhasil dikirim dan sedang diproses
+                </p>
+              )}
             </div>
 
             {/* Content */}
             <div className="p-6 space-y-6">
-              {/* Pengaduan Anda Section */}
+              {/* Detail Tiket Section */}
               <div className="text-left">
-                {/* Pengaduan Anda Section */}
-                <div className="text-left">
-                  <h3 className="text-sm font-medium text-gray-600 mb-4">
-                    Pengaduan Anda:
-                  </h3>
+                <h3 className="text-sm font-medium text-gray-600 mb-4">
+                  {ticketDataFromAPI.ticket_code
+                    ? "Detail Tiket:"
+                    : "Pengaduan Anda:"}
+                </h3>
 
-                  {/* No. Tiket dan Status - Rata Kiri */}
-                  <div className="space-y-3">
-                    {/* No. Tiket */}
+                {/* No. Tiket dan Status - Rata Kiri */}
+                <div className="space-y-3">
+                  {/* No. Tiket */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
+                      No. Tiket
+                    </span>
+                    <div className="bg-[#226597] text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
+                      <span className="text-sm font-medium">
+                        {ticketData.noTiket}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* PIN (hanya ditampilkan jika dari form submission) */}
+                  {!ticketDataFromAPI.ticket_code && ticketData.pin && (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
-                        No. Tiket
+                        PIN
                       </span>
-                      <div className="bg-[#226597] text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
+                      <div className="bg-gray-700 text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
                         <span className="text-sm font-medium">
-                          {ticketData.noTiket}
+                          {ticketData.pin}
                         </span>
                       </div>
                     </div>
+                  )}
 
-                    {/* Status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
-                        Status
+                  {/* Status */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
+                      Status
+                    </span>
+                    <div
+                      className={`${getStatusColor(
+                        ticketData.status
+                      )} text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center`}
+                    >
+                      <span className="text-sm font-medium">
+                        {getStatusText(ticketData.status)}
                       </span>
-                      <div className="bg-yellow-500 text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
-                        <span className="text-sm font-medium">Pending</span>
-                      </div>
                     </div>
                   </div>
+
+                  {/* Jenis Permohonan (jika ada dari API) */}
+                  {ticketData.requestType && (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
+                        Jenis
+                      </span>
+                      <div className="bg-gray-100 text-gray-800 px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
+                        <span className="text-sm font-medium">
+                          {ticketData.requestType
+                            .replace("_", " ")
+                            .toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -287,7 +429,18 @@ export default function SuksesPelayanan() {
 
           {/* Action Buttons */}
           <div className="max-w-2xl mx-auto mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Download Tiket (hanya untuk submission baru) */}
+              {!ticketDataFromAPI.ticket_code && (
+                <button
+                  onClick={handleDownloadTicket}
+                  className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-md text-sm font-medium transition-colors text-center flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  Download Tiket
+                </button>
+              )}
+
               {/* Cek Status Layanan */}
               <button
                 onClick={() => navigate("/pelacakan")}

@@ -2,23 +2,28 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import LayoutPegawai from "../../components/Layout/LayoutPegawai";
 
-const ProfilePage = () => {
-  const [activeItem, setActiveItem] = useState("beranda");
+const API_BASE_URL = "https://service-desk-be-production.up.railway.app";
+
+const ProfilSaya = () => {
   const [profileData, setProfileData] = useState({
-    email: "sriwulandari@gmail.com",
-    full_name: "Sri Wulandari",
-    phone_number: "", // Tidak ada di gambar
-    profile_url: "", // Tidak ada foto di gambar
-    role_name: "pegawai",
-    nik: "", // Tidak ada di gambar
-    alamat: "Asemrowo, Surabaya",
-    dinas: "Dinas Kependudukan dan Pencatatan Sipil",
+    email: "",
+    full_name: "",
+    phone_number: "",
+    profile_url: "",
+    role_name: "",
+    nik: "",
+    alamat: "",
+    dinas: "",
+    role: "",
+    unit_kerja: "",
+    name: "",
+    username: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    alamat: "Asemrowo, Surabaya",
+    alamat: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -33,7 +38,12 @@ const ProfilePage = () => {
     if (!url || url === "" || url === null) {
       return ""; // Kosong, tidak ada gambar
     }
-    return url;
+    // Jika URL sudah lengkap, return langsung
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    // Jika hanya nama file, tambahkan base URL
+    return `${API_BASE_URL}/storage/${url}`;
   };
 
   // Helper function untuk menampilkan placeholder avatar
@@ -54,11 +64,270 @@ const ProfilePage = () => {
     );
   };
 
+  // Fetch profile data dari API
+  const fetchProfileData = async () => {
+    console.log("🔍 [PROFIL] fetchProfileData dipanggil");
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Cari token
+      let token = localStorage.getItem("token");
+
+      if (!token) {
+        // Cari nama field alternatif
+        const possibleKeys = [
+          "access_token",
+          "jwt",
+          "auth_token",
+          "accessToken",
+          "access",
+          "user_token",
+        ];
+
+        for (const key of possibleKeys) {
+          const value = localStorage.getItem(key);
+          if (value) {
+            token = value;
+            console.log(`✅ [PROFIL] Token ditemukan di key: ${key}`);
+            break;
+          }
+        }
+      }
+
+      if (!token) {
+        throw new Error("Token tidak ditemukan. Silakan login kembali.");
+      }
+
+      console.log("🌐 [PROFIL] Mengakses API:", `${API_BASE_URL}/me`);
+
+      // Fetch data dari API endpoint /me
+      const response = await fetch(`${API_BASE_URL}/me`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("📡 [PROFIL] Response status:", response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          throw new Error("Sesi telah berakhir. Silakan login kembali.");
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("📦 [PROFIL] API Response data:", data);
+
+      // Parse response sesuai format API
+      if (data.status === "success" && data.user) {
+        const user = data.user;
+
+        // Mapping data dari API response
+        const mappedData = {
+          email: user.email || "",
+          full_name: user.name || "",
+          phone_number: user.phone_number || "",
+          profile_url: user.avatar || "",
+          role_name: user.role || "",
+          nik: user.nik || "",
+          alamat: user.alamat || "",
+          dinas: user.dinas || "",
+          role: user.role || "",
+          unit_kerja: user.unit_kerja || "",
+          name: user.name || "",
+          username: user.username || "",
+        };
+
+        console.log("✅ [PROFIL] Data yang akan ditampilkan:", mappedData);
+
+        setProfileData(mappedData);
+        setEditData({
+          alamat: mappedData.alamat || "",
+        });
+      } else {
+        console.error("❌ [PROFIL] Format data tidak sesuai:", data);
+        throw new Error("Format data profil tidak sesuai");
+      }
+    } catch (err) {
+      console.error("❌ [PROFIL] Error fetching profile:", err);
+      setError(err.message);
+
+      // Fallback untuk testing jika API error
+      const fallbackData = {
+        email: "opd@dinaskesehatan.go.id",
+        full_name: "OPD Dinas Kesehatan",
+        alamat: "Jl. OPD No. 1, Jakarta",
+        dinas: "Dinas Kesehatan",
+        role: "Pegawai",
+      };
+
+      setProfileData(fallbackData);
+      setEditData({
+        alamat: fallbackData.alamat,
+      });
+
+      setError(
+        "Tidak dapat mengambil data dari server. Menampilkan data simulasi."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fungsi untuk upload avatar ke API
+  const uploadProfileImage = async (file) => {
+    try {
+      setIsUploading(true);
+      setSaveMessage("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Token tidak ditemukan. Silakan login kembali.");
+      }
+
+      const formData = new FormData();
+      formData.append("avatar", file); // Sesuaikan dengan nama field yang diharapkan API
+
+      const response = await fetch(`${API_BASE_URL}/me`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Update profile data dengan response dari API
+      if (data.status === "success" && data.user) {
+        setProfileData((prev) => ({
+          ...prev,
+          profile_url: data.user.avatar || "",
+        }));
+
+        setSaveMessage("Foto profil berhasil diperbarui!");
+      } else {
+        throw new Error("Format response tidak sesuai");
+      }
+
+      setTimeout(() => {
+        setSaveMessage("");
+      }, 3000);
+    } catch (err) {
+      console.error("❌ [PROFIL] Error uploading profile image:", err);
+      setSaveMessage("Gagal mengupload foto profil. Silakan coba lagi.");
+    } finally {
+      setIsUploading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Fungsi untuk menghapus avatar dari API
+  const deleteAvatarFromAPI = async () => {
+    try {
+      setIsDeletingAvatar(true);
+      setSaveMessage("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Token tidak ditemukan. Silakan login kembali.");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/me/avatar`, {
+        method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        setProfileData((prev) => ({
+          ...prev,
+          profile_url: "",
+        }));
+
+        setSaveMessage("Foto profil berhasil dihapus!");
+        setShowDeleteAvatarConfirm(false);
+      } else {
+        throw new Error("Gagal menghapus foto profil");
+      }
+
+      setTimeout(() => {
+        setSaveMessage("");
+      }, 3000);
+    } catch (err) {
+      console.error("❌ [PROFIL] Error deleting avatar:", err);
+      setSaveMessage("Gagal menghapus foto profil. Silakan coba lagi.");
+    } finally {
+      setIsDeletingAvatar(false);
+    }
+  };
+
+  // Fungsi untuk mengupdate alamat ke API
+  const updateAddressInAPI = async (alamat) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Token tidak ditemukan. Silakan login kembali.");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/me`, {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          alamat: alamat,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.status === "success" && data.user) {
+        return { success: true, data: data.user };
+      } else {
+        throw new Error("Format response tidak sesuai");
+      }
+    } catch (err) {
+      console.error("❌ [PROFIL] Error updating address:", err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
-    // Mengisi data awal
-    setEditData({
-      alamat: profileData.alamat || "",
-    });
+    console.log("🚀 [PROFIL] Komponen ProfilSaya dimuat");
+    fetchProfileData();
   }, []);
 
   const handleEditToggle = () => {
@@ -98,55 +367,17 @@ const ProfilePage = () => {
       return;
     }
 
-    // Simulasi upload
-    setIsUploading(true);
-    setSaveMessage("");
-
-    // Simulasi upload berhasil setelah 1.5 detik
-    setTimeout(() => {
-      // Buat URL lokal untuk preview
-      const imageUrl = URL.createObjectURL(file);
-      setProfileData((prev) => ({
-        ...prev,
-        profile_url: imageUrl,
-      }));
-
-      setSaveMessage("Foto profil berhasil diperbarui!");
-      setIsUploading(false);
-
-      setTimeout(() => {
-        setSaveMessage("");
-      }, 3000);
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }, 1500);
+    // Upload ke API
+    await uploadProfileImage(file);
   };
 
   // Fungsi untuk menghapus avatar profil
-  const handleDeleteAvatar = () => {
-    setIsDeletingAvatar(true);
-    setSaveMessage("");
-
-    // Simulasi penghapusan setelah 1 detik
-    setTimeout(() => {
-      setProfileData((prev) => ({
-        ...prev,
-        profile_url: "", // Kosongkan URL profil
-      }));
-
-      setSaveMessage("Foto profil berhasil dihapus!");
-      setShowDeleteAvatarConfirm(false);
-      setIsDeletingAvatar(false);
-
-      setTimeout(() => {
-        setSaveMessage("");
-      }, 3000);
-    }, 1000);
+  const handleDeleteAvatar = async () => {
+    await deleteAvatarFromAPI();
   };
 
-  const handleSave = () => {
+  // Fungsi untuk menyimpan perubahan alamat
+  const handleSave = async () => {
     if (!editData.alamat.trim()) {
       setSaveMessage("Alamat tidak boleh kosong");
       return;
@@ -155,21 +386,28 @@ const ProfilePage = () => {
     setIsSaving(true);
     setSaveMessage("");
 
-    // Simulasi penyimpanan setelah 1.5 detik
-    setTimeout(() => {
-      setProfileData((prev) => ({
-        ...prev,
-        alamat: editData.alamat,
-      }));
+    try {
+      const result = await updateAddressInAPI(editData.alamat);
 
-      setSaveMessage("Alamat berhasil diperbarui!");
-      setIsEditing(false);
-      setIsSaving(false);
+      if (result.success) {
+        setProfileData((prev) => ({
+          ...prev,
+          alamat: result.data.alamat || editData.alamat,
+        }));
+
+        setSaveMessage("Alamat berhasil diperbarui!");
+        setIsEditing(false);
+      }
 
       setTimeout(() => {
         setSaveMessage("");
       }, 3000);
-    }, 1500);
+    } catch (err) {
+      console.error("Error updating address:", err);
+      setSaveMessage("Gagal memperbarui alamat. Coba lagi nanti.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -180,7 +418,72 @@ const ProfilePage = () => {
     setSaveMessage("");
   };
 
+  // Fungsi untuk refresh data
+  const handleRefresh = () => {
+    console.log("[PROFIL] Manual refresh dipanggil");
+    fetchProfileData();
+  };
+
   const hasAvatar = profileData.profile_url && profileData.profile_url !== "";
+
+  // Render loading state
+  if (loading) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-4">
+          <div className="px-4 md:px-6 py-4 md:py-8">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-4 md:mb-6 w-full">
+              <div className="flex flex-col items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mb-4"></div>
+                <p className="text-gray-600">Memuat data profil...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
+  // Render error state
+  if (error && !profileData.email) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-4">
+          <div className="px-4 md:px-6 py-4 md:py-8">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-4 md:mb-6 w-full">
+              <div className="text-center py-8">
+                <div className="text-red-500 mb-4">
+                  <svg
+                    className="w-16 h-16 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Gagal Memuat Data
+                </h3>
+                <p className="text-gray-600 mb-4">{error}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="bg-[#226597] hover:bg-blue-900 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+                >
+                  Coba Lagi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
 
   return (
     <LayoutPegawai>
@@ -196,12 +499,32 @@ const ProfilePage = () => {
       {/* Main Content */}
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
-          {/* Profile Header */}
+          {/* Profile Header dengan debug button */}
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-4 md:mb-6 w-full">
-            <div className="flex justify-start mb-4 md:mb-6">
+            <div className="flex justify-between items-center mb-4 md:mb-6">
               <h1 className="text-xl md:text-2xl font-semibold text-[#226597]">
                 Profil Saya
               </h1>
+              <button
+                onClick={handleRefresh}
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded flex items-center"
+                title="Refresh data"
+              >
+                <svg
+                  className="w-3 h-3 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
             </div>
 
             {/* Profile Card */}
@@ -215,14 +538,12 @@ const ProfilePage = () => {
                         alt={profileData.full_name}
                         className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-[#226597]"
                         onError={(e) => {
-                          // Jika gambar gagal dimuat, tampilkan placeholder
                           e.target.style.display = "none";
                           e.target.parentElement.innerHTML =
                             renderAvatarPlaceholder(profileData.full_name);
                         }}
                       />
                       <div className="absolute bottom-0 right-0 flex flex-col space-y-1">
-                        {/* Tombol Upload */}
                         <button
                           onClick={handleFileSelect}
                           disabled={isUploading}
@@ -259,7 +580,6 @@ const ProfilePage = () => {
                     <>
                       {renderAvatarPlaceholder(profileData.full_name)}
                       <div className="absolute bottom-0 right-0">
-                        {/* Tombol Upload saja */}
                         <button
                           onClick={handleFileSelect}
                           disabled={isUploading}
@@ -300,11 +620,18 @@ const ProfilePage = () => {
                   </h2>
                   <div className="flex flex-wrap gap-2 mt-4">
                     <span className="inline-block bg-[#226597] text-white text-sm font-normal px-3 py-1 rounded-full">
-                      Pegawai
+                      {profileData.role === "opd"
+                        ? "OPD"
+                        : profileData.role || "Pengguna"}
                     </span>
                     <span className="inline-block bg-green-100 text-green-800 text-sm font-normal px-3 py-1 rounded-full">
                       Aktif
                     </span>
+                    {profileData.unit_kerja && (
+                      <span className="inline-block bg-blue-100 text-blue-800 text-sm font-normal px-3 py-1 rounded-full">
+                        {profileData.unit_kerja}
+                      </span>
+                    )}
                   </div>
                   {hasAvatar && (
                     <button
@@ -416,9 +743,8 @@ const ProfilePage = () => {
               </div>
             )}
 
-            {/* Tabel Informasi Dasar (layout seperti gambar) */}
+            {/* Tabel Informasi Dasar */}
             <div className="mt-4 md:mt-6">
-              {/* Baris 1: Nama Lengkap | Alamat */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-6">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
@@ -452,7 +778,6 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Baris 2: Email | Dinas */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
@@ -550,4 +875,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default ProfilSaya;

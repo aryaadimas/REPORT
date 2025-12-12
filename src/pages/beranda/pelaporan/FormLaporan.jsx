@@ -1,19 +1,26 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FileText, XCircle, ChevronDown } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 
 export default function FormLaporan() {
-  const [selectedReasons, setSelectedReasons] = useState([]);
-  const [priority, setPriority] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showCancelWarning, setShowCancelWarning] = useState(false); // Tambahkan state untuk warning
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [assets, setAssets] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [subKategori, setSubKategori] = useState([]);
+  const [loadingSubKategori, setLoadingSubKategori] = useState(false);
+  const [opdData, setOpdData] = useState(null);
+  const [isLoadingOpd, setIsLoadingOpd] = useState(false);
+
   const [formData, setFormData] = useState({
-    nama: "Haikal Saputra",
-    nip: "haikalsaputra@gmail.com",
-    divisi: "Divisi Sumber Daya Manusia",
+    nama: "",
+    email: "",
+    divisi: "",
     judulPelaporan: "",
     dataAset: "",
     nomorSeri: "",
@@ -23,23 +30,390 @@ export default function FormLaporan() {
     lokasiKejadian: "",
     rincianMasalah: "",
     penyelesaianDiharapkan: "",
+    selectedSubKategoriId: "",
   });
 
   const [dropdowns, setDropdowns] = useState({
     dataAset: false,
-    nomorSeri: false,
-    kategoriAset: false,
-    subKategoriAset: false,
-    jenisAset: false,
   });
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const selectedOpd = location.state?.selectedOpd || {
-    name: "Dinas Pendidikan",
-    logo: "/assets/Dinas Pendidikan.png",
+  const defaultOpd = {
+    name: "Dinas Kesehatan",
+    logo: "/assets/Dinas Kesehatan.png",
+  };
+
+  // Function to get token
+  const getToken = () => {
+    const tokenKeys = [
+      "access_token",
+      "token",
+      "jwt_token",
+      "auth_token",
+      "accessToken",
+    ];
+
+    for (const key of tokenKeys) {
+      const token = localStorage.getItem(key);
+      if (token && token.trim() !== "") {
+        console.log(`✅ Token ditemukan di: ${key}`);
+        return token;
+      }
+    }
+
+    console.log("❌ Token tidak ditemukan di localStorage");
+    return null;
+  };
+
+  // Fetch semua data yang diperlukan
+  useEffect(() => {
+    const initData = async () => {
+      await fetchUserProfile();
+      await fetchAssets();
+      await fetchSubKategori();
+    };
+
+    initData();
+  }, []);
+
+  // Fetch data OPD setelah user profile berhasil diambil
+  useEffect(() => {
+    if (userProfile && userProfile.dinas_id) {
+      fetchOpdData(userProfile.dinas_id);
+    } else {
+      // Coba ambil dinas_id dari localStorage
+      const userDataStr = localStorage.getItem("user_data");
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          if (userData.dinas_id) {
+            fetchOpdData(userData.dinas_id);
+          } else {
+            fetchOpdData(1); // Default ID
+          }
+        } catch (error) {
+          fetchOpdData(1); // Default ID
+        }
+      } else {
+        fetchOpdData(1); // Default ID
+      }
+    }
+  }, [userProfile]);
+
+  // Fetch data OPD berdasarkan ID dinas
+  const fetchOpdData = async (dinasId) => {
+    try {
+      setIsLoadingOpd(true);
+      console.log(`📡 Fetching OPD data untuk dinas ID: ${dinasId}`);
+
+      const response = await fetch(
+        `https://service-desk-be-production.up.railway.app/opd/dinas/${dinasId}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Data OPD berhasil diambil:", result);
+
+      if (result.data) {
+        const opdInfo = {
+          id: result.data.id,
+          name: result.data.nama,
+          logo: result.data.file_path || defaultOpd.logo,
+          created_at: result.data.created_at,
+          updated_at: result.data.updated_at,
+        };
+
+        setOpdData(opdInfo);
+        localStorage.setItem("current_opd", JSON.stringify(opdInfo));
+      }
+    } catch (error) {
+      console.error("❌ Error fetching OPD data:", error);
+      // Coba gunakan data dari localStorage atau default
+      const savedOpd = localStorage.getItem("current_opd");
+      if (savedOpd) {
+        try {
+          setOpdData(JSON.parse(savedOpd));
+        } catch (e) {
+          setOpdData(defaultOpd);
+        }
+      } else {
+        setOpdData(location.state?.selectedOpd || defaultOpd);
+      }
+    } finally {
+      setIsLoadingOpd(false);
+    }
+  };
+
+  // Fetch data sub-kategori
+  const fetchSubKategori = async () => {
+    try {
+      setLoadingSubKategori(true);
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/sub-kategori",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (Array.isArray(result)) {
+        setSubKategori(result);
+      } else if (result.data && Array.isArray(result.data)) {
+        setSubKategori(result.data);
+      } else {
+        console.error("⚠️ Format response tidak sesuai:", result);
+        setSubKategori([
+          { id: 1, nama: "Server" },
+          { id: 2, nama: "Komputer Desktop" },
+          { id: 3, nama: "Laptop" },
+          { id: 4, nama: "Printer" },
+          { id: 5, nama: "Monitor" },
+        ]);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching sub-kategori:", error);
+      setSubKategori([
+        { id: 1, nama: "Server" },
+        { id: 2, nama: "Komputer Desktop" },
+        { id: 3, nama: "Laptop" },
+        { id: 4, nama: "Printer" },
+        { id: 5, nama: "Monitor" },
+        { id: 6, nama: "Keyboard" },
+        { id: 7, nama: "Mouse" },
+      ]);
+    } finally {
+      setLoadingSubKategori(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoadingProfile(true);
+      const token = getToken();
+
+      if (!token) {
+        console.error("❌ Token tidak tersedia. Silakan login ulang.");
+        const dummyProfile = {
+          name: "OPD Dinas Kesehatan",
+          email: "opd@dinaskesehatan.go.id",
+          unit_kerja: "Bidang Kesehatan Masyarakat",
+          dinas_id: 1,
+        };
+
+        setUserProfile(dummyProfile);
+        localStorage.setItem("user_data", JSON.stringify(dummyProfile));
+
+        setFormData((prev) => ({
+          ...prev,
+          nama: dummyProfile.name,
+          email: dummyProfile.email,
+          divisi: dummyProfile.unit_kerja,
+        }));
+
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      console.log("🌐 Fetching profile data...");
+
+      const endpoints = [
+        "https://service-desk-be-production.up.railway.app/api/me",
+        "https://service-desk-be-production.up.railway.app/me",
+        "https://service-desk-be-production.up.railway.app/api/user/profile",
+      ];
+
+      let response = null;
+      let result = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`🔄 Mencoba endpoint: ${endpoint}`);
+          response = await fetch(endpoint, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: "include",
+          });
+
+          console.log(`📡 Status ${endpoint}:`, response.status);
+
+          if (response.ok) {
+            result = await response.json();
+            console.log(`✅ Success dari ${endpoint}:`, result);
+            break;
+          }
+        } catch (err) {
+          console.warn(`⚠️ Gagal akses ${endpoint}:`, err.message);
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(
+          `Semua endpoint gagal. Status terakhir: ${response?.status}`
+        );
+      }
+
+      let userData = null;
+
+      if (result && result.user) {
+        userData = result.user;
+      } else if (result && result.data) {
+        userData = result.data;
+      } else if (result && (result.name || result.email)) {
+        userData = result;
+      }
+
+      if (userData) {
+        console.log("👤 User data ditemukan:", userData);
+
+        const mappedData = {
+          name: userData.name || userData.full_name || userData.username || "",
+          email: userData.email || userData.user_email || "",
+          unit_kerja:
+            userData.unit_kerja ||
+            userData.division ||
+            userData.department ||
+            "",
+          alamat: userData.alamat || userData.address || "",
+          dinas: userData.dinas || userData.department_name || "",
+          dinas_id:
+            userData.dinas_id ||
+            userData.dinasId ||
+            userData.unit_kerja?.dinas?.id ||
+            1,
+          role: userData.role || userData.role_name || "",
+        };
+
+        setUserProfile(mappedData);
+        localStorage.setItem("user_data", JSON.stringify(mappedData));
+
+        setFormData((prev) => ({
+          ...prev,
+          nama: mappedData.name,
+          email: mappedData.email,
+          divisi: mappedData.unit_kerja,
+        }));
+      } else {
+        console.warn("⚠️ Struktur data tidak dikenali:", result);
+        const fallbackData = {
+          name: "OPD Dinas Kesehatan",
+          email: "opd@dinaskesehatan.go.id",
+          unit_kerja: "Bidang Kesehatan Masyarakat",
+          dinas_id: 1,
+        };
+
+        setUserProfile(fallbackData);
+        localStorage.setItem("user_data", JSON.stringify(fallbackData));
+
+        setFormData((prev) => ({
+          ...prev,
+          nama: fallbackData.name,
+          email: fallbackData.email,
+          divisi: fallbackData.unit_kerja,
+        }));
+      }
+    } catch (error) {
+      console.error("❌ Error fetching profile:", error);
+      const fallbackData = {
+        name: "OPD Dinas Kesehatan",
+        email: "opd@dinaskesehatan.go.id",
+        unit_kerja: "Bidang Kesehatan Masyarakat",
+        dinas_id: 1,
+      };
+
+      setUserProfile(fallbackData);
+      localStorage.setItem("user_data", JSON.stringify(fallbackData));
+
+      setFormData((prev) => ({
+        ...prev,
+        nama: fallbackData.name,
+        email: fallbackData.email,
+        divisi: fallbackData.unit_kerja,
+      }));
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  const fetchAssets = async () => {
+    try {
+      setIsLoadingAssets(true);
+      const token = getToken();
+
+      if (!token) {
+        console.warn("⚠️ Token tidak tersedia untuk fetch assets");
+        return;
+      }
+
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/asset-barang",
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.status === "success" && Array.isArray(result.data?.data)) {
+        const activeAssets = result.data.data.filter(
+          (asset) => asset.status === "aktif" || asset.status === "dihapus"
+        );
+
+        const formattedAssets = activeAssets.map((asset) => ({
+          id: asset.id,
+          nama_asset: asset.nama_asset,
+          nomor_seri: asset.nomor_seri,
+          kode_bmd: asset.kode_bmd,
+          kategori: asset.kategori,
+          jenis: asset.jenis,
+          sub_kategori: asset.asset_barang?.sub_kategori?.nama || "",
+          unit_kerja: asset.unit_kerja?.nama || "",
+          dinas: asset.unit_kerja?.dinas?.nama || "",
+          lokasi: asset.asset_barang?.lokasi?.nama || "",
+          kondisi: asset.asset_barang?.kondisi || "",
+        }));
+
+        setAssets(formattedAssets);
+      } else {
+        setAssets([]);
+      }
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+      setAssets([]);
+    } finally {
+      setIsLoadingAssets(false);
+    }
   };
 
   const toggleDropdown = (dropdownName) => {
@@ -52,7 +426,7 @@ export default function FormLaporan() {
   const isFormValid = () => {
     return (
       formData.nama.trim() !== "" &&
-      formData.nip.trim() !== "" &&
+      formData.email.trim() !== "" &&
       formData.divisi.trim() !== "" &&
       formData.judulPelaporan.trim() !== "" &&
       formData.dataAset.trim() !== "" &&
@@ -69,6 +443,52 @@ export default function FormLaporan() {
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectAsset = (assetName) => {
+    const selectedAsset = assets.find(
+      (asset) => asset.nama_asset === assetName
+    );
+
+    if (selectedAsset) {
+      setFormData((prev) => ({
+        ...prev,
+        dataAset: selectedAsset.nama_asset,
+        nomorSeri: selectedAsset.nomor_seri,
+        kategoriAset: selectedAsset.kategori === "ti" ? "TI" : "Non-TI",
+        subKategoriAset: selectedAsset.sub_kategori || "",
+        jenisAset: selectedAsset.jenis || "",
+      }));
+    }
+
+    toggleDropdown("dataAset");
+  };
+
+  const handleSelectSubKategori = (subKategoriItem) => {
+    setFormData((prev) => ({
+      ...prev,
+      dataAset: subKategoriItem.nama,
+      subKategoriAset: subKategoriItem.nama,
+      selectedSubKategoriId: subKategoriItem.id.toString(),
+    }));
+    toggleDropdown("dataAset");
+  };
+
+  const handleNomorSeriChange = (value) => {
+    setFormData((prev) => ({ ...prev, nomorSeri: value }));
+
+    if (value.trim() !== "") {
+      const matchedAsset = assets.find((asset) => asset.nomor_seri === value);
+      if (matchedAsset) {
+        setFormData((prev) => ({
+          ...prev,
+          dataAset: matchedAsset.nama_asset,
+          kategoriAset: matchedAsset.kategori === "ti" ? "TI" : "Non-TI",
+          subKategoriAset: matchedAsset.sub_kategori || "",
+          jenisAset: matchedAsset.jenis || "",
+        }));
+      }
+    }
   };
 
   const handleFileUpload = (event) => {
@@ -116,11 +536,11 @@ export default function FormLaporan() {
       })),
       tanggal: new Date().toISOString(),
       status: "dikirim",
-      opdTujuan: selectedOpd.name,
+      opdTujuan: opdData?.name || defaultOpd.name,
+      userProfile: userProfile,
     };
 
-    console.log("Data laporan:", laporanData);
-
+    console.log("📤 Data laporan dikirim:", laporanData);
     setShowConfirmation(false);
     setShowSuccessPopup(true);
   };
@@ -137,47 +557,40 @@ export default function FormLaporan() {
           })),
           tanggal: new Date().toISOString(),
           status: "dikirim",
-          opdTujuan: selectedOpd.name,
+          opdTujuan: opdData?.name || defaultOpd.name,
+          userProfile: userProfile,
         },
       },
     });
   };
 
   const handleBatalkan = () => {
-    // Tampilkan warning popup ketika tombol batalkan diklik
     setShowCancelWarning(true);
   };
 
   const handleConfirmCancel = () => {
-    // Konfirmasi batalkan dan navigasi
     setShowCancelWarning(false);
     navigate(-1);
   };
 
   const handleCancelCancel = () => {
-    // Batal konfirmasi, tutup popup
     setShowCancelWarning(false);
   };
 
-  // Data dropdown options
-  const dataAsetOptions = [
-    "Laptop Lenovo ThinkPad X230",
-    "Printer HP LaserJet Pro P1102w",
-    "PC Dell OptiPlex 3020",
-    "Laptop ASUS ZenBook UX305FA ",
-    "Printer Canon PIXMA MP287",
-    "Laptop HP EliteBook 840",
-    "Printer Epson L3110",
-  ];
+  const dataAsetOptions = assets.map((asset) => asset.nama_asset);
+
+  useEffect(() => {
+    console.log("🔄 FormData saat ini:", formData);
+    console.log("👤 UserProfile:", userProfile);
+    console.log("📋 SubKategori List:", subKategori);
+    console.log("🏢 OPD Data:", opdData);
+  }, [formData, userProfile, subKategori, opdData]);
 
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
-          {/* Form Pelaporan dalam Card */}
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* Header Form */}
             <div className="p-6 border-b border-gray-200 text-center">
               <h2 className="text-2xl font-bold text-[#226597]">
                 Pelaporan Online
@@ -191,20 +604,33 @@ export default function FormLaporan() {
                   <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     Kirim laporan ke
                   </label>
-                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start">
-                    {selectedOpd.logo && (
-                      <img
-                        src={selectedOpd.logo}
-                        alt={`Logo ${selectedOpd.name}`}
-                        className="w-5 h-5 object-cover rounded"
-                      />
+                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start min-w-[200px]">
+                    {isLoadingOpd ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span className="text-sm">Memuat OPD...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={opdData?.logo || defaultOpd.logo}
+                          alt={`Logo ${opdData?.name || defaultOpd.name}`}
+                          className="w-5 h-5 object-cover rounded"
+                          onError={(e) => {
+                            e.target.src = defaultOpd.logo;
+                            e.target.onerror = null;
+                          }}
+                        />
+                        <span className="text-sm">
+                          {opdData?.name || defaultOpd.name}
+                        </span>
+                      </>
                     )}
-                    <span className="text-sm">{selectedOpd.name}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Form Fields - Sesuai Gambar */}
+              {/* Form Fields */}
               <div className="space-y-4">
                 {/* Nama */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -212,7 +638,16 @@ export default function FormLaporan() {
                     Nama
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.nama}
+                    {isLoadingProfile ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#226597]"></div>
+                        <span className="text-gray-500">Memuat...</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-700 font-medium">
+                        {formData.nama || "OPD Dinas Kesehatan"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -222,7 +657,16 @@ export default function FormLaporan() {
                     Email
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.nip}
+                    {isLoadingProfile ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#226597]"></div>
+                        <span className="text-gray-500">Memuat...</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-700 font-medium">
+                        {formData.email || "opd@dinaskesehatan.go.id"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -232,7 +676,16 @@ export default function FormLaporan() {
                     Divisi
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.divisi}
+                    {isLoadingProfile ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#226597]"></div>
+                        <span className="text-gray-500">Memuat...</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-700 font-medium">
+                        {formData.divisi || "Bidang Kesehatan Masyarakat"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -262,7 +715,8 @@ export default function FormLaporan() {
                     <div className="relative">
                       <button
                         onClick={() => toggleDropdown("dataAset")}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between"
+                        disabled={loadingSubKategori}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span
                           className={`flex-1 text-left ${
@@ -271,27 +725,38 @@ export default function FormLaporan() {
                               : "text-gray-400"
                           }`}
                         >
-                          {formData.dataAset || "Pilih data aset"}
+                          {loadingSubKategori
+                            ? "Memuat data aset..."
+                            : formData.dataAset || "Pilih data aset"}
                         </span>
                         <ChevronDown size={16} className="text-gray-400" />
                       </button>
-                      {dropdowns.dataAset && (
+                      {dropdowns.dataAset && !loadingSubKategori && (
                         <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
-                          {dataAsetOptions.map((option) => (
-                            <div
-                              key={option}
-                              onClick={() => {
-                                handleInputChange("dataAset", option);
-                                toggleDropdown("dataAset");
-                              }}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left"
-                            >
-                              {option}
+                          {subKategori.length > 0 ? (
+                            subKategori.map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => handleSelectSubKategori(item)}
+                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left truncate"
+                                title={item.nama}
+                              >
+                                {item.nama}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                              Tidak ada data aset
                             </div>
-                          ))}
+                          )}
                         </div>
                       )}
                     </div>
+                    {formData.selectedSubKategoriId && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        ID Sub-Kategori: {formData.selectedSubKategoriId}
+                      </p>
+                    )}
                   </div>
 
                   {/* Nomor Seri */}
@@ -302,10 +767,9 @@ export default function FormLaporan() {
                     <input
                       type="text"
                       value={formData.nomorSeri || ""}
-                      onChange={(e) =>
-                        handleInputChange("nomorSeri", e.target.value)
-                      }
+                      onChange={(e) => handleNomorSeriChange(e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-sm"
+                      placeholder="Nomor seri aset"
                     />
                   </div>
                 </div>
@@ -323,7 +787,8 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("kategoriAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
+                      placeholder="TI / Non-TI"
                     />
                   </div>
 
@@ -338,7 +803,8 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("subKategoriAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
+                      placeholder="Contoh: Laptop, Printer"
                     />
                   </div>
 
@@ -353,7 +819,8 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("jenisAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
+                      placeholder="Contoh: Barang, Ruangan"
                     />
                   </div>
                 </div>
@@ -411,6 +878,7 @@ export default function FormLaporan() {
                   onChange={handleFileUpload}
                   multiple
                   className="hidden"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />
 
                 <button
@@ -501,14 +969,14 @@ export default function FormLaporan() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button
                     onClick={handleKonfirmasiKirim}
+                    disabled={loadingSubKategori}
                     className={`px-6 py-2 rounded-md text-sm font-medium transition-colors text-center ${
-                      isFormValid()
+                      isFormValid() && !loadingSubKategori
                         ? "bg-[#226597] hover:bg-[#1a507a] text-white cursor-pointer"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
-                    disabled={!isFormValid()}
                   >
-                    Kirim
+                    {loadingSubKategori ? "Memuat data..." : "Kirim"}
                   </button>
                 </div>
               </div>
@@ -614,7 +1082,6 @@ export default function FormLaporan() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
             <div className="text-center">
-              {/* Logo Success */}
               <div className="flex justify-center mb-4">
                 <svg
                   width="70"

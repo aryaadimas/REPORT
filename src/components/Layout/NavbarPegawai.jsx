@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Eye } from "lucide-react";
 import HelpdeskPopup from "../../components/HelpdeskPopup";
+import { getProfile } from "../services/apiFetch"; // Ganti import
 
 export function Beranda() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -12,172 +13,62 @@ export function Beranda() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
-  const [userName, setUserName] = useState("Haikal Saputra");
-  const [notifications, setNotifications] = useState([]);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
+
+  // State untuk data profil
+  const [profileData, setProfileData] = useState({
+    name: "Loading...",
+    role: "Loading...",
+    unit_kerja: "Loading...",
+    dinas: "Loading...",
+    avatar: null,
+    email: "Loading...",
+    alamat: "Loading...",
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const navigate = useNavigate();
 
-  // Token yang sama dengan API
-  const token =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8";
-
-  const handleTampilkanSemua = () => {
-    navigate("/riwayat");
-  };
-
-  // Fetch user data
+  // Fetch data profil saat komponen dimount
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoadingUser(true);
-        const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/me",
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.status === "success" && data.user && data.user.name) {
-            setUserName(data.user.name);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoadingUser(false);
-      }
-    };
-
-    fetchUserData();
+    fetchProfileData();
   }, []);
 
-  // Fetch notifications
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setIsLoadingNotifications(true);
-        const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/api/tickets/pegawai/finished",
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getProfile();
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data && Array.isArray(data.data)) {
-            // Format notifications sesuai dengan tampilan
-            const formattedNotifications = data.data.map((ticket, index) => {
-              let type = "Tiket";
-              let title = "Status Tiket Diperbarui";
-              let description = `Tiket Anda ${
-                ticket.ticket_code
-              } ${getStatusText(
-                ticket.status_ticket_pengguna || ticket.status
-              )}.`;
-              let timeText = getTimeAgo(ticket.created_at);
-
-              if (
-                ticket.status_ticket_pengguna === "Selesai" ||
-                ticket.status === "selesai"
-              ) {
-                type = "Tiket";
-                title = "Tiket Selesai";
-                description = `Tiket Anda ${ticket.ticket_code} telah selesai diproses.`;
-              } else if (
-                ticket.status_ticket_pengguna === "Tiket Ditolak" ||
-                ticket.status === "rejected"
-              ) {
-                type = "Tiket";
-                title = "Tiket Ditolak";
-                description = `Tiket Anda ${ticket.ticket_code} telah ditolak.`;
-              }
-
-              return {
-                id: ticket.ticket_id,
-                type,
-                title,
-                description,
-                time: timeText,
-                ticketCode: ticket.ticket_code,
-                status: ticket.status_ticket_pengguna || ticket.status,
-              };
-            });
-
-            // Ambil hanya 3 notifikasi terbaru untuk ditampilkan
-            setNotifications(formattedNotifications.slice(0, 3));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      } finally {
-        setIsLoadingNotifications(false);
+      if (response.status === "success") {
+        setProfileData({
+          name: response.user.name || "Tidak ada nama",
+          role: response.user.role || "Tidak ada role",
+          unit_kerja: response.user.unit_kerja || "Tidak ada unit kerja",
+          dinas: response.user.dinas || "Tidak ada dinas",
+          avatar: response.user.avatar,
+          email: response.user.email || "Tidak ada email",
+          alamat: response.user.alamat || "Tidak ada alamat",
+        });
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+      setError("Gagal memuat data profil");
 
-    fetchNotifications();
-  }, []);
-
-  // Helper function to get status text
-  const getStatusText = (status) => {
-    const statusLower = (status || "").toLowerCase();
-    if (
-      statusLower.includes("selesai") ||
-      statusLower.includes("done") ||
-      statusLower.includes("completed")
-    ) {
-      return "telah selesai";
-    } else if (
-      statusLower.includes("ditolak") ||
-      statusLower.includes("rejected")
-    ) {
-      return "telah ditolak";
-    } else if (
-      statusLower.includes("diproses") ||
-      statusLower.includes("process") ||
-      statusLower.includes("in progress")
-    ) {
-      return "sedang diproses";
-    } else if (
-      statusLower.includes("menunggu") ||
-      statusLower.includes("pending")
-    ) {
-      return "menunggu diproses";
-    } else if (statusLower.includes("verifikasi")) {
-      return "sedang diverifikasi";
-    } else {
-      return "telah diperbarui";
+      // Fallback jika token tidak valid
+      if (err.message === "Unauthorized") {
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Helper function to get time ago text
-  const getTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return "Baru saja";
-    if (diffMins < 60) return `${diffMins} menit yang lalu`;
-    if (diffHours < 24) return `${diffHours} jam yang lalu`;
-    if (diffDays < 7) return `${diffDays} hari yang lalu`;
-    return "Lebih dari seminggu yang lalu";
+  const handleTampilkanSemua = () => {
+    navigate("/riwayat");
   };
 
   // Menutup dropdown ketika klik di luar
@@ -215,10 +106,8 @@ export function Beranda() {
 
   // Fungsi untuk konfirmasi logout
   const handleConfirmLogout = () => {
-    // Lakukan proses logout di sini (clear token, dll)
     localStorage.removeItem("token");
     localStorage.removeItem("userData");
-
     setShowLogoutWarning(false);
     setIsDropdownOpen(false);
     navigate("/login");
@@ -235,28 +124,55 @@ export function Beranda() {
     setIsDropdownOpen(false);
   };
 
-  // Fungsi untuk navigasi berdasarkan status notifikasi
-  const handleNotificationClick = (notification) => {
-    setIsNotificationOpen(false);
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const today = currentDate.getDate();
 
-    if (
-      notification.status === "Selesai" ||
-      notification.status === "selesai"
-    ) {
-      navigate("/notifdiproses");
-    } else if (
-      notification.status === "Tiket Ditolak" ||
-      notification.status === "rejected"
-    ) {
-      navigate("/notifdiproses");
-    } else if (notification.title.includes("Maintenance")) {
-      navigate("/notifmaintenance");
-    } else {
-      navigate("/notifdibuat");
-    }
+  // Generate calendar days
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const monthNames = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    calendarDays.push(null);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push(day);
+  }
+
+  // Fungsi untuk navigasi
+  const handlePelaporanOnline = () => {
+    navigate("/FormLaporan");
   };
 
-  // Riwayat laporan tetap menggunakan data statis
+  const handlePengajuan = () => {
+    navigate("/FormPengajuan");
+  };
+
+  const handleKnowledgeBase = () => {
+    navigate("/KnowledgeBase");
+  };
+
+  const handlePelacakan = () => {
+    navigate("/Pelacakan");
+  };
+
+  // Data riwayat laporan
   const riwayatLaporan = [
     {
       id: "LPR321336",
@@ -272,27 +188,8 @@ export function Beranda() {
 
   const dataTerbaru = riwayatLaporan.slice(0, 2);
 
-  // Fungsi untuk navigasi ke halaman Pelaporan Online
-  const handlePelaporanOnline = () => {
-    navigate("/FormLaporan");
-  };
-
-  // Fungsi untuk navigasi ke halaman Pengajuan
-  const handlePengajuan = () => {
-    navigate("/FormPengajuan");
-  };
-
-  // Fungsi untuk navigasi ke halaman Knowledge Base
-  const handleKnowledgeBase = () => {
-    navigate("/KnowledgeBase");
-  };
-
-  // Fungsi untuk navigasi ke halaman Pelacakan
-  const handlePelacakan = () => {
-    navigate("/Pelacakan");
-  };
-
   const [isChatOpen, setIsChatOpen] = useState(false);
+
   const popupRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({
@@ -330,6 +227,95 @@ export function Beranda() {
     };
   }, [isDragging, offset]);
 
+  // Fungsi untuk render avatar dengan fallback
+  const renderAvatar = () => {
+    if (isLoading) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gray-200 animate-pulse">
+          <div className="w-6 h-6 rounded-full bg-gray-300"></div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-red-100">
+          <span className="text-xs font-bold text-red-600">!</span>
+        </div>
+      );
+    }
+
+    if (profileData.avatar) {
+      return (
+        <img
+          src={profileData.avatar}
+          alt="Profil"
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.style.display = "none";
+            e.target.parentElement.innerHTML = `
+              <div class="w-full h-full flex items-center justify-center bg-[#226597] text-white font-semibold text-sm">
+                ${getInitials(profileData.name)}
+              </div>
+            `;
+          }}
+        />
+      );
+    }
+
+    // Fallback avatar dengan inisial
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-[#226597] text-white font-semibold text-sm">
+        {getInitials(profileData.name)}
+      </div>
+    );
+  };
+
+  // Helper untuk mendapatkan inisial dari nama
+  const getInitials = (name) => {
+    if (!name || name === "Loading...") return "??";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Fungsi untuk render nama di profil dropdown
+  const renderProfileName = () => {
+    if (isLoading) {
+      return (
+        <>
+          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-3 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+        </>
+      );
+    }
+
+    if (error) {
+      return (
+        <>
+          <p className="text-gray-700 text-xs font-medium truncate">Error</p>
+          <p className="text-gray-500 text-[10px] truncate">
+            Gagal memuat data
+          </p>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-gray-700 text-xs font-medium truncate">
+          {profileData.name}
+        </p>
+        <p className="text-gray-500 text-[10px] truncate">
+          {profileData.role} • {profileData.dinas}
+        </p>
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {/* Mobile Header - Fixed */}
@@ -354,9 +340,11 @@ export function Beranda() {
           {/* Profile Dropdown Mobile */}
           <div ref={dropdownRef} className="relative">
             <div
-              className="w-8 h-8 rounded-full overflow-hidden cursor-pointer"
+              className="w-8 h-8 rounded-full overflow-hidden cursor-pointer border border-gray-300"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            ></div>
+            >
+              {renderAvatar()}
+            </div>
 
             {/* Dropdown Menu Mobile */}
             {isDropdownOpen && (
@@ -788,71 +776,99 @@ export function Beranda() {
 
                 {/* Daftar Notifikasi */}
                 <div className="max-h-96 overflow-y-auto">
-                  {isLoadingNotifications ? (
-                    <div className="px-3 py-4 text-center">
-                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#226597]"></div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Memuat notifikasi...
-                      </p>
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="px-3 py-4 text-center">
-                      <p className="text-xs text-gray-500">
-                        Tidak ada notifikasi
-                      </p>
-                    </div>
-                  ) : (
-                    notifications.map((notification, index) => (
-                      <div
-                        key={notification.id || index}
-                        className="px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleNotificationClick(notification)}
+                  {/* Tiket Dibuat */}
+                  <div
+                    className="px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate("/notifdibuat")}
+                  >
+                    <div className="flex items-start gap-2">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 57 57"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
-                        <div className="flex items-start gap-2">
-                          <svg
-                            width="32"
-                            height="32"
-                            viewBox="0 0 57 57"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="57"
-                              height="57"
-                              rx="8"
-                              fill="#113F67"
-                            />
-                            <path
-                              d="M32.5 17.5H24.5V21.5H32.5V17.5Z"
-                              fill="white"
-                            />
-                            <path
-                              d="M19.5 19.5H22.5V23.5H34.5V19.5H37.5V39.5H19.5V19.5ZM31.5 29.5V27.5H25.5V29.5H31.5ZM31.5 33.5V31.5H25.5V33.5H31.5Z"
-                              fill="white"
-                            />
-                          </svg>
-                          <div className="flex-1 min-w-0">
-                            <h5 className="font-medium text-gray-700 text-xs mb-1">
-                              {notification.title}
-                            </h5>
-                            <p className="text-[10px] text-gray-600 mb-1">
-                              {notification.description}
-                            </p>
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-medium bg-[#226597] text-white px-1.5 py-0.5 rounded">
-                                {notification.type}
-                              </span>
-                              <span className="text-[10px] text-gray-500">
-                                {notification.time}
-                              </span>
-                            </div>
-                          </div>
+                        <rect width="57" height="57" rx="8" fill="#113F67" />
+                        <path
+                          d="M32.5 17.5H24.5V21.5H32.5V17.5Z"
+                          fill="white"
+                        />
+                        <path
+                          d="M19.5 19.5H22.5V23.5H34.5V19.5H37.5V39.5H19.5V19.5ZM31.5 29.5V27.5H25.5V29.5H31.5ZM31.5 33.5V31.5H25.5V33.5H31.5Z"
+                          fill="white"
+                        />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium text-gray-700 text-xs mb-1">
+                          Tiket Dibuat
+                        </h5>
+                        <p className="text-[10px] text-gray-600 mb-1">
+                          Tiket Anda{" "}
+                          <span className="font-bold">LYN152672</span> telah
+                          dibuat.
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-medium bg-[#226597] text-white px-1.5 py-0.5 rounded">
+                            Tiket
+                          </span>
+                          <span className="text-[10px] text-gray-500">
+                            1 jam yang lalu
+                          </span>
                         </div>
                       </div>
-                    ))
-                  )}
+                    </div>
+                  </div>
 
-                  {/* Pengumuman (statis) */}
+                  {/* Status Tiket Diperbarui */}
+                  <div
+                    className="px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate("/notifdiproses")}
+                  >
+                    <div className="flex items-start gap-2">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 57 57"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect width="57" height="57" rx="8" fill="#113F67" />
+                        <path
+                          d="M32.5 17.5H24.5V21.5H32.5V17.5Z"
+                          fill="white"
+                        />
+                        <path
+                          d="M19.5 19.5H22.5V23.5H34.5V19.5H37.5V28.174C36.0037 27.4634 34.3039 27.3065 32.7028 27.731C31.1017 28.1556 29.7031 29.1342 28.7555 30.4929C27.808 31.8515 27.3729 33.5022 27.5277 35.1514C27.6825 36.8006 28.4172 38.3414 29.601 39.5H19.5V19.5Z"
+                          fill="white"
+                        />
+                        <path
+                          d="M29 34.5C29 33.7777 29.1423 33.0625 29.4187 32.3952C29.6951 31.728 30.1002 31.1216 30.6109 30.6109C31.1216 30.1002 31.728 29.6951 32.3952 29.4187C33.0625 29.1423 33.7777 29 34.5 29C35.2223 29 35.9375 29.1423 36.6048 29.4187C37.272 29.6951 37.8784 30.1002 38.3891 30.6109C38.8998 31.1216 39.3049 31.728 39.5813 32.3952C39.8577 33.0625 40 33.7777 40 34.5C40 35.9587 39.4205 37.3576 38.3891 38.3891C37.3576 39.4205 35.9587 40 34.5 40C33.0413 40 31.6424 39.4205 30.6109 38.3891C29.5795 37.3576 29 35.9587 29 34.5ZM36.914 35.5L35.5 34.086V32.252H33.5V34.914L35.5 36.914L36.914 35.5Z"
+                          fill="white"
+                        />
+                      </svg>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium text-gray-700 text-xs mb-1">
+                          Status Tiket Diperbarui
+                        </h5>
+                        <p className="text-[10px] text-gray-600 mb-1">
+                          Tiket Anda{" "}
+                          <span className="font-bold">LPR872390</span> sedang
+                          diproses.
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-medium bg-[#226597] text-white px-1.5 py-0.5 rounded">
+                            Status
+                          </span>
+                          <span className="text-[10px] text-gray-500">
+                            2 hari yang lalu
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pengumuman */}
                   <div
                     className="px-3 py-2 hover:bg-gray-50 cursor-pointer"
                     onClick={() => navigate("/notifmaintenance")}
@@ -902,26 +918,12 @@ export function Beranda() {
             >
               <div className="flex items-center gap-2 overflow-hidden">
                 {/* Avatar Profil */}
-                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-gray-600"
-                  >
-                    <path
-                      d="M12 4C13.0609 4 14.0783 4.42143 14.8284 5.17157C15.5786 5.92172 16 6.93913 16 8C16 9.06087 15.5786 10.0783 14.8284 10.8284C14.0783 11.5786 13.0609 12 12 12C10.9391 12 9.92172 11.5786 9.17157 10.8284C8.42143 10.0783 8 9.06087 8 8C8 6.93913 8.42143 5.92172 9.17157 5.17157C9.92172 4.42143 10.9391 4 12 4ZM12 14C16.42 14 20 15.79 20 18V20H4V18C4 15.79 7.58 14 12 14Z"
-                      fill="#666666"
-                    />
-                  </svg>
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-gray-300">
+                  {renderAvatar()}
                 </div>
 
-                {/* Nama dari API */}
-                <p className="text-gray-700 text-xs font-medium truncate">
-                  {isLoadingUser ? "Memuat..." : userName}
-                </p>
+                {/* Nama dan Info */}
+                <div className="min-w-0">{renderProfileName()}</div>
               </div>
               {/* Icon Dropdown */}
               <svg
@@ -944,16 +946,48 @@ export function Beranda() {
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                {/* Item 1: Profil Saya */}
-                <div
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
-                  onClick={() => handleItemClick("Profil Saya")}
-                >
-                  <div className="flex items-center">
+              <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-3 z-50">
+                {/* Info Profil */}
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
+                      {renderAvatar()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {isLoading
+                          ? "Loading..."
+                          : error
+                          ? "Error"
+                          : profileData.name}
+                      </p>
+                      <p className="text-xs text-gray-600 truncate">
+                        {isLoading
+                          ? "Loading..."
+                          : error
+                          ? "Gagal memuat"
+                          : profileData.role}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {isLoading
+                          ? "Loading..."
+                          : error
+                          ? ""
+                          : profileData.unit_kerja}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Menu Items */}
+                <div className="py-1">
+                  <div
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
+                    onClick={() => handleItemClick("Profil Saya")}
+                  >
                     <svg
-                      width="24"
-                      height="24"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -963,21 +997,18 @@ export function Beranda() {
                         fill="#226597"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-800 ml-1.5">
+                    <span className="text-sm font-medium text-gray-800">
                       Profil Saya
                     </span>
                   </div>
-                </div>
 
-                {/* Item 2: Tampilan */}
-                <div
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100"
-                  onClick={() => handleItemClick("Tampilan")}
-                >
-                  <div className="flex items-center">
+                  <div
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
+                    onClick={() => handleItemClick("Tampilan")}
+                  >
                     <svg
-                      width="24"
-                      height="24"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -989,21 +1020,18 @@ export function Beranda() {
                         fill="#226597"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-800 ml-1.5">
+                    <span className="text-sm font-medium text-gray-800">
                       Tampilan
                     </span>
                   </div>
-                </div>
 
-                {/* Item 3: Keluar */}
-                <div
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => handleItemClick("Keluar")}
-                >
-                  <div className="flex items-center">
+                  <div
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-3"
+                    onClick={() => handleItemClick("Keluar")}
+                  >
                     <svg
-                      width="24"
-                      height="24"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -1022,7 +1050,7 @@ export function Beranda() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-800 ml-1.5">
+                    <span className="text-sm font-medium text-gray-800">
                       Keluar
                     </span>
                   </div>

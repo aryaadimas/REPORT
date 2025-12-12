@@ -36,43 +36,72 @@ const Pelacakan = () => {
       setShowErrorPopup(false);
       setErrorMessage("");
 
-      // Fetch data dari API
+      // Fetch data dari API dengan token yang benar
       const response = await fetch(
         `https://service-desk-be-production.up.railway.app/api/track-ticket/${reportId}`,
         {
           method: "GET",
           headers: {
             accept: "application/json",
+            // Gunakan token dari curl yang berhasil
             Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZDYyZGVkMy1kOWM0LTQxMWEtODc2OS0wMWZkMjU5MzE0MDIiLCJlbWFpbCI6Im1hc3NAZ21haWwuY29tIiwicm9sZV9pZCI6OSwicm9sZV9uYW1lIjoibWFzeWFyYWthdCIsImV4cCI6MTc2NTc4NzE3MX0.Ig-aV0ofrI7srjWX4RLTXZkB0i00PYVxEnGtyjwfsOU",
+              "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8",
           },
         }
       );
 
       console.log("API Response status:", response.status);
+      console.log("API Response headers:", response.headers);
 
       if (response.ok) {
         const data = await response.json();
         console.log("API Response data:", data);
 
-        // Navigasi ke halaman data ditemukan dengan data dari API
-        navigate("/dataditemukan", {
-          state: {
-            ticketData: data,
-          },
-        });
+        // Validasi data response
+        if (data && data.ticket_code) {
+          // Navigasi ke halaman data ditemukan dengan data dari API
+          navigate("/dataditemukan", {
+            state: {
+              ticketData: data,
+            },
+          });
+        } else {
+          setErrorMessage("Format data tidak valid. Silakan coba lagi.");
+          setShowErrorPopup(true);
+        }
       } else {
         // Handle error responses
-        if (response.status === 404) {
-          setErrorMessage(
-            "Tiket tidak ditemukan. Periksa kembali ID Tiket Anda."
-          );
-        } else if (response.status === 401) {
-          setErrorMessage("Sesi Anda telah berakhir. Silakan login kembali.");
-        } else if (response.status === 500) {
-          setErrorMessage("Terjadi kesalahan server. Silakan coba lagi nanti.");
-        } else {
-          setErrorMessage("Gagal melacak tiket. Silakan coba lagi.");
+        console.log("API Error response:", response);
+
+        // Coba parse error message
+        try {
+          const errorData = await response.json();
+          console.log("Error data:", errorData);
+
+          if (errorData.message) {
+            setErrorMessage(errorData.message);
+          } else {
+            throw new Error("No error message");
+          }
+        } catch {
+          // Jika tidak bisa parse JSON, gunakan status code
+          if (response.status === 404) {
+            setErrorMessage(
+              `Tiket "${reportId}" tidak ditemukan. Periksa kembali ID Tiket Anda.`
+            );
+          } else if (response.status === 401) {
+            setErrorMessage("Sesi Anda telah berakhir. Silakan login kembali.");
+          } else if (response.status === 403) {
+            setErrorMessage(
+              "Anda tidak memiliki izin untuk mengakses data ini."
+            );
+          } else if (response.status === 500) {
+            setErrorMessage(
+              "Terjadi kesalahan server. Silakan coba lagi nanti."
+            );
+          } else {
+            setErrorMessage(`Gagal melacak tiket. Status: ${response.status}`);
+          }
         }
         setShowErrorPopup(true);
       }
@@ -101,7 +130,9 @@ const Pelacakan = () => {
 
   // Clear error ketika user mulai mengetik
   const handleReportIdChange = (e) => {
-    setReportId(e.target.value.toUpperCase()); // Convert to uppercase for consistency
+    const value = e.target.value;
+    // Hanya mengubah ke uppercase jika bukan kosong
+    setReportId(value ? value.toUpperCase() : value);
     if (errors.reportId) {
       setErrors((prev) => ({ ...prev, reportId: "" }));
     }
@@ -189,6 +220,7 @@ const Pelacakan = () => {
                       onChange={handleReportIdChange}
                       onKeyPress={handleKeyPress}
                       className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm md:text-base placeholder-gray-400"
+                      placeholder="Contoh: SVD-PL-0028-PG"
                       disabled={isLoading}
                     />
                   </div>

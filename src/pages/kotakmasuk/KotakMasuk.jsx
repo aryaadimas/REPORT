@@ -9,161 +9,386 @@ import {
   CheckCircle,
   Trash2,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 export default function KotakMasuk() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
-  const [readItems, setReadItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [totalData, setTotalData] = useState(0);
   const dropdownRef = useRef(null);
+
   const itemsPerPage = 10;
-  const totalData = 13;
   const totalPages = Math.ceil(totalData / itemsPerPage);
 
-  // Data kotak masuk sesuai gambar dengan teks persis
-  const [inboxItems, setInboxItems] = useState([
-    {
-      id: 1,
-      type: "Tiket Dibuat",
-      ticketId: "UY8723922",
-      status: "telah dibuat",
-      sender: "TIKET",
-      timestamp: "12:30 PM",
-      unread: true,
-    },
-    {
-      id: 2,
-      type: "Tiket Dibuat",
-      ticketId: "UPR0202893",
-      status: "telah dibuat",
-      sender: "TIKET",
-      timestamp: "11:45 AM",
-      unread: true,
-    },
-    {
-      id: 3,
-      type: "Status Tiket Diperbarui",
-      ticketId: "UY8723140",
-      status: "sedang diproses",
-      sender: "STATUS",
-      timestamp: "10:15 AM",
-      unread: true,
-    },
-    {
-      id: 4,
-      type: "Tiket Dibuat",
-      ticketId: "UYN8567223",
-      status: "telah dibuat",
-      sender: "TIKET",
-      timestamp: "09:30 AM",
-      unread: false,
-    },
-    {
-      id: 5,
-      type: "Tiket Dibuat",
-      ticketId: "UYN8589223",
-      status: "telah dibuat",
-      sender: "TIKET",
-      timestamp: "08:45 AM",
-      unread: false,
-    },
-    {
-      id: 6,
-      type: "Status Tiket Diperbarui",
-      ticketId: "UY8723100",
-      status: "sedang diproses",
-      sender: "STATUS",
-      timestamp: "Yesterday",
-      unread: false,
-    },
-    {
-      id: 7,
-      type: "Pengumuman",
-      message: "Kutamaan, dilakukan pemeliharaan sistem.",
-      sender: "MAINTENANCE",
-      timestamp: "Yesterday",
-      unread: false,
-    },
-    {
-      id: 8,
-      type: "Pengumuman",
-      message: "Kutamaan, dilakukan pemeliharaan sistem.",
-      sender: "UMUM",
-      timestamp: "Yesterday",
-      unread: false,
-    },
-    {
-      id: 9,
-      type: "Pengumuman",
-      message: "Harap melakukan update kir-727.",
-      sender: "UMUM",
-      timestamp: "2 days ago",
-      unread: false,
-    },
-    {
-      id: 10,
-      type: "Pengumuman",
-      message: "Pengingat, deadline registrasi.",
-      sender: "DARURAT",
-      timestamp: "3 days ago",
-      unread: false,
-    },
-  ]);
+  const API_BASE_URL = "https://service-desk-be-production.up.railway.app";
 
-  // Fungsi untuk handle klik item dan navigasi
-  const handleItemClick = (item) => {
-    // Tandai sebagai sudah dibaca
-    handleMarkAsRead(item.id);
+  const getToken = () => {
+    // Cari token dengan urutan prioritas
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("access_token") ||
+      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8"
+    );
+  };
 
-    // Navigasi berdasarkan jenis item dan sender
-    if (item.type === "Tiket Dibuat") {
-      navigate("/notifdibuat", {
-        state: {
-          notificationData: item,
-        },
-      });
-    } else if (item.type === "Status Tiket Diperbarui") {
-      navigate("/notifdiproses", {
-        state: {
-          notificationData: item,
-        },
-      });
-    } else if (item.type === "Pengumuman") {
-      // Navigasi berdasarkan sender untuk pengumuman
-      if (item.sender === "MAINTENANCE") {
-        navigate("/notifmaintenance", {
-          state: {
-            notificationData: item,
+  // Fetch tickets dari API untuk pegawai - MENGUBAH ENDPOINT
+  const fetchTickets = async () => {
+    try {
+      setIsLoading(true);
+      const token = getToken();
+
+      console.log(
+        "🔍 [KOTAK MASUK] Fetching tickets with token:",
+        token.substring(0, 30) + "..."
+      );
+
+      // ENDPOINT YANG BENAR untuk pegawai
+      const response = await fetch(
+        `${API_BASE_URL}/api/tickets/pegawai/finished`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        });
-      } else if (item.sender === "UMUM") {
-        navigate("/notifumum", {
-          state: {
-            notificationData: item,
-          },
-        });
-      } else if (item.sender === "DARURAT") {
-        navigate("/notifdarurat", {
-          state: {
-            notificationData: item,
-          },
-        });
-      } else {
-        // Default untuk pengumuman lainnya
-        navigate("/notifumum", {
-          state: {
-            notificationData: item,
-          },
-        });
+        }
+      );
+
+      console.log("📡 [KOTAK MASUK] Response status:", response.status);
+
+      if (!response.ok) {
+        console.error(
+          `❌ [KOTAK MASUK] Error ${response.status}:`,
+          await response.text()
+        );
+
+        // Coba endpoint lain sebagai fallback
+        try {
+          console.log("🔍 [KOTAK MASUK] Coba endpoint alternatif /api/tickets");
+          const altResponse = await fetch(`${API_BASE_URL}/api/tickets`, {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (altResponse.ok) {
+            const result = await altResponse.json();
+            processTicketData(result);
+          } else {
+            throw new Error(`Alt endpoint failed: ${altResponse.status}`);
+          }
+        } catch (altError) {
+          console.log(
+            "⚠️ [KOTAK MASUK] Semua endpoint gagal, menggunakan data dummy"
+          );
+          setNotifications(getFallbackData());
+          setTotalData(getFallbackData().length);
+        }
+        return;
       }
+
+      const result = await response.json();
+      console.log("📦 [KOTAK MASUK] API Response:", result);
+      processTicketData(result);
+    } catch (error) {
+      console.error("❌ [KOTAK MASUK] Error fetching tickets:", error);
+      console.log("🛠️ [KOTAK MASUK] Menggunakan data dummy untuk testing");
+      setNotifications(getFallbackData());
+      setTotalData(getFallbackData().length);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Close dropdown when clicking outside
+  // Process data tickets dari API - DIPERBARUI untuk struktur baru
+  const processTicketData = (result) => {
+    console.log("📦 [KOTAK MASUK] Processing ticket data:", result);
+
+    if (result.data && Array.isArray(result.data)) {
+      const formattedNotifications = result.data.map((ticket, index) => {
+        // Tentukan jenis notifikasi berdasarkan status ticket
+        let type = "Status Tiket Diperbarui";
+        let sender = "STATUS";
+        let message = "";
+        let status = "";
+        let unread = false;
+
+        // Logic berdasarkan status ticket
+        if (
+          ticket.status === "selesai" ||
+          ticket.status_ticket_pengguna === "Selesai"
+        ) {
+          type = "Tiket Selesai";
+          sender = "TIKET";
+          status = "selesai";
+          message = `Tiket ${
+            ticket.ticket_code || ticket.ticket_id
+          } telah selesai.`;
+          unread = true; // Tiket selesai biasanya belum dibaca
+        } else if (
+          ticket.status === "rejected" ||
+          ticket.status_ticket_pengguna === "Tiket Ditolak"
+        ) {
+          type = "Tiket Ditolak";
+          sender = "TIKET";
+          status = "ditolak";
+          message = `Tiket ${ticket.ticket_code || ticket.ticket_id} ditolak: ${
+            ticket.rejection_reason_seksi || "tidak ada alasan"
+          }`;
+          unread = true;
+        } else if (ticket.status === "sedang diproses") {
+          type = "Status Tiket Diperbarui";
+          sender = "STATUS";
+          status = "diproses";
+          message = `Tiket ${
+            ticket.ticket_code || ticket.ticket_id
+          } sedang diproses.`;
+          unread = true;
+        } else if (ticket.status_ticket_teknisi === "selesai") {
+          type = "Tiket Diselesaikan Teknisi";
+          sender = "TEKNISI";
+          status = "selesai teknisi";
+          message = `Teknisi telah menyelesaikan tiket ${
+            ticket.ticket_code || ticket.ticket_id
+          }.`;
+          unread = true;
+        }
+
+        // Format timestamp dari created_at
+        let timestamp = "Just now";
+        if (ticket.created_at) {
+          const createdAt = new Date(ticket.created_at);
+          const now = new Date();
+          const diffTime = Math.abs(now - createdAt);
+          const diffMinutes = Math.floor(diffTime / (1000 * 60));
+          const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays === 0) {
+            if (diffHours === 0) {
+              timestamp = `${diffMinutes} menit yang lalu`;
+            } else {
+              timestamp =
+                createdAt.toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) + (createdAt.getHours() >= 12 ? " PM" : " AM");
+            }
+          } else if (diffDays === 1) {
+            timestamp = "Kemarin";
+          } else if (diffDays < 7) {
+            timestamp = `${diffDays} hari yang lalu`;
+          } else {
+            timestamp = createdAt.toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "short",
+            });
+          }
+        }
+
+        // Ambil rating jika ada
+        let ratingInfo = null;
+        if (ticket.rating) {
+          ratingInfo = {
+            rating: ticket.rating.rating,
+            comment: ticket.rating.comment,
+            createdAt: ticket.rating.created_at,
+          };
+        }
+
+        return {
+          id: ticket.ticket_id || `ticket-${index}`,
+          type: type,
+          ticketId: ticket.ticket_code || ticket.ticket_id || "N/A",
+          ticket_code: ticket.ticket_code,
+          title: ticket.title || "Tidak ada judul",
+          description: ticket.description || "Tidak ada deskripsi",
+          priority: ticket.priority || "Normal",
+          status: status,
+          sender: sender,
+          timestamp: timestamp,
+          unread: unread,
+          message: message,
+          status_ticket_pengguna: ticket.status_ticket_pengguna,
+          status_ticket_seksi: ticket.status_ticket_seksi,
+          status_ticket_teknisi: ticket.status_ticket_teknisi,
+          pengerjaan_awal: ticket.pengerjaan_awal,
+          pengerjaan_akhir: ticket.pengerjaan_akhir,
+          rejection_reason_seksi: ticket.rejection_reason_seksi,
+          rating: ratingInfo,
+          originalData: ticket,
+        };
+      });
+
+      setNotifications(formattedNotifications);
+      setTotalData(result.total || formattedNotifications.length);
+      console.log(
+        `✅ [KOTAK MASUK] Loaded ${formattedNotifications.length} tickets`
+      );
+    } else {
+      console.log(
+        "⚠️ [KOTAK MASUK] Format data tidak sesuai, menggunakan data dummy"
+      );
+      setNotifications(getFallbackData());
+      setTotalData(getFallbackData().length);
+    }
+  };
+
+  // Fallback data untuk testing
+  const getFallbackData = () => {
+    return [
+      {
+        id: "8b0239ae-5ac7-4891-ab91-732ea79f1c0c",
+        type: "Tiket Selesai",
+        ticketId: "SVD-PO-0055-PG",
+        ticket_code: "SVD-PO-0055-PG",
+        title: "Permintaan perbaikan sistem",
+        description: "Sistem lambat saat load data",
+        priority: "Low",
+        status: "selesai",
+        sender: "TIKET",
+        timestamp: "2 hari yang lalu",
+        unread: true,
+        message: "Tiket SVD-PO-0055-PG telah selesai.",
+        status_ticket_pengguna: "Selesai",
+        status_ticket_seksi: "normal",
+        status_ticket_teknisi: "selesai",
+        rating: {
+          rating: 4,
+          comment: "masalah terselesaikan dengan cukup baik dan cepat",
+        },
+      },
+      {
+        id: "2b2d89e3-bc3a-4e49-ba23-0d4103e2dd1e",
+        type: "Tiket Selesai",
+        ticketId: "SVD-PO-0054-PG",
+        ticket_code: "SVD-PO-0054-PG",
+        title: "Permintaan fitur baru",
+        description: "Tambah fitur export PDF",
+        priority: "Low",
+        status: "selesai",
+        sender: "TIKET",
+        timestamp: "3 hari yang lalu",
+        unread: true,
+        message: "Tiket SVD-PO-0054-PG telah selesai.",
+        status_ticket_pengguna: "Selesai",
+        status_ticket_seksi: "normal",
+        status_ticket_teknisi: "selesai",
+        rating: {
+          rating: 4,
+          comment: "penyelesaian nya cukup bagus dan cepat",
+        },
+      },
+      {
+        id: "3a0572e7-f934-4ca9-9031-1c1fdfbff2b9",
+        type: "Tiket Ditolak",
+        ticketId: "SVD-PO-0040-PG",
+        ticket_code: "SVD-PO-0040-PG",
+        title: "Permintaan data",
+        description: "Data tidak lengkap",
+        priority: null,
+        status: "ditolak",
+        sender: "TIKET",
+        timestamp: "5 hari yang lalu",
+        unread: true,
+        message: "Tiket SVD-PO-0040-PG ditolak: jelek lu",
+        status_ticket_pengguna: "Tiket Ditolak",
+        status_ticket_seksi: "rejected",
+        status_ticket_teknisi: null,
+        rejection_reason_seksi: "jelek lu",
+      },
+    ];
+  };
+
+  // API functions untuk tickets - DIPERBARUI
+  const deleteTicketAPI = async (ticketId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}`, {
+        method: "DELETE",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("❌ [KOTAK MASUK] Error deleting ticket:", error);
+      throw error;
+    }
+  };
+
+  const markTicketAsReadAPI = async (ticketId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(
+        `${API_BASE_URL}/api/tickets/${ticketId}/read`,
+        {
+          method: "PATCH",
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("❌ [KOTAK MASUK] Error marking ticket as read:", error);
+      throw error;
+    }
+  };
+
+  const markAllTicketsAsReadAPI = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/api/tickets/read-all`, {
+        method: "PATCH",
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error(
+        "❌ [KOTAK MASUK] Error marking all tickets as read:",
+        error
+      );
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -177,32 +402,45 @@ export default function KotakMasuk() {
     };
   }, []);
 
-  const filteredItems =
-    activeTab === "Semua"
-      ? inboxItems
-      : inboxItems.filter((item) => {
-          if (activeTab === "Tiket") return item.type.includes("Tiket");
-          if (activeTab === "Status") return item.type.includes("Status");
-          if (activeTab === "Pengumuman") return item.type === "Pengumuman";
-          return true;
-        });
+  // Filter items based on active tab - DIPERBARUI untuk tickets
+  const filteredItems = notifications.filter((item) => {
+    if (activeTab === "Semua") return true;
+    if (activeTab === "Tiket") return item.type.includes("Tiket");
+    if (activeTab === "Status") return item.type.includes("Status");
+    if (activeTab === "Pengumuman") return item.type === "Pengumuman";
+    return true;
+  });
 
-  const displayedItems = filteredItems.slice(0, itemsPerPage);
+  // Pagination
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedItems = filteredItems.slice(startIndex, endIndex);
 
   const getStatusText = (item) => {
-    if (item.type === "Tiket Dibuat") {
-      return `Tiket Anci: ${item.ticketId} ${item.status}.`;
+    if (item.type === "Tiket Selesai") {
+      return `Tiket ${item.ticketId} telah ${item.status}.`;
+    } else if (item.type === "Tiket Ditolak") {
+      return `Tiket ${item.ticketId} ditolak.`;
     } else if (item.type === "Status Tiket Diperbarui") {
-      return `Tiket Anci: ${item.ticketId} ${item.status}.`;
+      return `Status tiket ${item.ticketId} ${item.status}.`;
+    } else if (item.type === "Tiket Diselesaikan Teknisi") {
+      return `Teknisi telah menyelesaikan tiket ${item.ticketId}.`;
     } else {
-      return item.message;
+      return item.message || "Tidak ada pesan.";
     }
   };
 
+  // Event handlers
   const handleRefresh = () => {
-    // Logic untuk refresh data
-    console.log("Refresh data");
+    fetchTickets();
     setShowDropdown(false);
+    Swal.fire({
+      icon: "success",
+      title: "Memperbarui...",
+      text: "Data tiket sedang diperbarui",
+      timer: 1000,
+      showConfirmButton: false,
+    });
   };
 
   const handleDeleteClick = () => {
@@ -212,15 +450,52 @@ export default function KotakMasuk() {
     setShowDropdown(false);
   };
 
-  const handleConfirmDelete = () => {
-    // Hapus item yang dipilih
-    const updatedItems = inboxItems.filter(
-      (item) => !selectedItems.includes(item.id)
-    );
-    setInboxItems(updatedItems);
-    setSelectedItems([]);
-    setShowDeleteConfirm(false);
-    setShowDeleteSuccess(true);
+  const handleConfirmDelete = async () => {
+    try {
+      setIsLoading(true);
+
+      // Hapus dari API jika ada
+      for (const itemId of selectedItems) {
+        const ticket = notifications.find((ticket) => ticket.id === itemId);
+        if (ticket && ticket.id) {
+          try {
+            await deleteTicketAPI(ticket.id);
+            console.log(`✅ [KOTAK MASUK] Deleted ticket: ${ticket.id}`);
+          } catch (error) {
+            console.error(`⚠️ [KOTAK MASUK] Failed to delete from API:`, error);
+          }
+        }
+      }
+
+      // Update local state
+      const updatedItems = notifications.filter(
+        (item) => !selectedItems.includes(item.id)
+      );
+      setNotifications(updatedItems);
+      setTotalData(updatedItems.length);
+      setSelectedItems([]);
+      setShowDeleteConfirm(false);
+      setShowDeleteSuccess(true);
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: `${selectedItems.length} tiket berhasil dihapus`,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("❌ [KOTAK MASUK] Error deleting tickets:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal menghapus tiket. Silakan coba lagi.",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancelDelete = () => {
@@ -231,20 +506,53 @@ export default function KotakMasuk() {
     setShowDeleteSuccess(false);
   };
 
-  const handleMarkAsRead = (itemId) => {
-    if (!readItems.includes(itemId)) {
-      setReadItems([...readItems, itemId]);
-    }
-  };
+  const handleMarkAllAsRead = async () => {
+    try {
+      setIsLoading(true);
 
-  const handleMarkAllAsRead = () => {
-    const allItemIds = inboxItems.map((item) => item.id);
-    setReadItems(allItemIds);
+      // Update API jika tersedia
+      try {
+        await markAllTicketsAsReadAPI();
+        console.log("✅ [KOTAK MASUK] Marked all as read in API");
+      } catch (apiError) {
+        console.log(
+          "⚠️ [KOTAK MASUK] API mark all as read failed, continuing locally"
+        );
+      }
+
+      // Update local state
+      const updatedNotifications = notifications.map((item) => ({
+        ...item,
+        unread: false,
+      }));
+
+      setNotifications(updatedNotifications);
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Semua tiket telah ditandai sebagai sudah dibaca",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("❌ [KOTAK MASUK] Error marking all as read:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal menandai semua sebagai sudah dibaca",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+
     setShowDropdown(false);
   };
 
   const toggleSelectItem = (itemId, e) => {
-    e.stopPropagation(); // Mencegah event propagation
+    e.stopPropagation();
     setSelectedItems((prev) =>
       prev.includes(itemId)
         ? prev.filter((id) => id !== itemId)
@@ -258,23 +566,156 @@ export default function KotakMasuk() {
     }
   };
 
-  const isItemRead = (item) => {
-    return readItems.includes(item.id) || !item.unread;
+  const handleItemClick = async (item) => {
+    // Mark as read if unread
+    if (item.unread) {
+      try {
+        await markTicketAsReadAPI(item.id);
+
+        const updatedNotifications = notifications.map((ticket) =>
+          ticket.id === item.id ? { ...ticket, unread: false } : ticket
+        );
+        setNotifications(updatedNotifications);
+      } catch (error) {
+        console.error("❌ [KOTAK MASUK] Error marking as read:", error);
+        // Update locally anyway
+        const updatedNotifications = notifications.map((ticket) =>
+          ticket.id === item.id ? { ...ticket, unread: false } : ticket
+        );
+        setNotifications(updatedNotifications);
+      }
+    }
+
+    // Navigate based on ticket type and status
+    if (item.type === "Tiket Selesai") {
+      navigate("/tiket-selesai", {
+        state: {
+          ticketData: item,
+        },
+      });
+    } else if (item.type === "Tiket Ditolak") {
+      navigate("/tiket-ditolak", {
+        state: {
+          ticketData: item,
+        },
+      });
+    } else if (item.type === "Status Tiket Diperbarui") {
+      navigate("/tiket-diproses", {
+        state: {
+          ticketData: item,
+        },
+      });
+    } else if (item.type === "Tiket Diselesaikan Teknisi") {
+      navigate("/tiket-selesai-teknisi", {
+        state: {
+          ticketData: item,
+        },
+      });
+    } else {
+      // Default navigation
+      navigate("/tiket-detail", {
+        state: {
+          ticketData: item,
+        },
+      });
+    }
   };
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-4">
+          <div className="px-4 md:px-6 py-4 md:py-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-col items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mb-4"></div>
+                <p className="text-gray-600">Memuat tiket...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
+  // Empty state
+  if (!isLoading && notifications.length === 0) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-4">
+          <div className="px-4 md:px-6 py-4 md:py-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex justify-between items-center mb-6">
+                {/* Tab Navigation */}
+                <div className="flex space-x-2">
+                  {["Semua", "Tiket", "Status", "Pengumuman"].map((tab) => (
+                    <div
+                      key={tab}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200"
+                    >
+                      <button
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors w-full h-full ${
+                          activeTab === tab
+                            ? "bg-[#226597] text-white"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        onClick={() => {
+                          setActiveTab(tab);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        {tab}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2">
+                  <div className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1">
+                    <button
+                      onClick={handleRefresh}
+                      className="px-4 py-2 bg-transparent text-white hover:bg-white hover:text-[#226597] rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+                      title="Refresh"
+                    >
+                      <RefreshCw size={18} />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Empty State */}
+              <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
+                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                  Belum Ada Tiket
+                </h3>
+                <p className="text-gray-500 text-sm mb-6">
+                  Tidak ada tiket yang perlu ditampilkan saat ini.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
+  // Main render
   return (
     <LayoutPegawai>
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
           {/* Header */}
           <div className="max-w-4xl mx-auto">
-            {/* Navigation Tabs dan Action Buttons dalam satu baris */}
+            {/* Navigation Tabs dan Action Buttons */}
             <div className="flex justify-between items-center mb-6">
-              {/* Tab Navigation dengan card putih */}
+              {/* Tab Navigation */}
               <div className="flex space-x-2">
                 {["Semua", "Tiket", "Status", "Pengumuman"].map((tab) => (
                   <div
@@ -287,7 +728,10 @@ export default function KotakMasuk() {
                           ? "bg-[#226597] text-white"
                           : "text-gray-700 hover:bg-gray-100"
                       }`}
-                      onClick={() => setActiveTab(tab)}
+                      onClick={() => {
+                        setActiveTab(tab);
+                        setCurrentPage(1);
+                      }}
                     >
                       {tab}
                     </button>
@@ -295,7 +739,7 @@ export default function KotakMasuk() {
                 ))}
               </div>
 
-              {/* Action Buttons dengan card biru */}
+              {/* Action Buttons */}
               <div className="flex items-center space-x-2">
                 {/* Button Hapus */}
                 <div className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1">
@@ -359,7 +803,7 @@ export default function KotakMasuk() {
             {/* Inbox Items */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200">
               {displayedItems.map((item, index) => {
-                const isRead = isItemRead(item);
+                const isRead = !item.unread;
                 return (
                   <div
                     key={item.id}
@@ -371,10 +815,8 @@ export default function KotakMasuk() {
                     onClick={() => handleItemClick(item)}
                   >
                     <div className="flex items-start space-x-3">
-                      {/* Checkbox di sebelah kiri */}
+                      {/* Checkbox */}
                       <div onClick={(e) => e.stopPropagation()}>
-                        {" "}
-                        {/* Wrapper untuk mencegah propagation */}
                         <input
                           type="checkbox"
                           checked={selectedItems.includes(item.id)}
@@ -416,6 +858,27 @@ export default function KotakMasuk() {
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           )}
                         </div>
+                        {/* Tambahan info untuk tickets */}
+                        <div className="mt-2 flex items-center space-x-2">
+                          {item.priority && (
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                item.priority === "High"
+                                  ? "bg-red-100 text-red-800"
+                                  : item.priority === "Medium"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-green-100 text-green-800"
+                              }`}
+                            >
+                              {item.priority}
+                            </span>
+                          )}
+                          {item.rating && (
+                            <span className="text-xs text-yellow-600">
+                              ⭐ {item.rating.rating}/5
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -427,57 +890,72 @@ export default function KotakMasuk() {
             <div className="mt-4 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
               {/* Info Menampilkan Data */}
               <div className="text-sm text-gray-500">
-                Menampilkan data 1 sampai{" "}
-                {Math.min(itemsPerPage, filteredItems.length)} dari {totalData}{" "}
-                data
+                Menampilkan data {startIndex + 1} sampai{" "}
+                {Math.min(endIndex, filteredItems.length)} dari{" "}
+                {filteredItems.length} data
               </div>
 
               {/* Pagination Controls */}
-              <div className="flex items-center space-x-2">
-                {/* Previous Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`p-2 rounded border ${
-                    currentPage === 1
-                      ? "text-gray-400 border-gray-300 cursor-not-allowed"
-                      : "text-gray-600 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <ChevronLeft size={16} />
-                </button>
+              {totalPages > 1 && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`p-2 rounded border ${
+                      currentPage === 1
+                        ? "text-gray-400 border-gray-300 cursor-not-allowed"
+                        : "text-gray-600 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
 
-                {/* Page Numbers */}
-                {[...Array(totalPages)].map((_, index) => {
-                  const page = index + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`w-8 h-8 rounded text-sm font-medium ${
-                        currentPage === page
-                          ? "bg-[#226597] text-white"
-                          : "text-gray-600 border border-gray-300 hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                  {[...Array(totalPages)].map((_, index) => {
+                    const page = index + 1;
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`w-8 h-8 rounded text-sm font-medium ${
+                            currentPage === page
+                              ? "bg-[#226597] text-white"
+                              : "text-gray-600 border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="text-gray-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
 
-                {/* Next Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 rounded border ${
-                    currentPage === totalPages
-                      ? "text-gray-400 border-gray-300 cursor-not-allowed"
-                      : "text-gray-600 border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 rounded border ${
+                      currentPage === totalPages
+                        ? "text-gray-400 border-gray-300 cursor-not-allowed"
+                        : "text-gray-600 border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -506,7 +984,8 @@ export default function KotakMasuk() {
                   Apakah Anda yakin ingin menghapus?
                 </h3>
                 <p className="text-sm text-gray-600 mb-6">
-                  Data yang telah Anda hapus tidak dapat dipulihkan kembali
+                  {selectedItems.length} tiket akan dihapus. Data yang telah
+                  dihapus tidak dapat dipulihkan kembali.
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -533,7 +1012,6 @@ export default function KotakMasuk() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
               <div className="text-center">
-                {/* Logo Success */}
                 <div className="flex justify-center mb-4">
                   <svg
                     width="70"
@@ -560,7 +1038,7 @@ export default function KotakMasuk() {
                 </div>
 
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Data berhasil dihapus!
+                  Tiket berhasil dihapus!
                 </h3>
 
                 <div className="flex justify-center">

@@ -1,34 +1,177 @@
 import { Download } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
-export default function SuksesPelayanan() {
+export default function SuksesPelaporan() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [ticketData, setTicketData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Ambil data dari FormLaporan melalui state navigasi
-  const laporanData = location.state?.laporanData || {};
+  useEffect(() => {
+    console.log("Location state:", location.state);
 
-  // Data tiket dengan OPD tujuan dari form
-  const ticketData = {
-    noTiket: "LPR318728",
-    tanggal: "18-10-2025",
-    waktu: "08:14 A.M.",
-    jenisLayanan: "Pelaporan Online",
-    opdTujuan: laporanData.opdTujuan || "Dinas Pendidikan",
-    judulPelaporan: laporanData.judulPelaporan || "Router Terganggu",
-    dataAset: laporanData.dataAset || "Printer HP LaserJet Pro P1102w",
-    nomorSeri: laporanData.nomorSeri || "HP-LJ-P1102W-001",
-    kategoriAset: laporanData.kategoriAset || "TI",
-    subKategoriAset: laporanData.subKategoriAset || "Jaringan",
-    jenisAset: laporanData.jenisAset || "Barang",
-    lokasiKejadian: laporanData.lokasiKejadian || "Dispendik Pusat",
-    nama: laporanData.nama || "Sri Wulandari",
-    nip: laporanData.nip || "20001142023052053",
-    divisi: laporanData.divisi || "Divisi Sumber Daya Manusia",
+    // Coba ambil dari kedua kemungkinan key
+    const pengajuanData =
+      location.state?.pengajuanData || location.state?.laporanData;
+
+    if (pengajuanData) {
+      console.log("Data diterima dari FormPengajuan:", pengajuanData);
+
+      // Format data tiket dari pengajuanData
+      const formattedTicketData = {
+        noTiket:
+          pengajuanData.ticket_code ||
+          pengajuanData.ticket_id ||
+          "LYN" + Math.floor(100000 + Math.random() * 900000),
+        tanggal: pengajuanData.tanggal
+          ? new Date(pengajuanData.tanggal).toLocaleDateString("id-ID")
+          : new Date().toLocaleDateString("id-ID"),
+        waktu: pengajuanData.tanggal
+          ? new Date(pengajuanData.tanggal).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : new Date().toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            }),
+        jenisLayanan: "Pelaporan Online",
+        opdTujuan:
+          pengajuanData.opdTujuan ||
+          pengajuanData.selectedOpd?.name ||
+          "Dinas Pendidikan",
+        judulPelaporan:
+          pengajuanData.judulPelaporan ||
+          pengajuanData.title ||
+          "Pengajuan Pelayanan",
+        dataAset: pengajuanData.dataAset || "Perangkat TI",
+        lokasiKejadian:
+          pengajuanData.lokasiKejadian || "Lokasi tidak ditentukan",
+        nama: pengajuanData.nama || "Haikal Saputra",
+        nip: pengajuanData.nip || "haikalsaputra@gmail.com",
+        divisi: pengajuanData.divisi || "Divisi Sumber Daya Manusia",
+
+        // Data tambahan dari form jika ada
+        rincianMasalah: pengajuanData.rincianMasalah || "",
+        penyelesaianDiharapkan: pengajuanData.penyelesaianDiharapkan || "",
+
+        // Original data untuk debug
+        originalData: pengajuanData,
+      };
+
+      setTicketData(formattedTicketData);
+      console.log("Data tiket diformat:", formattedTicketData);
+    } else {
+      console.log("Tidak ada data pengajuan ditemukan di state navigasi");
+    }
+
+    setLoading(false);
+  }, [location.state]);
+
+  // Fallback jika jsPDF gagal diimport
+  const handleDownloadFallback = () => {
+    if (!ticketData) return;
+
+    const ticketNumber = ticketData.noTiket;
+    const content = `
+TIKET PENGAJUAN - ${ticketNumber}
+===========================================
+
+Permohonan Anda Telah Berhasil Dikirim
+Terima kasih atas permohonan Anda. Permohonan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan.
+
+No. Tiket: ${ticketNumber}
+
+DETAIL TIKET:
+=============
+Judul Pelaporan: ${ticketData.judulPelaporan}
+Jenis Aset: ${ticketData.dataAset}
+Lokasi Penempatan: ${ticketData.lokasiKejadian}
+OPD Tujuan: ${ticketData.opdTujuan}
+Tanggal / waktu laporan dibuat: ${ticketData.tanggal} / ${ticketData.waktu}
+Nama Pemohon: ${ticketData.nama}
+Email: ${ticketData.nip}
+Divisi: ${ticketData.divisi}
+
+INFORMASI:
+==========
+Mohon simpan nomor tiket Anda untuk melacak status penyelesaian.
+Tim kami akan segera menindaklanjuti permohonan Anda.
+Anda dapat memantau progres tiket di menu Cek Status Layanan.
+
+© 2025 REPORT – Sistem Pelaporan Layanan.
+Dokumen dicetak otomatis dan sah tanpa tanda tangan.
+    `;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Tiket_${ticketNumber}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
+
+  // Jika loading, tampilkan loading spinner
+  if (loading) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data tiket...</p>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
+  // Jika tidak ada data tiket, tampilkan pesan error
+  if (!ticketData) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <svg
+                className="w-16 h-16 mx-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Data Tidak Ditemukan
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Data permohonan tidak ditemukan. Silakan kembali dan coba lagi.
+            </p>
+            <button
+              onClick={() => navigate("/beranda")}
+              className="bg-[#226597] hover:bg-[#1a507a] text-white px-6 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
 
   // Fungsi untuk generate dan download PDF menggunakan jsPDF
   const handleDownloadPDF = async () => {
@@ -46,19 +189,19 @@ export default function SuksesPelayanan() {
 
       // Header - persis seperti gambar
       doc.setFontSize(20);
-      doc.setTextColor(0, 0, 0); // Hitam
+      doc.setTextColor(0, 0, 0);
       doc.text("Tiket Anda Berhasil Dibuat", 105, 20, { align: "center" });
 
       doc.setFontSize(16);
-      doc.text("Laporan Anda Telah Berhasil Dikirim", 105, 30, {
+      doc.text("Permohonan Anda Telah Berhasil Dikirim", 105, 30, {
         align: "center",
       });
 
       // Deskripsi bahasa Indonesia
       doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100); // Abu-abu
+      doc.setTextColor(100, 100, 100);
       const description =
-        "Terima kasih atas laporan Anda. Laporan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan. Silakan pantau perkembangan laporan melalui menu Cek Status Layanan.";
+        "Terima kasih atas permohonan Anda. Permohonan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan. Silakan pantau perkembangan permohonan melalui menu Cek Status Layanan.";
       doc.text(description, 105, 45, { align: "center", maxWidth: 180 });
 
       // Garis pemisah
@@ -66,14 +209,16 @@ export default function SuksesPelayanan() {
       doc.line(20, 60, 190, 60);
 
       // No. Tiket - tanpa kotak, seperti gambar
+      const ticketNumber = ticketData.noTiket;
+
       doc.setFontSize(14);
       doc.setTextColor(100, 100, 100);
       doc.text("No. Tiket:", 20, 75);
 
       doc.setFontSize(24);
-      doc.setTextColor(34, 101, 151); // Warna biru #226597
+      doc.setTextColor(34, 101, 151);
       doc.setFont("helvetica", "bold");
-      doc.text(ticketData.noTiket, 105, 75, { align: "center" });
+      doc.text(ticketNumber, 105, 75, { align: "center" });
 
       // Garis pemisah kedua
       doc.setDrawColor(200, 200, 200);
@@ -91,14 +236,13 @@ export default function SuksesPelayanan() {
 
       let yPos = 105;
       const leftColumnX = 20;
-      const valueColumnX = 80; // Posisi untuk nilai setelah ":"
+      const valueColumnX = 80;
 
       // Fungsi untuk menambahkan baris data seperti gambar
       const addDataRow = (label, value) => {
         doc.setTextColor(100, 100, 100);
         doc.text(`${label}`, leftColumnX, yPos);
         doc.setTextColor(0, 0, 0);
-        // Format dengan titik dua di tengah seperti gambar
         const labelWidth = doc.getTextWidth(label);
         const colonX = leftColumnX + labelWidth + 2;
         doc.text(":", colonX, yPos);
@@ -106,8 +250,8 @@ export default function SuksesPelayanan() {
         yPos += 7;
       };
 
-      // Data sesuai urutan gambar
-      addDataRow("Nomor Tiket", ticketData.noTiket);
+      // Data sesuai format yang diberikan
+      addDataRow("Nomor Tiket", ticketNumber);
       addDataRow(
         "Tanggal / waktu laporan dibuat",
         `${ticketData.tanggal} / ${ticketData.waktu}`
@@ -115,13 +259,23 @@ export default function SuksesPelayanan() {
       addDataRow("Jenis Layanan", ticketData.jenisLayanan);
       addDataRow("Ditujukan ke OPD", ticketData.opdTujuan);
       addDataRow("Judul Pelaporan", ticketData.judulPelaporan);
-      addDataRow("Data Aset", ticketData.dataAset);
-      addDataRow("Nomor Seri", ticketData.nomorSeri);
-      addDataRow("Kategori Aset", ticketData.kategoriAset);
-      addDataRow("Sub Kategori Aset", ticketData.subKategoriAset);
-      addDataRow("Jenis Aset", ticketData.jenisAset);
-      addDataRow("Nama Aset", "Router"); // Hardcoded seperti gambar
-      addDataRow("Lokasi Kejadian", ticketData.lokasiKejadian);
+
+      // Hanya tampilkan data yang ada
+      if (ticketData.dataAset) {
+        addDataRow("Jenis Aset", ticketData.dataAset);
+      }
+      if (ticketData.lokasiKejadian) {
+        addDataRow("Lokasi Penempatan", ticketData.lokasiKejadian);
+      }
+      if (ticketData.nama) {
+        addDataRow("Nama Pemohon", ticketData.nama);
+      }
+      if (ticketData.nip) {
+        addDataRow("Email", ticketData.nip);
+      }
+      if (ticketData.divisi) {
+        addDataRow("Divisi", ticketData.divisi);
+      }
 
       // Garis pemisah footer
       yPos += 5;
@@ -135,7 +289,8 @@ export default function SuksesPelayanan() {
 
       const footerText1 =
         "Mohon simpan nomor tiket Anda untuk melacak status penyelesaian.";
-      const footerText2 = "Tim kami akan segera menindaklanjuti laporan Anda.";
+      const footerText2 =
+        "Tim kami akan segera menindaklanjuti permohonan Anda.";
       const footerText3 =
         "Anda dapat memantau progres tiket di menu Cek Status Layanan.";
 
@@ -160,63 +315,20 @@ export default function SuksesPelayanan() {
       );
 
       // Simpan PDF
-      doc.save(`Tiket_${ticketData.noTiket}.pdf`);
+      doc.save(`Tiket_${ticketNumber}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Gagal mengunduh PDF. Silakan coba lagi.");
+      // Fallback ke text download
+      handleDownloadFallback();
+      Swal.fire({
+        icon: "warning",
+        title: "PDF Tidak Tersedia",
+        text: "File PDF berhasil diunduh dalam format teks.",
+        timer: 2000,
+      });
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // Fallback jika jsPDF gagal diimport
-  const handleDownloadFallback = () => {
-    // Buat konten teks sederhana
-    const content = `
-TIKET LAPORAN - ${ticketData.noTiket}
-=========================================
-
-Laporan Anda Telah Berhasil Dikirim
-Terima kasih atas laporan Anda. Laporan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan.
-
-No. Tiket: ${ticketData.noTiket}
-
-DETAIL TIKET:
-=============
-Nomor Tiket: ${ticketData.noTiket}
-Tanggal / waktu: ${ticketData.tanggal} / ${ticketData.waktu}
-Jenis Layanan: ${ticketData.jenisLayanan}
-Ditujukan ke OPD: ${ticketData.opdTujuan}
-Judul Pelaporan: ${ticketData.judulPelaporan}
-Data Aset: ${ticketData.dataAset}
-Nomor Seri: ${ticketData.nomorSeri}
-Kategori Aset: ${ticketData.kategoriAset}
-Sub Kategori: ${ticketData.subKategoriAset}
-Jenis Aset: ${ticketData.jenisAset}
-Nama: ${ticketData.nama}
-NIP: ${ticketData.nip}
-Divisi: ${ticketData.divisi}
-Lokasi Kejadian: ${ticketData.lokasiKejadian}
-
-INFORMASI:
-==========
-Mohon simpan nomor tiket Anda untuk melacak status penyelesaian.
-Tim kami akan segera menindaklanjuti laporan Anda.
-Anda dapat memantau progres tiket di menu Cek Status Layanan.
-
-© 2025 REPORT – Sistem Pelaporan Layanan.
-Dokumen dicetak otomatis dan sah tanpa tanda tangan.
-    `;
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Tiket_${ticketData.noTiket}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -289,16 +401,16 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                   </svg>
                 </div>
                 <h1 className="text-2xl font-semibold text-[#000000] text-center">
-                  Laporan Anda Telah Berhasil Dikirim
+                  Permohonan Anda Telah Berhasil Dikirim
                 </h1>
                 <div className="text-gray-600 text-sm text-center mt-3">
                   <p>
-                    Terima kasih atas laporan Anda. Laporan telah tercatat, kami
-                    akan menindaklanjuti sesuai
+                    Terima kasih atas permohonan Anda. Permohonan telah
+                    tercatat, kami akan menindaklanjuti sesuai
                   </p>
                   <p>
                     prosedur dalam waktu yang ditentukan. Silakan pantau
-                    perkembangan laporan melalui menu
+                    perkembangan permohonan melalui menu
                   </p>
                   <p>Cek Status Layanan.</p>
                 </div>
@@ -323,9 +435,9 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                       </div>
                     </div>
 
-                    {/* Jenis Layanan dan OPD Tujuan - Sebelahan */}
+                    {/* Judul Pelaporan dan Jenis Aset - Sebelahan */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                      {/* Jenis Layanan */}
+                      {/* Judul Pelaporan */}
                       <div>
                         <div className="flex items-start gap-4">
                           <svg
@@ -395,10 +507,173 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                           </svg>
                           <div className="flex-1">
                             <label className="text-sm font-medium text-gray-600 block mb-2 text-left">
-                              Jenis Layanan:
+                              Judul Pelaporan:
                             </label>
                             <div className="text-sm text-gray-800 bg-gray-50 px-4 py-3 rounded-md text-left">
-                              {ticketData.jenisLayanan}
+                              {ticketData.judulPelaporan}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Jenis Aset */}
+                      <div>
+                        <div className="flex items-start gap-4">
+                          <svg
+                            width="70"
+                            height="70"
+                            viewBox="0 0 72 72"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <g filter="url(#filter0_d_2515_5514)">
+                              <rect
+                                x="20"
+                                y="20"
+                                width="32"
+                                height="32"
+                                rx="16"
+                                fill="white"
+                                shapeRendering="crispEdges"
+                              />
+                              <path
+                                d="M43.7358 27.1136L27.4391 36.5125C26.8028 36.878 26.8836 37.7638 27.5165 38.0309L31.254 39.5985L41.3555 30.6988C41.5489 30.5265 41.8231 30.7902 41.6579 30.9905L33.1878 41.3068V44.1363C33.1878 44.9658 34.1899 45.2927 34.6821 44.6917L36.9148 41.9746L41.2957 43.8094C41.795 44.0203 42.3646 43.7075 42.456 43.1697L44.9875 27.9853C45.1071 27.2752 44.3441 26.7621 43.7358 27.1136Z"
+                                fill="#113F67"
+                              />
+                            </g>
+                            <defs>
+                              <filter
+                                id="filter0_d_2515_5514"
+                                x="0"
+                                y="0"
+                                width="72"
+                                height="72"
+                                filterUnits="userSpaceOnUse"
+                                colorInterpolationFilters="sRGB"
+                              >
+                                <feFlood
+                                  floodOpacity="0"
+                                  result="BackgroundImageFix"
+                                />
+                                <feColorMatrix
+                                  in="SourceAlpha"
+                                  type="matrix"
+                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                  result="hardAlpha"
+                                />
+                                <feOffset />
+                                <feGaussianBlur stdDeviation="10" />
+                                <feComposite in2="hardAlpha" operator="out" />
+                                <feColorMatrix
+                                  type="matrix"
+                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                                />
+                                <feBlend
+                                  mode="normal"
+                                  in2="BackgroundImageFix"
+                                  result="effect1_dropShadow_2515_5514"
+                                />
+                                <feBlend
+                                  mode="normal"
+                                  in="SourceGraphic"
+                                  in2="effect1_dropShadow_2515_5514"
+                                  result="shape"
+                                />
+                              </filter>
+                            </defs>
+                          </svg>
+                          <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-600 block mb-2 text-left">
+                              Jenis Aset:
+                            </label>
+                            <div className="text-sm text-gray-800 bg-gray-50 px-4 py-3 rounded-md text-left">
+                              {ticketData.dataAset}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lokasi Penempatan dan OPD Tujuan */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                      {/* Lokasi Penempatan */}
+                      <div>
+                        <div className="flex items-start gap-4">
+                          <svg
+                            width="70"
+                            height="70"
+                            viewBox="0 0 72 72"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <g filter="url(#filter0_d_1104_3295)">
+                              <rect
+                                x="20"
+                                y="20"
+                                width="32"
+                                height="32"
+                                rx="16"
+                                fill="white"
+                                shapeRendering="crispEdges"
+                              />
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M36 43.9561C39.3137 43.9561 42 41.2698 42 37.9561C42 34.6424 39.3137 31.9561 36 31.9561C32.6863 31.9561 30 34.6424 30 37.9561C30 41.2698 32.6863 43.9561 36 43.9561ZM36 46.9561C40.4183 46.9561 44 43.3744 44 37.9561C44 32.5378 40.4183 28.9561 36 28.9561C31.5817 28.9561 28 32.5378 28 37.9561C28 43.3744 31.5817 46.9561 36 46.9561Z"
+                                fill="#113F67"
+                              />
+                              <path
+                                d="M36 27.3311C32.3834 27.3311 29.418 30.0238 29.068 33.5697L29 34.4561H31.0001C31.0001 33.0032 32.3435 31.8311 34 31.8311C35.6569 31.8311 37 33.0032 37 34.4561H39C39 32.4391 37.549 30.7189 35.6882 30.2498C35.4042 28.3091 33.8646 26.8311 32 26.8311C30.3431 26.8311 29 28.0032 29 29.4561H27C27 27.4391 28.451 25.7189 30.3118 25.2498C31.035 22.3148 33.7818 20.0811 37 20.0811C40.7645 20.0811 43.8994 23.0521 44 26.7813C46.2091 27.5782 48 29.598 48 31.9561C48 34.3142 46.2091 36.334 44 37.1309C43.8994 40.8601 40.7645 43.8311 37 43.8311C33.7818 43.8311 31.035 41.5973 30.3118 38.6623C28.451 38.1932 27 36.473 27 34.4561C27 32.4391 28.451 30.7189 30.3118 30.2498C30.5958 28.3091 32.1354 26.8311 34 26.8311Z"
+                                fill="#113F67"
+                              />
+                            </g>
+                            <defs>
+                              <filter
+                                id="filter0_d_1104_3295"
+                                x="0"
+                                y="0"
+                                width="72"
+                                height="72"
+                                filterUnits="userSpaceOnUse"
+                                colorInterpolationFilters="sRGB"
+                              >
+                                <feFlood
+                                  floodOpacity="0"
+                                  result="BackgroundImageFix"
+                                />
+                                <feColorMatrix
+                                  in="SourceAlpha"
+                                  type="matrix"
+                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                  result="hardAlpha"
+                                />
+                                <feOffset />
+                                <feGaussianBlur stdDeviation="10" />
+                                <feComposite in2="hardAlpha" operator="out" />
+                                <feColorMatrix
+                                  type="matrix"
+                                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                                />
+                                <feBlend
+                                  mode="normal"
+                                  in2="BackgroundImageFix"
+                                  result="effect1_dropShadow_1104_3295"
+                                />
+                                <feBlend
+                                  mode="normal"
+                                  in="SourceGraphic"
+                                  in2="effect1_dropShadow_1104_3295"
+                                  result="shape"
+                                />
+                              </filter>
+                            </defs>
+                          </svg>
+                          <div className="flex-1">
+                            <label className="text-sm font-medium text-gray-600 block mb-2 text-left">
+                              Lokasi Penempatan:
+                            </label>
+                            <div className="text-sm text-gray-800 bg-gray-50 px-4 py-3 rounded-md text-left">
+                              {ticketData.lokasiKejadian}
                             </div>
                           </div>
                         </div>
@@ -518,12 +793,12 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                   Cek status layanan
                 </button>
 
-                {/* Buat Laporan Baru */}
+                {/* Buat Permohonan Baru */}
                 <button
-                  onClick={() => navigate("/pelaporanonline")}
+                  onClick={() => navigate("/pengajuan")}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
                 >
-                  Buat laporan baru
+                  Buat permohonan baru
                 </button>
 
                 {/* Kembali ke Beranda */}
@@ -531,7 +806,7 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                   onClick={() => navigate("/beranda")}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
                 >
-                  Kembali ke beranda
+                  Kembali ke beranda 
                 </button>
               </div>
             </div>
