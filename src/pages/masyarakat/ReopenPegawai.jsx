@@ -17,28 +17,24 @@ export default function ReopenPegawai() {
   const [error, setError] = useState(null);
   const [ticketData, setTicketData] = useState(null);
 
-  // Ambil ticket ID dari laporan
-  const ticketId = laporan.ticket_id || laporan.id || "UPS23336";
+  const ticketId = laporan.ticket_id || laporan.id || "";
 
-  // Fungsi untuk mendapatkan token
   const getToken = () => {
     return (
       localStorage.getItem("access_token") ||
       localStorage.getItem("token") ||
-      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8"
+      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjU1NTczNTksImV4cCI6MTc2NjE2MjE1OSwibmJmIjoxNzY1NTU3MzU5LCJqdGkiOiJpVmdBSkViRHQxMFpnZHFYIiwic3ViIjoiNSJ9.h47mz1YdSa2fevoaPLo6tnds2wvqNy-4cpnLSzTyICA"
     );
   };
 
-  // Fetch data ticket saat komponen dimuat
   useEffect(() => {
     const fetchTicketData = async () => {
       try {
         setLoading(true);
         const token = getToken();
 
-        // Fetch data ticket dari API (sesuaikan endpoint untuk pegawai)
         const response = await fetch(
-          `https://service-desk-be-production.up.railway.app/api/tickets/${ticketId}`,
+          `https://service-desk-be-production.up.railway.app/api/tickets/pegawai/${ticketId}`,
           {
             headers: {
               accept: "application/json",
@@ -54,7 +50,6 @@ export default function ReopenPegawai() {
         const data = await response.json();
         setTicketData(data);
 
-        // Jika ada data dari state laporan, gunakan itu sebagai fallback
         if (laporan && Object.keys(laporan).length > 0) {
           setTicketData((prev) => ({ ...prev, ...laporan }));
         }
@@ -62,23 +57,25 @@ export default function ReopenPegawai() {
         console.error("Error fetching ticket data:", err);
         setError(err.message);
 
-        // Jika gagal fetch, gunakan data dari state sebagai fallback
         if (laporan && Object.keys(laporan).length > 0) {
           setTicketData(laporan);
-          setError(null); // Reset error karena kita punya fallback data
+          setError(null);
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTicketData();
+    if (ticketId) {
+      fetchTicketData();
+    } else {
+      setLoading(false);
+    }
   }, [ticketId, laporan]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validasi ukuran file (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         Swal.fire({
           icon: "error",
@@ -90,7 +87,6 @@ export default function ReopenPegawai() {
         return;
       }
 
-      // Validasi tipe file
       const allowedTypes = [
         "image/jpeg",
         "image/png",
@@ -114,7 +110,6 @@ export default function ReopenPegawai() {
     }
   };
 
-  // === Kirim data dengan API ===
   const handleSubmit = async () => {
     if (!alasan || !penyelesaian) {
       Swal.fire({
@@ -141,7 +136,6 @@ export default function ReopenPegawai() {
           setSubmitting(true);
           const token = getToken();
 
-          // Siapkan FormData sesuai dengan API
           const formData = new FormData();
           formData.append("alasan_reopen", alasan);
           formData.append("expected_resolution", penyelesaian);
@@ -150,16 +144,8 @@ export default function ReopenPegawai() {
             formData.append("file", lampiran);
           }
 
-          console.log("Mengirim request reopen untuk ticket:", ticketId);
-          console.log("Data yang dikirim:", {
-            alasan_reopen: alasan,
-            expected_resolution: penyelesaian,
-            lampiran: lampiran?.name || "Tidak ada file",
-          });
-
-          // Kirim request PATCH ke API
           const response = await fetch(
-            `https://service-desk-be-production.up.railway.app/api/tickets/reopen/${ticketId}`,
+            `https://service-desk-be-production.up.railway.app/api/tickets/pegawai/reopen/${ticketId}`,
             {
               method: "PATCH",
               headers: {
@@ -170,11 +156,8 @@ export default function ReopenPegawai() {
             }
           );
 
-          console.log("Response status:", response.status);
-
           if (response.ok) {
             const resultData = await response.json();
-            console.log("Success response:", resultData);
 
             Swal.fire({
               icon: "success",
@@ -188,7 +171,6 @@ export default function ReopenPegawai() {
             });
           } else {
             const errorText = await response.text();
-            console.error("API Error:", errorText);
 
             let errorMessage = "Terjadi kesalahan saat mengirim pengajuan";
             if (response.status === 400) {
@@ -223,7 +205,6 @@ export default function ReopenPegawai() {
     });
   };
 
-  // === Konfirmasi batal ===
   const handleCancel = () => {
     Swal.fire({
       title: "Batalkan Pengajuan?",
@@ -240,7 +221,6 @@ export default function ReopenPegawai() {
     });
   };
 
-  // Tampilkan loading state
   if (loading) {
     return (
       <LayoutPegawai>
@@ -254,7 +234,6 @@ export default function ReopenPegawai() {
     );
   }
 
-  // Tampilkan error state
   if (error && !ticketData) {
     return (
       <LayoutPegawai>
@@ -276,7 +255,6 @@ export default function ReopenPegawai() {
     );
   }
 
-  // Gunakan data dari API atau dari state
   const currentTicketData = ticketData || laporan;
 
   return (
@@ -285,15 +263,12 @@ export default function ReopenPegawai() {
         <div className="flex-1 flex flex-col">
           <div className="p-6">
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 relative overflow-hidden max-w-4xl mx-auto">
-              {/* Background wave */}
               <div className="absolute bottom-0 left-0 w-full h-32 bg-[url('/assets/wave.svg')] bg-cover opacity-10 pointer-events-none"></div>
 
-              {/* Judul Tengah */}
               <h2 className="text-2xl font-bold text-[#0F2C59] text-center mb-8 border-b pb-4">
                 Formulir Pengajuan Kembali
               </h2>
 
-              {/* Pengirim & ID Tiket - Layout vertikal */}
               <div className="space-y-4 mb-8">
                 <div className="flex items-center">
                   <span className="text-sm font-semibold text-gray-600 w-40">
@@ -330,14 +305,13 @@ export default function ReopenPegawai() {
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm font-medium flex-1 text-center">
                     {currentTicketData.ticket_code ||
                       currentTicketData.id ||
-                      "UPS23336"}
+                      ""}
                   </div>
                 </div>
               </div>
 
               <div className="border-t border-gray-200 my-8"></div>
 
-              {/* Judul Pelaporan */}
               <div className="mb-8">
                 <span className="text-sm font-semibold text-gray-600 mb-2 block">
                   Judul Pelaporan
@@ -349,16 +323,15 @@ export default function ReopenPegawai() {
                 </div>
               </div>
 
-              {/* Data Aset & Nomor Seri - Grid 2 kolom */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
                   <span className="text-sm font-semibold text-gray-600">
                     Data Aset
                   </span>
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm">
-                    {currentTicketData.dataAset ||
-                      currentTicketData.nama_asset ||
-                      "Printer HP LaserJet Pro P1102w"}
+                    {currentTicketData.asset_name ||
+                      currentTicketData.asset?.nama_asset ||
+                      "Tidak ada nama aset"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -366,19 +339,22 @@ export default function ReopenPegawai() {
                     Nomor Seri
                   </span>
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm">
-                    {currentTicketData.nomorSeri || "HP-LJ-P1102W-001"}
+                    {currentTicketData.serial_number ||
+                      currentTicketData.asset?.nomor_seri ||
+                      "Tidak ada nomor seri"}
                   </div>
                 </div>
               </div>
 
-              {/* Kategori - Sub Kategori - Jenis Aset - Grid 3 kolom */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                 <div className="space-y-2">
                   <span className="text-sm font-semibold text-gray-600">
                     Kategori Aset
                   </span>
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm text-center">
-                    {currentTicketData.kategoriAset || "Non TI"}
+                    {currentTicketData.asset_category ||
+                      currentTicketData.asset?.kategori ||
+                      "Tidak ada kategori"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -386,7 +362,9 @@ export default function ReopenPegawai() {
                     Sub-Kategori Aset
                   </span>
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm text-center">
-                    {currentTicketData.subKategoriAset || "Jaringan"}
+                    {currentTicketData.asset_sub_category ||
+                      currentTicketData.asset?.subkategori_nama ||
+                      "Tidak ada sub kategori"}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -394,26 +372,26 @@ export default function ReopenPegawai() {
                     Jenis Aset
                   </span>
                   <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm text-center">
-                    {currentTicketData.jenisAset || "Barang"}
+                    {currentTicketData.asset_type ||
+                      currentTicketData.asset?.jenis_asset ||
+                      "Tidak ada jenis aset"}
                   </div>
                 </div>
               </div>
 
-              {/* Lokasi Kejadian */}
               <div className="mb-8">
                 <span className="text-sm font-semibold text-gray-600 mb-2 block">
                   Lokasi Kejadian
                 </span>
                 <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 text-sm w-fit">
-                  {currentTicketData.lokasiKejadian ||
-                    currentTicketData.lokasi_penempatan ||
-                    "Dinas Pendidikan Kantor Pusat"}
+                  {currentTicketData.location ||
+                    currentTicketData.lokasi_kejadian ||
+                    "Tidak ada lokasi"}
                 </div>
               </div>
 
               <div className="border-t border-gray-200 my-8"></div>
 
-              {/* Alasan Pengajuan */}
               <div className="mb-8">
                 <span className="text-sm font-semibold text-gray-600 mb-2 block">
                   Alasan pengajuan kembali
@@ -427,7 +405,6 @@ export default function ReopenPegawai() {
                 />
               </div>
 
-              {/* Lampiran File */}
               <div className="mb-8">
                 <span className="text-sm font-semibold text-gray-600 mb-2 block">
                   Lampiran file
@@ -454,7 +431,6 @@ export default function ReopenPegawai() {
                 )}
               </div>
 
-              {/* Penyelesaian */}
               <div className="mb-10">
                 <span className="text-sm font-semibold text-gray-600 mb-2 block">
                   Penyelesaian yang Diharapkan
@@ -468,7 +444,6 @@ export default function ReopenPegawai() {
                 />
               </div>
 
-              {/* Tombol Aksi - Seperti di gambar dengan posisi di kiri */}
               <div className="flex justify-start gap-4">
                 <button
                   onClick={handleCancel}

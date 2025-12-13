@@ -294,7 +294,7 @@ function App() {
         <Route path="/dashboardbidang" element={<DashboardBidang />} />
         <Route path="/detailbidang/:id" element={<DetailBidang />} />
         <Route path="/aksitiket" element={<AksiTiket />} />
-        <Route path="/lihatrating" element={<LihatRating />} />
+        {/* <Route path="/lihatrating" element={<LihatRating />} /> */}
         <Route path="/aksibidang" element={<AksiTiket />} />
         <Route path="/monitoringbidang" element={<MonitoringBidang />} />
         <Route path="/ratingkepuasan" element={<RatingKepuasan />} />
@@ -330,7 +330,7 @@ function App() {
         <Route path="riwayat" element={<Riwayat />} />
         <Route path="lihathistory" element={<LihatHistory />} />
         <Route path="lihatratingbidang" element={<LihatRatingBidang />} />
-        <Route path="berirating" element={<BeriRating />} />
+        {/* <Route path="berirating" element={<BeriRating />} /> */}
         <Route path="reopenpegawai" element={<ReopenPegawai />} />
         <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
       </Routes>

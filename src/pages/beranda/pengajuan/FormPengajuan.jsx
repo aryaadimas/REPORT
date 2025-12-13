@@ -43,7 +43,6 @@ export default function FormPengajuan() {
     logo: "/assets/Dinas Kesehatan.png",
   };
 
-  // Ambil token
   const getToken = () => {
     return (
       localStorage.getItem("access_token") ||
@@ -52,67 +51,131 @@ export default function FormPengajuan() {
     );
   };
 
-  // Fetch data user
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoadingUser(true);
         const token = getToken();
-        const response = await fetch(
+
+        console.log("🌐 Mengambil data user dari API /me...");
+
+        const endpoints = [
           "https://service-desk-be-production.up.railway.app/me",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
+          "https://service-desk-be-production.up.railway.app/api/me",
+        ];
+
+        let response = null;
+        let result = null;
+
+        for (const endpoint of endpoints) {
+          try {
+            console.log(`🔄 Mencoba endpoint: ${endpoint}`);
+            response = await fetch(endpoint, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            });
+
+            console.log(`📡 Status ${endpoint}:`, response.status);
+
+            if (response.ok) {
+              result = await response.json();
+              console.log(`✅ Berhasil dari ${endpoint}:`, result);
+              break;
+            }
+          } catch (err) {
+            console.warn(`⚠️ Gagal akses ${endpoint}:`, err.message);
           }
-        );
+        }
 
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response || !response.ok) {
+          throw new Error(
+            `Semua endpoint gagal. Status terakhir: ${response?.status}`
+          );
+        }
 
-        const result = await response.json();
+        let user = null;
+
         if (result.status === "success" && result.user) {
-          setUserData(result.user);
+          user = result.user;
+        } else if (result.data) {
+          user = result.data;
+        } else if (result && (result.name || result.email)) {
+          user = result;
+        }
+
+        if (user) {
+          console.log("👤 Data user yang ditemukan:", user);
+
+          const nama =
+            user.name ||
+            user.full_name ||
+            user.username ||
+            "OPD Dinas Kesehatan";
+          const email = user.email || "opd@dinaskesehatan.go.id";
+          const unitKerja =
+            user.unit_kerja ||
+            user.division ||
+            user.department ||
+            "Bidang Kesehatan Masyarakat";
+
+          setUserData(user);
           setFormData((prev) => ({
             ...prev,
-            nama: result.user.name || "Haikal Saputra",
-            nip: result.user.email || "haikalsaputra@gmail.com",
-            divisi:
-              result.user.unit_kerja ||
-              result.user.dinas ||
-              "Divisi Sumber Daya Manusia",
+            nama: nama,
+            nip: email,
+            divisi: unitKerja,
           }));
 
-          // Simpan user data ke localStorage untuk mendapatkan dinas_id nanti
           localStorage.setItem(
             "user_data",
             JSON.stringify({
-              name: result.user.name,
-              email: result.user.email,
-              unit_kerja: result.user.unit_kerja,
-              dinas: result.user.dinas,
-              dinas_id: result.user.dinas_id || result.user.dinasId || 1,
+              name: nama,
+              email: email,
+              unit_kerja: unitKerja,
+              dinas: user.dinas || "Dinas Kesehatan",
+              dinas_id: user.dinas_id || user.unit_kerja_id || 1,
+              user_id: user.id || 1,
             })
           );
+
+          console.log("✅ Data user berhasil diambil:", {
+            nama,
+            email,
+            unitKerja,
+          });
+        } else {
+          console.warn(
+            "⚠️ Format data tidak dikenali, menggunakan data OPD Dinas Kesehatan"
+          );
+          throw new Error("Format data tidak dikenali");
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("❌ Error fetching user data:", error);
+
+        const fallbackData = {
+          nama: "OPD Dinas Kesehatan",
+          nip: "opd@dinaskesehatan.go.id",
+          divisi: "Bidang Kesehatan Masyarakat",
+        };
+
         setFormData((prev) => ({
           ...prev,
-          nama: "Haikal Saputra",
-          nip: "haikalsaputra@gmail.com",
-          divisi: "Divisi Sumber Daya Manusia",
+          ...fallbackData,
         }));
 
         localStorage.setItem(
           "user_data",
           JSON.stringify({
-            name: "Haikal Saputra",
-            email: "haikalsaputra@gmail.com",
-            unit_kerja: "Divisi Sumber Daya Manusia",
+            name: fallbackData.nama,
+            email: fallbackData.nip,
+            unit_kerja: fallbackData.divisi,
+            dinas: "Dinas Kesehatan",
             dinas_id: 1,
+            user_id: 1,
           })
         );
       } finally {
@@ -123,13 +186,11 @@ export default function FormPengajuan() {
     fetchUserData();
   }, []);
 
-  // Fetch data OPD setelah user data berhasil diambil
   useEffect(() => {
     const fetchOpdData = async () => {
       try {
         setIsLoadingOpd(true);
 
-        // Ambil dinas_id dari localStorage atau userData
         let dinasId = 1;
         const userDataStr = localStorage.getItem("user_data");
 
@@ -177,7 +238,7 @@ export default function FormPengajuan() {
         }
       } catch (error) {
         console.error("❌ Error fetching OPD data:", error);
-        // Coba gunakan data dari localStorage atau default
+
         const savedOpd = localStorage.getItem("current_opd");
         if (savedOpd) {
           try {
@@ -198,7 +259,6 @@ export default function FormPengajuan() {
     }
   }, [loadingUser, userData, location.state]);
 
-  // Fetch data sub-kategori dari API
   useEffect(() => {
     const fetchSubKategori = async () => {
       try {
@@ -228,7 +288,7 @@ export default function FormPengajuan() {
           );
         } else {
           console.error("Format response tidak sesuai:", result);
-          // Fallback ke data statis jika API error
+
           setSubKategori([
             { id: 1, nama: "Server" },
             { id: 2, nama: "Komputer Desktop" },
@@ -239,7 +299,7 @@ export default function FormPengajuan() {
         }
       } catch (error) {
         console.error("Error fetching sub-kategori:", error);
-        // Fallback ke data statis jika API error
+
         setSubKategori([
           { id: 1, nama: "Server" },
           { id: 2, nama: "Komputer Desktop" },
@@ -280,8 +340,8 @@ export default function FormPengajuan() {
   const handleSelectSubKategori = (subKategoriItem) => {
     setFormData((prev) => ({
       ...prev,
-      dataAset: subKategoriItem.nama, // Menampilkan nama sub-kategori di dropdown
-      selectedSubKategoriId: subKategoriItem.id.toString(), // Menyimpan ID sub-kategori
+      dataAset: subKategoriItem.nama,
+      selectedSubKategoriId: subKategoriItem.id.toString(),
     }));
     toggleDropdown("dataAset");
   };
@@ -338,7 +398,6 @@ export default function FormPengajuan() {
       const token = getToken();
       const apiFormData = new FormData();
 
-      // Field wajib
       apiFormData.append("title", formData.judulPelaporan);
       apiFormData.append("description", formData.rincianMasalah);
       apiFormData.append(
@@ -346,16 +405,14 @@ export default function FormPengajuan() {
         formData.penyelesaianDiharapkan
       );
 
-      // Kirim ID sub-kategori yang dipilih
       apiFormData.append(
         "nama_asset",
         parseInt(formData.selectedSubKategoriId) || 3
-      ); // Default ke 3 (Laptop) jika tidak ada
+      );
 
       apiFormData.append("lokasi_penempatan", formData.lokasiKejadian);
       apiFormData.append("priority", priority);
 
-      // File
       uploadedFiles.forEach((fileObj) => {
         apiFormData.append("files[]", fileObj.file);
       });
@@ -452,7 +509,6 @@ export default function FormPengajuan() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Kirim laporan ke */}
               <div className="space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-start w-full gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -484,9 +540,7 @@ export default function FormPengajuan() {
                 </div>
               </div>
 
-              {/* Form Fields */}
               <div className="space-y-4">
-                {/* Nama */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Nama
@@ -496,7 +550,6 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Email */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Email
@@ -506,7 +559,6 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Divisi */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Divisi
@@ -516,7 +568,6 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Judul Pelaporan */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
                     Judul Pengajuan
@@ -532,7 +583,6 @@ export default function FormPengajuan() {
                   />
                 </div>
 
-                {/* Jenis Aset (Sub-Kategori) */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
                     Jenis Aset
@@ -576,13 +626,10 @@ export default function FormPengajuan() {
                     )}
                   </div>
                   {formData.selectedSubKategoriId && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      ID Jenis Aset: {formData.selectedSubKategoriId}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1"></p>
                   )}
                 </div>
 
-                {/* Lokasi Penempatan */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
                     Lokasi Penempatan
@@ -599,7 +646,6 @@ export default function FormPengajuan() {
                 </div>
               </div>
 
-              {/* Rincian Pengajuan Pelayanan */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Rincian Pengajuan Pelayanan
@@ -618,7 +664,6 @@ export default function FormPengajuan() {
                 />
               </div>
 
-              {/* Upload File */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Tambahkan file
@@ -690,7 +735,6 @@ export default function FormPengajuan() {
                 )}
               </div>
 
-              {/* Penyelesaian yang Diharapkan */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Penyelesaian yang Diharapkan
@@ -708,7 +752,6 @@ export default function FormPengajuan() {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between pt-6 gap-3 border-t border-gray-200">
                 <button
                   onClick={handleBatalkan}
@@ -734,7 +777,6 @@ export default function FormPengajuan() {
           </div>
         </div>
 
-        {/* Popup Konfirmasi */}
         {showConfirmation && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
@@ -784,7 +826,6 @@ export default function FormPengajuan() {
           </div>
         )}
 
-        {/* Popup Cancel Warning */}
         {showCancelWarning && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
@@ -828,7 +869,6 @@ export default function FormPengajuan() {
           </div>
         )}
 
-        {/* Popup Sukses */}
         {showSuccessPopup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
@@ -860,22 +900,7 @@ export default function FormPengajuan() {
                 <h3 className="text-2xl font-semibold mb-2">
                   Pengajuan berhasil terkirim!
                 </h3>
-                {lastResponse && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-md">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-medium">ID Tiket:</span>{" "}
-                      {lastResponse.ticket_code}
-                    </p>
-                    <p className="text-sm text-gray-700 mt-1">
-                      <span className="font-medium">Status:</span>{" "}
-                      {lastResponse.message || "Berhasil"}
-                    </p>
-                    <p className="text-sm text-gray-700 mt-1">
-                      <span className="font-medium">Dikirim ke:</span>{" "}
-                      {opdData?.name || defaultOpd.name}
-                    </p>
-                  </div>
-                )}
+
                 <button
                   onClick={handleSuccessOk}
                   className="mt-6 px-6 py-2 bg-[#226597] text-white rounded-md font-medium hover:bg-[#1a507a]"

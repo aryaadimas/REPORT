@@ -21,7 +21,6 @@ export default function KnowledgeBase() {
 
   const API_BASE_URL = "https://service-desk-be-production.up.railway.app";
 
-  // Ambil token dengan fallback ke token default
   const getToken = () => {
     return (
       localStorage.getItem("access_token") ||
@@ -39,7 +38,6 @@ export default function KnowledgeBase() {
       setLoading(true);
       const token = getToken();
 
-      // Fetch tags
       const tagsResponse = await fetch(`${API_BASE_URL}/articles/tags`, {
         headers: {
           accept: "application/json",
@@ -54,14 +52,12 @@ export default function KnowledgeBase() {
       const tagsData = await tagsResponse.json();
       console.log("Tags data from API:", tagsData);
 
-      // Filter out unwanted tags
       const filteredTags = tagsData.filter(
         (tag) => tag.tag_name !== "alviana" && tag.tag_name !== "string"
       );
       console.log("Filtered tags:", filteredTags);
       setTags(filteredTags);
 
-      // Fetch articles
       const articlesResponse = await fetch(`${API_BASE_URL}/articles`, {
         headers: {
           accept: "application/json",
@@ -76,13 +72,10 @@ export default function KnowledgeBase() {
       const articlesData = await articlesResponse.json();
       console.log("Articles data from API:", articlesData);
 
-      // Transform articles data
       let transformedArticles = [];
 
-      // Check if articlesData is an array
       if (Array.isArray(articlesData)) {
         transformedArticles = articlesData.map((article) => {
-          // Handle different possible structures
           const articleTags = article.tags || article.tag || [];
           const mainTag =
             Array.isArray(articleTags) && articleTags.length > 0
@@ -110,7 +103,6 @@ export default function KnowledgeBase() {
           };
         });
       } else if (articlesData.data && Array.isArray(articlesData.data)) {
-        // If response has data property
         transformedArticles = articlesData.data.map((article) => {
           const articleTags = article.tags || [];
           const mainTag =
@@ -136,7 +128,6 @@ export default function KnowledgeBase() {
         articlesData.articles &&
         Array.isArray(articlesData.articles)
       ) {
-        // If response has articles property
         transformedArticles = articlesData.articles.map((article) => {
           const articleTags = article.tags || [];
           const mainTag =
@@ -159,7 +150,6 @@ export default function KnowledgeBase() {
           };
         });
       } else {
-        // If structure is unexpected, use fallback
         console.warn("Unexpected articles data structure, using fallback");
         transformedArticles = getFallbackData();
       }
@@ -170,7 +160,6 @@ export default function KnowledgeBase() {
       setError(err.message);
       console.error("Error fetching data:", err);
 
-      // Fallback data
       setTags([
         { tag_id: "1", tag_name: "Akun dan SSO" },
         { tag_id: "2", tag_name: "Layanan dan Formulir" },

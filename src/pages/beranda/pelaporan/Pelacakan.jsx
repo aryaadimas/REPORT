@@ -12,11 +12,9 @@ const Pelacakan = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleSearch = async () => {
-    // Reset errors
     const newErrors = { reportId: "" };
     let hasError = false;
 
-    // Validasi
     if (!reportId.trim()) {
       newErrors.reportId = "Harap isi ID Laporan dengan benar";
       hasError = true;
@@ -24,7 +22,6 @@ const Pelacakan = () => {
 
     setErrors(newErrors);
 
-    // Jika ada error, stop execution
     if (hasError) {
       return;
     }
@@ -36,14 +33,13 @@ const Pelacakan = () => {
       setShowErrorPopup(false);
       setErrorMessage("");
 
-      // Fetch data dari API dengan token yang benar
       const response = await fetch(
         `https://service-desk-be-production.up.railway.app/api/track-ticket/${reportId}`,
         {
           method: "GET",
           headers: {
             accept: "application/json",
-            // Gunakan token dari curl yang berhasil
+
             Authorization:
               "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8",
           },
@@ -57,9 +53,7 @@ const Pelacakan = () => {
         const data = await response.json();
         console.log("API Response data:", data);
 
-        // Validasi data response
         if (data && data.ticket_code) {
-          // Navigasi ke halaman data ditemukan dengan data dari API
           navigate("/dataditemukan", {
             state: {
               ticketData: data,
@@ -70,10 +64,8 @@ const Pelacakan = () => {
           setShowErrorPopup(true);
         }
       } else {
-        // Handle error responses
         console.log("API Error response:", response);
 
-        // Coba parse error message
         try {
           const errorData = await response.json();
           console.log("Error data:", errorData);
@@ -84,7 +76,6 @@ const Pelacakan = () => {
             throw new Error("No error message");
           }
         } catch {
-          // Jika tidak bisa parse JSON, gunakan status code
           if (response.status === 404) {
             setErrorMessage(
               `Tiket "${reportId}" tidak ditemukan. Periksa kembali ID Tiket Anda.`
@@ -116,7 +107,6 @@ const Pelacakan = () => {
     }
   };
 
-  // Handle Enter key press
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -128,10 +118,9 @@ const Pelacakan = () => {
     setErrorMessage("");
   };
 
-  // Clear error ketika user mulai mengetik
   const handleReportIdChange = (e) => {
     const value = e.target.value;
-    // Hanya mengubah ke uppercase jika bukan kosong
+
     setReportId(value ? value.toUpperCase() : value);
     if (errors.reportId) {
       setErrors((prev) => ({ ...prev, reportId: "" }));
@@ -143,9 +132,7 @@ const Pelacakan = () => {
 
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Custom SVG Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <svg
             width="100%"
@@ -190,7 +177,6 @@ const Pelacakan = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-6 md:py-8">
-          {/* Page Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#226597] mb-3 md:py-4">
               Pelacakan Laporan
@@ -200,9 +186,7 @@ const Pelacakan = () => {
             </p>
           </div>
 
-          {/* Tracking Form */}
           <div className="max-w-xl mx-auto">
-            {/* ID Laporan Section - Responsive Layout */}
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap sm:min-w-[120px] text-left">
@@ -220,7 +204,6 @@ const Pelacakan = () => {
                       onChange={handleReportIdChange}
                       onKeyPress={handleKeyPress}
                       className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm md:text-base placeholder-gray-400"
-                      placeholder="Contoh: SVD-PL-0028-PG"
                       disabled={isLoading}
                     />
                   </div>
@@ -238,7 +221,6 @@ const Pelacakan = () => {
               </div>
             </div>
 
-            {/* Search Button - Responsive Positioning */}
             <div className="flex justify-center sm:justify-start mt-6 sm:ml-36">
               <button
                 onClick={handleSearch}
@@ -262,15 +244,11 @@ const Pelacakan = () => {
         </div>
       </div>
 
-      {/* Error Popup - Responsive */}
       {showErrorPopup && (
         <>
-          {/* Overlay */}
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            {/* Popup Content */}
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-sm w-full mx-auto">
               <div className="text-center">
-                {/* Warning Icon - Center aligned */}
                 <div className="flex justify-center mb-4">
                   <svg
                     width="60"
@@ -287,7 +265,6 @@ const Pelacakan = () => {
                   </svg>
                 </div>
 
-                {/* Error Message */}
                 <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
                   Data tidak ditemukan!
                 </h3>
@@ -295,7 +272,6 @@ const Pelacakan = () => {
                   {errorMessage || "Cek kembali inputan Anda"}
                 </p>
 
-                {/* OK Button - Responsive */}
                 <div className="flex justify-center">
                   <button
                     onClick={closeErrorPopup}

@@ -30,7 +30,6 @@ export default function KotakMasuk() {
   const API_BASE_URL = "https://service-desk-be-production.up.railway.app";
 
   const getToken = () => {
-    // Cari token dengan urutan prioritas
     return (
       localStorage.getItem("token") ||
       localStorage.getItem("access_token") ||
@@ -38,7 +37,6 @@ export default function KotakMasuk() {
     );
   };
 
-  // Fetch tickets dari API untuk pegawai - MENGUBAH ENDPOINT
   const fetchTickets = async () => {
     try {
       setIsLoading(true);
@@ -49,7 +47,6 @@ export default function KotakMasuk() {
         token.substring(0, 30) + "..."
       );
 
-      // ENDPOINT YANG BENAR untuk pegawai
       const response = await fetch(
         `${API_BASE_URL}/api/tickets/pegawai/finished`,
         {
@@ -69,7 +66,6 @@ export default function KotakMasuk() {
           await response.text()
         );
 
-        // Coba endpoint lain sebagai fallback
         try {
           console.log("🔍 [KOTAK MASUK] Coba endpoint alternatif /api/tickets");
           const altResponse = await fetch(`${API_BASE_URL}/api/tickets`, {
@@ -109,20 +105,17 @@ export default function KotakMasuk() {
     }
   };
 
-  // Process data tickets dari API - DIPERBARUI untuk struktur baru
   const processTicketData = (result) => {
     console.log("📦 [KOTAK MASUK] Processing ticket data:", result);
 
     if (result.data && Array.isArray(result.data)) {
       const formattedNotifications = result.data.map((ticket, index) => {
-        // Tentukan jenis notifikasi berdasarkan status ticket
         let type = "Status Tiket Diperbarui";
         let sender = "STATUS";
         let message = "";
         let status = "";
         let unread = false;
 
-        // Logic berdasarkan status ticket
         if (
           ticket.status === "selesai" ||
           ticket.status_ticket_pengguna === "Selesai"
@@ -133,7 +126,7 @@ export default function KotakMasuk() {
           message = `Tiket ${
             ticket.ticket_code || ticket.ticket_id
           } telah selesai.`;
-          unread = true; // Tiket selesai biasanya belum dibaca
+          unread = true;
         } else if (
           ticket.status === "rejected" ||
           ticket.status_ticket_pengguna === "Tiket Ditolak"
@@ -163,7 +156,6 @@ export default function KotakMasuk() {
           unread = true;
         }
 
-        // Format timestamp dari created_at
         let timestamp = "Just now";
         if (ticket.created_at) {
           const createdAt = new Date(ticket.created_at);
@@ -195,7 +187,6 @@ export default function KotakMasuk() {
           }
         }
 
-        // Ambil rating jika ada
         let ratingInfo = null;
         if (ticket.rating) {
           ratingInfo = {
@@ -243,7 +234,6 @@ export default function KotakMasuk() {
     }
   };
 
-  // Fallback data untuk testing
   const getFallbackData = () => {
     return [
       {
@@ -309,7 +299,6 @@ export default function KotakMasuk() {
     ];
   };
 
-  // API functions untuk tickets - DIPERBARUI
   const deleteTicketAPI = async (ticketId) => {
     try {
       const token = getToken();
@@ -402,7 +391,6 @@ export default function KotakMasuk() {
     };
   }, []);
 
-  // Filter items based on active tab - DIPERBARUI untuk tickets
   const filteredItems = notifications.filter((item) => {
     if (activeTab === "Semua") return true;
     if (activeTab === "Tiket") return item.type.includes("Tiket");
@@ -411,7 +399,6 @@ export default function KotakMasuk() {
     return true;
   });
 
-  // Pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedItems = filteredItems.slice(startIndex, endIndex);
@@ -430,7 +417,6 @@ export default function KotakMasuk() {
     }
   };
 
-  // Event handlers
   const handleRefresh = () => {
     fetchTickets();
     setShowDropdown(false);
@@ -454,7 +440,6 @@ export default function KotakMasuk() {
     try {
       setIsLoading(true);
 
-      // Hapus dari API jika ada
       for (const itemId of selectedItems) {
         const ticket = notifications.find((ticket) => ticket.id === itemId);
         if (ticket && ticket.id) {
@@ -467,7 +452,6 @@ export default function KotakMasuk() {
         }
       }
 
-      // Update local state
       const updatedItems = notifications.filter(
         (item) => !selectedItems.includes(item.id)
       );
@@ -510,7 +494,6 @@ export default function KotakMasuk() {
     try {
       setIsLoading(true);
 
-      // Update API jika tersedia
       try {
         await markAllTicketsAsReadAPI();
         console.log("✅ [KOTAK MASUK] Marked all as read in API");
@@ -520,7 +503,6 @@ export default function KotakMasuk() {
         );
       }
 
-      // Update local state
       const updatedNotifications = notifications.map((item) => ({
         ...item,
         unread: false,
@@ -567,7 +549,6 @@ export default function KotakMasuk() {
   };
 
   const handleItemClick = async (item) => {
-    // Mark as read if unread
     if (item.unread) {
       try {
         await markTicketAsReadAPI(item.id);
@@ -578,7 +559,7 @@ export default function KotakMasuk() {
         setNotifications(updatedNotifications);
       } catch (error) {
         console.error("❌ [KOTAK MASUK] Error marking as read:", error);
-        // Update locally anyway
+
         const updatedNotifications = notifications.map((ticket) =>
           ticket.id === item.id ? { ...ticket, unread: false } : ticket
         );
@@ -586,7 +567,6 @@ export default function KotakMasuk() {
       }
     }
 
-    // Navigate based on ticket type and status
     if (item.type === "Tiket Selesai") {
       navigate("/tiket-selesai", {
         state: {
@@ -612,7 +592,6 @@ export default function KotakMasuk() {
         },
       });
     } else {
-      // Default navigation
       navigate("/tiket-detail", {
         state: {
           ticketData: item,
@@ -625,7 +604,6 @@ export default function KotakMasuk() {
     setShowDropdown(!showDropdown);
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <LayoutPegawai>
@@ -643,7 +621,6 @@ export default function KotakMasuk() {
     );
   }
 
-  // Empty state
   if (!isLoading && notifications.length === 0) {
     return (
       <LayoutPegawai>
@@ -651,7 +628,6 @@ export default function KotakMasuk() {
           <div className="px-4 md:px-6 py-4 md:py-8">
             <div className="max-w-4xl mx-auto">
               <div className="flex justify-between items-center mb-6">
-                {/* Tab Navigation */}
                 <div className="flex space-x-2">
                   {["Semua", "Tiket", "Status", "Pengumuman"].map((tab) => (
                     <div
@@ -675,7 +651,6 @@ export default function KotakMasuk() {
                   ))}
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex items-center space-x-2">
                   <div className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1">
                     <button
@@ -690,7 +665,6 @@ export default function KotakMasuk() {
                 </div>
               </div>
 
-              {/* Empty State */}
               <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
                 <h3 className="text-lg font-medium text-gray-700 mb-2">
                   Belum Ada Tiket
@@ -706,16 +680,12 @@ export default function KotakMasuk() {
     );
   }
 
-  // Main render
   return (
     <LayoutPegawai>
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
-          {/* Header */}
           <div className="max-w-4xl mx-auto">
-            {/* Navigation Tabs dan Action Buttons */}
             <div className="flex justify-between items-center mb-6">
-              {/* Tab Navigation */}
               <div className="flex space-x-2">
                 {["Semua", "Tiket", "Status", "Pengumuman"].map((tab) => (
                   <div
@@ -739,9 +709,7 @@ export default function KotakMasuk() {
                 ))}
               </div>
 
-              {/* Action Buttons */}
               <div className="flex items-center space-x-2">
-                {/* Button Hapus */}
                 <div className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1">
                   <button
                     onClick={handleDeleteClick}
@@ -758,7 +726,6 @@ export default function KotakMasuk() {
                   </button>
                 </div>
 
-                {/* Button Refresh */}
                 <div className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1">
                   <button
                     onClick={handleRefresh}
@@ -770,7 +737,6 @@ export default function KotakMasuk() {
                   </button>
                 </div>
 
-                {/* Button Titik Tiga dengan Dropdown */}
                 <div
                   className="bg-[#226597] rounded-lg shadow-sm border border-[#226597] p-1 relative"
                   ref={dropdownRef}
@@ -782,7 +748,6 @@ export default function KotakMasuk() {
                     <MoreVertical size={18} />
                   </button>
 
-                  {/* Dropdown Menu */}
                   {showDropdown && (
                     <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                       <button
@@ -800,7 +765,6 @@ export default function KotakMasuk() {
               </div>
             </div>
 
-            {/* Inbox Items */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200">
               {displayedItems.map((item, index) => {
                 const isRead = !item.unread;
@@ -815,7 +779,6 @@ export default function KotakMasuk() {
                     onClick={() => handleItemClick(item)}
                   >
                     <div className="flex items-start space-x-3">
-                      {/* Checkbox */}
                       <div onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
@@ -853,12 +816,12 @@ export default function KotakMasuk() {
                           <span className="inline-block bg-[#226597] text-white text-xs px-2 py-1 rounded font-medium">
                             {item.sender}
                           </span>
-                          {/* Indikator belum dibaca */}
+
                           {!isRead && (
                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                           )}
                         </div>
-                        {/* Tambahan info untuk tickets */}
+
                         <div className="mt-2 flex items-center space-x-2">
                           {item.priority && (
                             <span
@@ -886,16 +849,13 @@ export default function KotakMasuk() {
               })}
             </div>
 
-            {/* Footer dengan Pagination */}
             <div className="mt-4 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
-              {/* Info Menampilkan Data */}
               <div className="text-sm text-gray-500">
                 Menampilkan data {startIndex + 1} sampai{" "}
                 {Math.min(endIndex, filteredItems.length)} dari{" "}
                 {filteredItems.length} data
               </div>
 
-              {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex items-center space-x-2">
                   <button
@@ -960,7 +920,6 @@ export default function KotakMasuk() {
           </div>
         </div>
 
-        {/* Popup Konfirmasi Hapus */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
@@ -1007,7 +966,6 @@ export default function KotakMasuk() {
           </div>
         )}
 
-        {/* Popup Berhasil Dihapus */}
         {showDeleteSuccess && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">

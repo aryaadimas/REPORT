@@ -6,11 +6,9 @@ export default function SuksesPelayanan() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Ambil data dari state navigasi (dari FormLaporan atau dari Pelacakan)
   const laporanData = location.state?.laporanData || {};
   const ticketDataFromAPI = location.state?.ticketData || {};
 
-  // Gunakan data dari API jika ada (dari pelacakan), jika tidak gunakan data dari form
   const ticketData = ticketDataFromAPI.ticket_code
     ? {
         noTiket: ticketDataFromAPI.ticket_code || "LPR318728",
@@ -20,9 +18,7 @@ export default function SuksesPelayanan() {
           laporanData.opdTujuan ||
           "Dinas Pendidikan",
         status: ticketDataFromAPI.status_ticket_pengguna || "Pending",
-      
         opdId: ticketDataFromAPI.opd_id,
-        // Tambahan jika dari form submission
         pin: ticketDataFromAPI.pin || "228973",
       }
     : {
@@ -33,7 +29,6 @@ export default function SuksesPelayanan() {
         status: "Pending",
       };
 
-  // Fungsi untuk menentukan warna status berdasarkan API response
   const getStatusColor = (status) => {
     const statusLower = status.toLowerCase();
     if (
@@ -56,11 +51,10 @@ export default function SuksesPelayanan() {
     } else if (statusLower.includes("menunggu")) {
       return "bg-yellow-500";
     } else {
-      return "bg-yellow-500"; // Default untuk pending
+      return "bg-yellow-500";
     }
   };
 
-  // Fungsi untuk menentukan teks status
   const getStatusText = (status) => {
     const statusLower = status.toLowerCase();
     if (
@@ -87,11 +81,9 @@ export default function SuksesPelayanan() {
     }
   };
 
-  // Fungsi untuk download tiket (hanya untuk submission baru)
   const handleDownloadTicket = () => {
     console.log("Downloading ticket:", ticketData.noTiket);
 
-    // Simulasi download PDF
     const ticketContent = `
       TIKET LAPORAN
       ========================
@@ -120,9 +112,7 @@ export default function SuksesPelayanan() {
 
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Custom SVG Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <svg
             width="100%"
@@ -167,9 +157,7 @@ export default function SuksesPelayanan() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-6 md:py-8">
-          {/* Card Success */}
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* Header Card */}
             <div className="p-6">
               <div className="w-16 h-16 bg-[#226597] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
@@ -198,9 +186,7 @@ export default function SuksesPelayanan() {
               )}
             </div>
 
-            {/* Content */}
             <div className="p-6 space-y-6">
-              {/* Detail Tiket Section */}
               <div className="text-left">
                 <h3 className="text-sm font-medium text-gray-600 mb-4">
                   {ticketDataFromAPI.ticket_code
@@ -208,9 +194,7 @@ export default function SuksesPelayanan() {
                     : "Pengaduan Anda:"}
                 </h3>
 
-                {/* No. Tiket dan Status - Rata Kiri */}
                 <div className="space-y-3">
-                  {/* No. Tiket */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
                       No. Tiket
@@ -222,7 +206,6 @@ export default function SuksesPelayanan() {
                     </div>
                   </div>
 
-                  {/* PIN (hanya ditampilkan jika dari form submission) */}
                   {!ticketDataFromAPI.ticket_code && ticketData.pin && (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
@@ -236,7 +219,6 @@ export default function SuksesPelayanan() {
                     </div>
                   )}
 
-                  {/* Status */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
                       Status
@@ -252,7 +234,6 @@ export default function SuksesPelayanan() {
                     </div>
                   </div>
 
-                  {/* Jenis Permohonan (jika ada dari API) */}
                   {ticketData.requestType && (
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
@@ -270,9 +251,7 @@ export default function SuksesPelayanan() {
                 </div>
               </div>
 
-              {/* Jenis Layanan dan OPD Tujuan - Sebelahan */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {/* Jenis Layanan */}
                 <div>
                   <div className="flex items-center gap-2">
                     <svg
@@ -349,7 +328,6 @@ export default function SuksesPelayanan() {
                   </div>
                 </div>
 
-                {/* OPD Tujuan */}
                 <div>
                   <div className="flex items-center gap-2">
                     <svg
@@ -427,32 +405,28 @@ export default function SuksesPelayanan() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="max-w-2xl mx-auto mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Download Tiket (hanya untuk submission baru) */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
               {!ticketDataFromAPI.ticket_code && (
                 <button
                   onClick={handleDownloadTicket}
-                  className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-md text-sm font-medium transition-colors text-center flex items-center justify-center gap-2"
+                  className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-md text-sm font-medium transition-colors text-center flex items-center justify-center gap-2 min-w-[180px]"
                 >
                   <Download size={18} />
                   Download Tiket
                 </button>
               )}
 
-              {/* Cek Status Layanan */}
               <button
                 onClick={() => navigate("/pelacakan")}
-                className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
+                className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 px-6 rounded-md text-sm font-medium transition-colors text-center min-w-[180px]"
               >
                 Cek status layanan
               </button>
 
-              {/* Kembali ke Beranda */}
               <button
                 onClick={() => navigate("/beranda")}
-                className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
+                className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 px-6 rounded-md text-sm font-medium transition-colors text-center min-w-[180px]"
               >
                 Kembali ke beranda
               </button>

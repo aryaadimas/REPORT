@@ -12,10 +12,12 @@ export function Beranda() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
-  const [userName, setUserName] = useState("Haikal Saputra");
+  const [userName, setUserName] = useState("Pegawai");
   const [notifications, setNotifications] = useState([]);
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [riwayatLaporan, setRiwayatLaporan] = useState([]);
+  const [isLoadingUser, setIsLoadingUser] = useState(false); // Diubah jadi false karena ambil dari localStorage
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
+  const [isLoadingRiwayat, setIsLoadingRiwayat] = useState(true);
 
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
@@ -29,36 +31,22 @@ export function Beranda() {
     navigate("/riwayat");
   };
 
-  // Fetch user data
+  // Ambil data user dari localStorage saat login
   useEffect(() => {
-    const fetchUserData = async () => {
+    const userData = localStorage.getItem("userData");
+    if (userData) {
       try {
-        setIsLoadingUser(true);
-        const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/me",
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.status === "success" && data.user && data.user.name) {
-            setUserName(data.user.name);
-          }
+        const parsedData = JSON.parse(userData);
+        // Ambil nama dari data user yang disimpan saat login
+        if (parsedData.name) {
+          setUserName(parsedData.name);
+        } else if (parsedData.user && parsedData.user.name) {
+          setUserName(parsedData.user.name);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoadingUser(false);
+        console.error("Error parsing user data:", error);
       }
-    };
-
-    fetchUserData();
+    }
   }, []);
 
   // Fetch notifications
@@ -115,6 +103,7 @@ export function Beranda() {
                 time: timeText,
                 ticketCode: ticket.ticket_code,
                 status: ticket.status_ticket_pengguna || ticket.status,
+                created_at: ticket.created_at,
               };
             });
 
@@ -130,6 +119,90 @@ export function Beranda() {
     };
 
     fetchNotifications();
+  }, []);
+
+  // Fetch riwayat laporan dari API yang sama
+  useEffect(() => {
+    const fetchRiwayatLaporan = async () => {
+      try {
+        setIsLoadingRiwayat(true);
+        const response = await fetch(
+          "https://service-desk-be-production.up.railway.app/api/tickets/pegawai/finished",
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && Array.isArray(data.data)) {
+            // Format data untuk riwayat laporan
+            const formattedRiwayat = data.data.map((ticket) => {
+              // Tentukan status untuk penamaan
+              let statusText = "Selesai";
+              if (
+                ticket.status_ticket_pengguna === "Tiket Ditolak" ||
+                ticket.status === "rejected"
+              ) {
+                statusText = "Ditolak";
+              } else if (
+                ticket.status_ticket_pengguna === "Proses Verifikasi" ||
+                ticket.status === "pending"
+              ) {
+                statusText = "Verifikasi";
+              } else if (
+                ticket.status_ticket_pengguna === "Menunggu Diproses" ||
+                ticket.status === "Draft"
+              ) {
+                statusText = "Menunggu";
+              }
+
+              // Format tanggal
+              const formatDate = (dateString) => {
+                try {
+                  const date = new Date(dateString);
+                  const day = String(date.getDate()).padStart(2, "0");
+                  const month = String(date.getMonth() + 1).padStart(2, "0");
+                  const year = date.getFullYear();
+                  return `${day}-${month}-${year}`;
+                } catch (e) {
+                  return "Tanggal tidak valid";
+                }
+              };
+
+              return {
+                id: ticket.ticket_code,
+                nama: `${ticket.title || "Laporan"} (${statusText})`,
+                tanggalSelesai: formatDate(
+                  ticket.pengerjaan_akhir_teknisi ||
+                    ticket.pengerjaan_akhir ||
+                    ticket.created_at
+                ),
+                status: ticket.status_ticket_pengguna || ticket.status,
+                ticket_id: ticket.ticket_id,
+              };
+            });
+
+            // Urutkan berdasarkan tanggal terbaru
+            const sortedRiwayat = formattedRiwayat.sort((a, b) => {
+              return new Date(b.tanggalSelesai) - new Date(a.tanggalSelesai);
+            });
+
+            setRiwayatLaporan(sortedRiwayat);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching riwayat laporan:", error);
+      } finally {
+        setIsLoadingRiwayat(false);
+      }
+    };
+
+    fetchRiwayatLaporan();
   }, []);
 
   // Helper function to get status text
@@ -256,20 +329,7 @@ export function Beranda() {
     }
   };
 
-  // Riwayat laporan tetap menggunakan data statis
-  const riwayatLaporan = [
-    {
-      id: "LPR321336",
-      nama: "Gangguan Router",
-      tanggalSelesai: "17-07-2025",
-    },
-    {
-      id: "LYN651289",
-      nama: "Permintaan Printer",
-      tanggalSelesai: "17-07-2025",
-    },
-  ];
-
+  // Ambil data terbaru untuk ditampilkan (maksimal 2)
   const dataTerbaru = riwayatLaporan.slice(0, 2);
 
   // Fungsi untuk navigasi ke halaman Pelaporan Online
@@ -290,6 +350,12 @@ export function Beranda() {
   // Fungsi untuk navigasi ke halaman Pelacakan
   const handlePelacakan = () => {
     navigate("/Pelacakan");
+  };
+
+  // Fungsi untuk melihat detail laporan
+  const handleViewDetail = (ticket_id) => {
+    // Navigasi ke halaman detail dengan membawa ticket_id
+    navigate(`/detail-laporan/${ticket_id}`);
   };
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -322,7 +388,7 @@ export function Beranda() {
     const handleMouseUp = () => setIsDragging(false);
 
     document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("mouseup", handleMouseUp);
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
@@ -676,8 +742,17 @@ export function Beranda() {
             </button>
           </div>
 
-          {/* Jika tidak ada data */}
-          {dataTerbaru.length === 0 ? (
+          {/* Loading state */}
+          {isLoadingRiwayat ? (
+            <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center justify-center mb-4 shadow-sm border border-gray-200 min-h-[100px]">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#226597]"></div>
+                <p className="text-gray-600 text-xs md:text-sm mt-2">
+                  Memuat riwayat laporan...
+                </p>
+              </div>
+            </div>
+          ) : dataTerbaru.length === 0 ? (
             <div className="bg-white rounded-xl md:rounded-2xl p-3 flex items-center mb-4 shadow-sm border border-gray-200">
               <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center border-2 border-gray-400 rounded-full mr-3 font-bold text-gray-600 text-xs md:text-sm">
                 !
@@ -720,6 +795,7 @@ export function Beranda() {
                   {/* Aksi di kanan */}
                   <div className="flex gap-4 ml-6 pr-2">
                     <button
+                      onClick={() => handleViewDetail(laporan.ticket_id)}
                       className="text-[#226597] hover:text-[#153d6a] transition transform hover:scale-110"
                       title="Lihat Detail"
                     >
@@ -918,9 +994,9 @@ export function Beranda() {
                   </svg>
                 </div>
 
-                {/* Nama dari API */}
+                {/* Nama dari localStorage */}
                 <p className="text-gray-700 text-xs font-medium truncate">
-                  {isLoadingUser ? "Memuat..." : userName}
+                  {userName}
                 </p>
               </div>
               {/* Icon Dropdown */}
