@@ -21,6 +21,11 @@ const ProfilUniversal = () => {
     role: "",
     role_id: "",
     nik: "",
+    alamat: "",
+    dinas: "",
+    unit_kerja: "",
+    name: "",
+    username: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,19 +78,19 @@ const ProfilUniversal = () => {
         setError(null);
 
         const token = localStorage.getItem("token");
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
         if (!token) {
           navigate("/login");
           return;
         }
 
-        // Determine endpoint based on role
-        const isMasyarakat =
-          userData.role_id === "9" ||
-          userData.role?.toLowerCase().includes("masyarakat") ||
-          userData.role?.nama?.toLowerCase().includes("masyarakat");
+        // FIX: Gunakan hanya role_id untuk menentukan endpoint
+        const isMasyarakat = storedUser.role_id === "9";
         const endpoint = isMasyarakat ? `/api/me/masyarakat` : `/api/me`;
+
+        console.log("🔍 Fetching profile from:", endpoint);
+        console.log("📦 Stored user data:", storedUser);
 
         const response = await fetch(endpoint, {
           method: "GET",
@@ -107,26 +112,97 @@ const ProfilUniversal = () => {
         }
 
         const data = await response.json();
+        console.log("📥 Full API response:", data);
 
-        // Debug: log response dari API
-        console.log("📥 Response dari /api/me:", data);
-        console.log("- data.name:", data.name);
-        console.log("- data.role:", data.role);
-        console.log("- data.role?.nama:", data.role?.nama);
+        // Periksa apakah data memiliki wrapper "user" atau langsung
+        let userDataFromApi = data;
+        if (data.status === "success" && data.user) {
+          userDataFromApi = data.user;
+          console.log("👤 Using wrapped user data:", userDataFromApi);
+        }
 
-        setProfileData({
-          id: data.id || "",
-          email: data.email || "",
-          full_name: data.full_name || data.name || "",
-          phone_number: data.phone_number || data.no_hp || "",
-          profile_url: data.profile_url || data.avatar || "/assets/Lomon.png",
-          role: data.role || data.role?.nama || "",
-          role_id: data.role_id || userData.role_id || "",
-          nik: data.nik || "",
+        // Debug struktur data
+        console.log("🔍 Data structure check:", {
+          role: userDataFromApi.role,
+          roleType: typeof userDataFromApi.role,
+          unitKerja: userDataFromApi.unit_kerja,
+          unitKerjaType: typeof userDataFromApi.unit_kerja,
+          hasAlamat: !!userDataFromApi.alamat,
+          hasDinas: !!userDataFromApi.dinas,
         });
+
+        // Helper functions untuk mengekstrak data dengan aman
+        const getSafeRole = (role) => {
+          if (!role) return '';
+          if (typeof role === 'string') return role;
+          if (role && typeof role === 'object' && role.nama) return role.nama;
+          return '';
+        };
+
+        const getSafeDinas = (user) => {
+          if (user.dinas) return user.dinas;
+          if (user.unit_kerja) {
+            if (typeof user.unit_kerja === 'string') return user.unit_kerja;
+            if (user.unit_kerja && typeof user.unit_kerja === 'object') {
+              if (user.unit_kerja.nama) return user.unit_kerja.nama;
+              if (user.unit_kerja.dinas && user.unit_kerja.dinas.nama) {
+                return user.unit_kerja.dinas.nama;
+              }
+            }
+          }
+          if (user.department) return user.department;
+          if (user.instansi) return user.instansi;
+          return '';
+        };
+
+        const getSafeUnitKerja = (unitKerja) => {
+          if (!unitKerja) return '';
+          if (typeof unitKerja === 'string') return unitKerja;
+          if (unitKerja && typeof unitKerja === 'object' && unitKerja.nama) {
+            return unitKerja.nama;
+          }
+          return '';
+        };
+
+        const extractedRole = getSafeRole(userDataFromApi.role);
+        const extractedDinas = getSafeDinas(userDataFromApi);
+        const extractedUnitKerja = getSafeUnitKerja(userDataFromApi.unit_kerja);
+
+        const profilePayload = {
+          id: userDataFromApi.id || "",
+          email: userDataFromApi.email || "",
+          full_name: userDataFromApi.full_name || userDataFromApi.name || "",
+          phone_number: userDataFromApi.phone_number || userDataFromApi.no_hp || "",
+          profile_url: userDataFromApi.profile_url || userDataFromApi.avatar || "",
+          role: extractedRole,
+          role_id: userDataFromApi.role_id || storedUser.role_id || "",
+          nik: userDataFromApi.nik || "",
+          alamat: userDataFromApi.alamat || userDataFromApi.address || userDataFromApi.lokasi || "",
+          dinas: extractedDinas,
+          unit_kerja: extractedUnitKerja,
+          name: userDataFromApi.name || "",
+          username: userDataFromApi.username || "",
+        };
+
+        console.log("✅ Profile data to set:", profilePayload);
+        setProfileData(profilePayload);
+        
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("❌ Error fetching profile:", err);
         setError("Gagal memuat data profil. Silakan coba lagi.");
+        
+        // Fallback: Gunakan data dari localStorage jika API error
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        if (storedUser) {
+          console.log("🔄 Using fallback data from localStorage");
+          setProfileData(prev => ({
+            ...prev,
+            full_name: storedUser.name || storedUser.username || "",
+            email: storedUser.email || "",
+            role: storedUser.role_name || storedUser.role || "",
+            role_id: storedUser.role_id || "",
+          }));
+        }
       } finally {
         setLoading(false);
       }
@@ -135,18 +211,18 @@ const ProfilUniversal = () => {
     fetchProfileData();
   }, [navigate]);
 
-  // Pilih Sidebar berdasarkan role - gunakan userData dari localStorage untuk initial decision
-  // Backend mapping: 1=diskominfo(Kota), 2=opd(Pegawai), 3=verifikator,
-  // 5=admin dinas(Admin OPD), 6=teknisi, 7=bidang, 8=seksi, 9=masyarakat
+  // Pilih Sidebar berdasarkan role
   const getSidebar = () => {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
     const roleId = profileData.role_id || userData.role_id;
+
+    console.log("🎯 Sidebar selection - role_id:", roleId);
 
     switch (roleId) {
       case "1": // diskominfo = Admin Kota
         return SidebarKota;
       case "2": // opd = Pegawai OPD
-      case "3": // verifikator = diarahkan ke OPD
+      case "3": // verifikator
       case "5": // admin dinas = Admin OPD
         return SidebarOpd;
       case "6": // teknisi
@@ -158,7 +234,8 @@ const ProfilUniversal = () => {
       case "9": // masyarakat
         return SidebarMasyarakat;
       default:
-        return SidebarOpd; // Default fallback
+        console.warn("⚠️ Unknown role_id, defaulting to SidebarOpd");
+        return SidebarOpd;
     }
   };
 
@@ -268,8 +345,13 @@ const ProfilUniversal = () => {
                   </h2>
                   <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
                     <span className="inline-block bg-[#226597] text-white text-sm font-normal px-3 py-1 rounded-full">
-                      {profileData.role || "User"}
+                      {profileData.role === "opd" ? "OPD" : profileData.role || "User"}
                     </span>
+                    {profileData.unit_kerja && (
+                      <span className="inline-block bg-green-100 text-green-800 text-sm font-normal px-3 py-1 rounded-full">
+                        {profileData.unit_kerja}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -279,10 +361,11 @@ const ProfilUniversal = () => {
           {/* Info Pribadi */}
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-4 md:mb-6 w-full">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Informasi Pribadi
+              Informasi Dasar
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {/* Nama Lengkap */}
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
                   Nama Lengkap
@@ -292,6 +375,7 @@ const ProfilUniversal = () => {
                 </p>
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
                   Email
@@ -301,15 +385,39 @@ const ProfilUniversal = () => {
                 </p>
               </div>
 
+              {/* Alamat */}
               <div>
                 <label className="block text-sm font-medium text-black mb-1">
-                  Nomor Telepon
+                  Alamat
                 </label>
                 <p className="text-gray-500 text-sm md:text-base">
-                  {formatPhoneNumber(profileData.phone_number)}
+                  {profileData.alamat || "-"}
                 </p>
               </div>
 
+              {/* Dinas */}
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">
+                  Dinas
+                </label>
+                <p className="text-gray-500 text-sm md:text-base">
+                  {profileData.dinas || profileData.unit_kerja || "-"}
+                </p>
+              </div>
+
+              {/* Nomor Telepon */}
+              {profileData.phone_number && (
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Nomor Telepon
+                  </label>
+                  <p className="text-gray-500 text-sm md:text-base">
+                    {formatPhoneNumber(profileData.phone_number)}
+                  </p>
+                </div>
+              )}
+
+              {/* NIK */}
               {profileData.nik && (
                 <>
                   <div>

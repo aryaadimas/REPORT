@@ -18,24 +18,86 @@ const KnowledgeBaseDraft = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/articles?status=draft"
-        );
-        if (!response.ok) throw new Error("Gagal mengambil data draft");
+        const token = localStorage.getItem("token");
+
+        console.log("📥 Fetching my articles...");
+
+        // Gunakan endpoint /api/articles/my-articles untuk artikel user yang login
+        const response = await fetch("/api/articles/my-articles", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("📡 Response status:", response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Error response:", errorData);
+          throw new Error(errorData.detail || "Gagal mengambil data artikel");
+        }
+
         const data = await response.json();
-        // Sesuaikan mapping data jika perlu
-        setTableData(
-          Array.isArray(data)
-            ? data.map((item) => ({
-                document: item.title || "(Tanpa Judul)",
-                lastModified: item.updatedAt
-                  ? new Date(item.updatedAt).toLocaleDateString()
-                  : "-",
-                id: item.id,
-              }))
-            : []
+        console.log("📥 Articles data:", data);
+        console.log(
+          "📥 Data type:",
+          Array.isArray(data) ? "array" : typeof data
         );
+        console.log(
+          "📥 Data structure - total:",
+          data.total,
+          "items:",
+          data.data?.length
+        );
+
+        // Mapping data sesuai struktur backend: {total, data: [...]}
+        let articlesArray = [];
+
+        if (Array.isArray(data)) {
+          // Jika response adalah array langsung
+          articlesArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          // Jika response adalah object dengan property 'data'
+          articlesArray = data.data;
+        } else if (data && typeof data === "object") {
+          // Fallback: cek property lain yang mungkin berisi array
+          console.warn("⚠️ Response structure tidak expected:", data);
+          articlesArray = [];
+        }
+
+        if (articlesArray.length > 0) {
+          const mappedData = articlesArray.map((item) => {
+            console.log("📄 Article item:", item);
+            return {
+              document: item.title || "(Tanpa Judul)",
+              lastModified:
+                item.updated_at ||
+                item.updatedAt ||
+                item.created_at ||
+                item.createdAt
+                  ? new Date(
+                      item.updated_at ||
+                        item.updatedAt ||
+                        item.created_at ||
+                        item.createdAt
+                    ).toLocaleDateString("id-ID")
+                  : "-",
+              id: item.article_id || item.id,
+              status: item.status || "draft",
+              tags: item.tags || [],
+            };
+          });
+
+          console.log("✅ Mapped data:", mappedData);
+          setTableData(mappedData);
+        } else {
+          console.warn("⚠️ No articles found in response");
+          setTableData([]);
+        }
       } catch (err) {
+        console.error("❌ Error fetching articles:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -182,8 +244,15 @@ const KnowledgeBaseDraft = () => {
                           {/* Aksi */}
                           <div className="min-w-[60px] flex justify-start">
                             <button
-                              onClick={() => navigate("/lihatartikel")}
+                              onClick={() => {
+                                console.log(
+                                  "🔍 Navigating to article detail:",
+                                  item.id
+                                );
+                                navigate(`/lihatartikel/${item.id}`);
+                              }}
                               className="text-[#226597] hover:text-[#113F67] transition-colors duration-200"
+                              title="Lihat detail artikel"
                             >
                               {/* ...existing code... */}
                               <svg

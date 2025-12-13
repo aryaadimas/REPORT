@@ -113,6 +113,8 @@ import KnowledgeBaseDraft from "./pages/adminopd/KnowledgeBaseDraft";
 import KnowledgeBaseDiajukan from "./pages/adminopd/KnowledgeBaseDiajukan";
 import DraftBaru from "./pages/adminopd/DraftBaru";
 import RatingKepuasanOpd from "./pages/adminopd/RatingKepuasanOpd";
+
+//*-- Statistik Pelaporan --*/
 import StatistikKategori from "./pages/adminopd/StatistikKategori";
 import StatistikPrioritas from "./pages/adminopd/StatistikPrioritas";
 import StatistikTahunan from "./pages/adminopd/StatistikTahunan";
@@ -204,7 +206,7 @@ function App() {
           <Route path="ratekotaopd/:opdName" element={<RateKotaOpd />} />
           <Route path="ratekotaopd" element={<RateKotaOpd />} />
           <Route path="knowledgebasekota" element={<KnowledgeBaseKota />} />
-          <Route path="aksikbkota" element={<AksiKBKota />} />
+          <Route path="aksikbkota/:articleId" element={<AksiKBKota />} />
           <Route path="kbeditorkota" element={<KBEditorKota />} />
           <Route path="lihatartikelkota" element={<LihatArtikelKota />} />
           <Route path="pengumumankota" element={<PengumumanKota />} />
@@ -292,9 +294,12 @@ function App() {
         <Route path="/ratingkepuasanopd" element={<RatingKepuasanOpd />} />
         <Route path="/dataditemukan" element={<DataDitemukan />} />
         <Route path="/helpdesk" element={<HelpdeskChat />} />
-        <Route path="/statistikkategori" element={<StatistikKategori />} />
-        <Route path="/statistikprioritas" element={<StatistikPrioritas />} />
-        <Route path="/statistiktahunan" element={<StatistikTahunan />} />
+
+        {/* Statistik Pelaporan */}
+        <Route path="/StatistikKategori" element={<StatistikKategori />} />
+        <Route path="/StatistikPrioritas" element={<StatistikPrioritas />} />
+        <Route path="/StatistikTahunan" element={<StatistikTahunan />} />
+        <Route path="/StatistikBulanan" element={<StatistikBulanan />} />
         <Route path="/notifdibuat" element={<NotifDibuat />} />
         <Route path="/notifdiproses" element={<NotifDiproses />} />
         <Route path="/notifmaintenance" element={<NotifMaintenance />} />
@@ -305,8 +310,7 @@ function App() {
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
         <Route path="/profilsaya" element={<Profil />} />
         <Route path="/tampilan" element={<Tampilan />} />
-        <Route path="/statistikbulanan" element={<StatistikBulanan />} />
-        <Route path="/lihatartikel" element={<LihatArtikel />} />
+        <Route path="/lihatartikel/:articleId" element={<LihatArtikel />} />
         <Route path="/kotakmasuk" element={<KotakMasuk />} />
         <Route path="/kotakmasukbidang" element={<KotakMasukBidang />} />
         <Route path="/kotakmasukopd" element={<KotakMasukOpd />} />

@@ -22,7 +22,7 @@ export default function LayoutOPD({ children }) {
     {
       name: "Statistik",
       icon: "/assets/Logo Statistik.png",
-      path: "/statistikkategori",
+      path: "/StatistikKategori",
     },
     {
       name: "Rating",

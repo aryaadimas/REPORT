@@ -19,7 +19,12 @@ const Navbar = ({ profileData }) => {
 
   // Fallback ke localStorage jika profileData belum tersedia
   const getUserData = () => {
-    console.log("🔍 getUserData - profileData:", profileData);
+    console.log("🔍 getUserData START - profileData:", profileData);
+    console.log("🔍 profileData type:", typeof profileData);
+    console.log(
+      "🔍 profileData keys:",
+      profileData ? Object.keys(profileData) : "null"
+    );
 
     // Handle jika profileData adalah response wrapper dengan property 'data' atau 'user'
     let actualData = profileData;
@@ -55,8 +60,13 @@ const Navbar = ({ profileData }) => {
     }
 
     // Fallback ke user yang disimpan saat login
+    console.log("🔄 getUserData - FALLBACK to localStorage");
     const localUser = JSON.parse(localStorage.getItem("user") || "{}");
-    console.log("🔄 getUserData - fallback to localStorage user:", localUser);
+    console.log("🔄 localStorage user raw:", localUser);
+    console.log("🔄 localUser.name:", localUser.name);
+    console.log("🔄 localUser.email:", localUser.email);
+    console.log("🔄 localUser.role:", localUser.role);
+    console.log("🔄 localUser.role?.nama:", localUser.role?.nama);
 
     if (localUser && Object.keys(localUser).length > 0) {
       const mappedUser = {
@@ -64,6 +74,7 @@ const Navbar = ({ profileData }) => {
         role: localUser.role?.nama || localUser.role || "User",
         profile_url: localUser.avatar || "/assets/Lomon.png",
         email: localUser.email,
+        role_id: localUser.role_id,
       };
       console.log(
         "✅ getUserData - returning mapped localStorage user:",
@@ -106,8 +117,9 @@ const Navbar = ({ profileData }) => {
     console.log("🔄 Navbar useEffect - userData result:", userData);
 
     if (userData) {
-      console.log("✅ Navbar - full_name:", userData.full_name);
-      console.log("✅ Navbar - role:", userData.role);
+      console.log("✅ Navbar FINAL - full_name:", userData.full_name);
+      console.log("✅ Navbar FINAL - role:", userData.role);
+      console.log("✅ Navbar FINAL - email:", userData.email);
     } else {
       console.log("❌ Navbar - No user data available");
     }
@@ -153,13 +165,16 @@ const Navbar = ({ profileData }) => {
 
     // Ambil role dari berbagai kemungkinan lokasi
     // BE structure: data.role.nama (object) → dimapping jadi data.role (string)
-    let role = (
-      userData.role ||
-      userData.role?.nama ||
-      localUser.role ||
-      localUser.role?.nama ||
-      ""
-    ).toLowerCase();
+    // Extract string value first, then convert to lowercase
+    let roleValue = userData.role || localUser.role || "";
+
+    // If role is an object, extract the 'nama' property
+    if (typeof roleValue === "object" && roleValue !== null) {
+      roleValue = roleValue.nama || "";
+    }
+
+    // Now safely convert to lowercase
+    let role = String(roleValue).toLowerCase();
 
     // Debug log untuk melihat data yang digunakan
     console.log("🔍 Debug goToProfile:");
@@ -441,12 +456,12 @@ const Navbar = ({ profileData }) => {
               >
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-medium text-gray-800">
-                    {currentUserData?.full_name || ""}
+                    {currentUserData?.full_name || "Pengguna"}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {currentUserData?.role === ""
-                      ? ""
-                      : currentUserData?.role || ""}
+                    {currentUserData?.role === "masyarakat"
+                      ? "Publik"
+                      : currentUserData?.role || "User"}
                   </span>
                 </div>
 
