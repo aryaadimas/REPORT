@@ -1,26 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RefreshCcw, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function RatingTeknisi() {
-  const [activeTab, setActiveTab] = useState("pelaporan");
-
   const navigate = useNavigate();
 
-  // === Dummy data lengkap (ada IT / Non-IT & Fisik / Non-Fisik)
-  const dataRating = [
-    { id: 1, nama: "Doni Ridho", masuk: "18/09/2024", selesai: "28/09/2024", aset: "Laptop Lenovo", seri: "LNV-TP-001", rating: 4, foto: "/assets/shizuku.jpg" },
-    { id: 2, nama: "Rio Widoro", masuk: "18/09/2024", selesai: "19/09/2024", aset: "Printer HP", seri: "PT-HP-001", rating: 3, foto: "/assets/Suika.jpg" },
-    { id: 3, nama: "Lia Yustia", masuk: "17/09/2024", selesai: "17/09/2024", aset: "PC Dell", seri: "PC-DL-012", rating: 5, foto: "/assets/Bokuto.jpg" },
-    { id: 4, nama: "Sinta Wulandari", masuk: "20/09/2024", selesai: "21/09/2024", aset: "Monitor Samsung", seri: "MN-SS-004", rating: 4, foto: "/assets/shizuku.jpg" },
-    { id: 5, nama: "Bagas Arif", masuk: "15/09/2024", selesai: "18/09/2024", aset: "Router TP-Link", seri: "RT-TPL-010", rating: 2, foto: "/assets/Suika.jpg" },
-    { id: 6, nama: "Rani Amelia", masuk: "11/09/2024", selesai: "11/09/2024", aset: "Keyboard Logitech", seri: "KB-LG-022", rating: 5, foto: "/assets/Bokuto.jpg" },
-    { id: 7, nama: "Feri Saputra", masuk: "09/10/2024", selesai: "10/10/2024", aset: "Mouse Logitech", seri: "MS-LG-099", rating: 3, foto: "/assets/shizuku.jpg" },
-    { id: 8, nama: "Ayuni Pratiwi", masuk: "12/10/2024", selesai: "13/10/2024", aset: "Scanner Canon", seri: "SC-CN-008", rating: 4, foto: "/assets/Suika.jpg" },
-    { id: 9, nama: "Kevin Hartanta", masuk: "05/10/2024", selesai: "07/10/2024", aset: "CCTV Hikvision", seri: "CT-HV-003", rating: 2, foto: "/assets/Bokuto.jpg" },
-    { id: 10, nama: "Dewi Nursita", masuk: "01/10/2024", selesai: "03/10/2024", aset: "Wifi Indihome", seri: "WF-ID-020", rating: 5, foto: "/assets/shizuku.jpg" },
-  ];
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
+  const token = localStorage.getItem("token");
 
+  // ========================= STATES =========================
+  const [ratings, setRatings] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Filters
+  const [searchAset, setSearchAset] = useState("");
+  const [selectedSeri, setSelectedSeri] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("Semua");
+
+  const [availableSeri, setAvailableSeri] = useState([]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 8;
+
+  // ========================= FETCH API =========================
+  const fetchRatings = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/teknisi/ratings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const result = await res.json();
+      setRatings(result.data || []);
+    } catch (err) {
+      console.error("Gagal fetch rating teknisi:", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchRatings();
+  }, []);
+
+  // ========================= HANDLE SERI BY ASET =========================
+  useEffect(() => {
+    if (searchAset.trim() === "") {
+      setAvailableSeri([]);
+      setSelectedSeri("");
+      return;
+    }
+
+    const seriList = ratings
+      .filter((r) =>
+        r.asset?.nama_asset?.toLowerCase().includes(searchAset.toLowerCase())
+      )
+      .map((r) => r.asset?.nomor_seri)
+      .filter((v) => v);
+
+    setAvailableSeri([...new Set(seriList)]);
+  }, [searchAset, ratings]);
+
+  // ========================= FILTERING =========================
+  const filteredData = ratings.filter((item) => {
+    const aset = item.asset?.nama_asset || "";
+    const seri = item.asset?.nomor_seri || "";
+
+    const matchAset =
+      searchAset === "" || aset.toLowerCase().includes(searchAset.toLowerCase());
+
+    const matchSeri =
+      selectedSeri === "" || seri.toLowerCase() === selectedSeri.toLowerCase();
+
+    const matchRating =
+      ratingFilter === "Semua" || item.rating === Number(ratingFilter);
+
+    return matchAset && matchSeri && matchRating;
+  });
+
+  // ========================= PAGINATION =========================
+  const totalPages = Math.ceil(filteredData.length / perPage);
+  const indexLast = currentPage * perPage;
+  const indexFirst = indexLast - perPage;
+  const currentData = filteredData.slice(indexFirst, indexLast);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
+  // ========================= UI STAR RENDER =========================
   const renderStars = (count) => (
     <div className="flex">
       {[...Array(5)].map((_, i) => (
@@ -31,81 +99,100 @@ export default function RatingTeknisi() {
     </div>
   );
 
+  // ========================= RENDER =========================
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-[#0F2C59]">Rating Kepuasan</h1>
 
       <div className="bg-white rounded-2xl shadow overflow-hidden">
-        {/* === Tab Pelaporan / Pelayanan === */}
+
+        {/* HEADER */}
         <div className="border-b flex items-center justify-between px-6">
           <div className="flex">
-            {["pelaporan", "pelayanan"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-                  activeTab === tab
-                    ? "border-[#0F2C59] text-[#0F2C59]"
-                    : "border-transparent text-gray-500 hover:text-[#0F2C59]"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            <button className="px-5 py-3 text-sm font-semibold border-b-2 border-[#0F2C59] text-[#0F2C59]">
+              Pelaporan
+            </button>
           </div>
-          <button className="flex items-center gap-2 bg-[#0F2C59] hover:bg-[#15397A] text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-            <RefreshCcw size={16} /> Refresh
+
+          {/* REFRESH BUTTON */}
+          <button
+            onClick={fetchRatings}
+            disabled={loading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition 
+              ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#0F2C59] hover:bg-[#15397A] text-white"
+              }
+            `}
+          >
+            <RefreshCcw
+              size={16}
+              className={`${loading ? "animate-spin" : ""}`}
+            />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
 
-        {/* === Filter Baru 1 Baris 3 Kolom === */}
+        {/* FILTER */}
         <div className="p-6 bg-gray-50 border-b">
           <div className="grid grid-cols-3 gap-8">
 
-            {/* Kategori */}
-            <div className="flex items-center gap-2">
-              <label className="w-29 text-sm font-semibold text-gray-700">
-                Data Aset
+            {/* SEARCH ASET */}
+            <div className="flex items-center gap-3">
+              <label className="w-24 text-sm font-semibold text-gray-700">Aset</label>
+              <input
+                type="text"
+                placeholder="Cari aset..."
+                value={searchAset}
+                onChange={(e) => {
+                  setSearchAset(e.target.value);
+                  setSelectedSeri("");
+                }}
+                className="flex-1 border rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+
+            {/* NOMOR SERI */}
+            <div className="flex items-center gap-3">
+              <label className="w-24 text-sm font-semibold text-gray-700">
+                Nomor Seri
               </label>
-              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-                <option>Laptop Dell</option>
-                <option>Jaringan</option>
-                <option>Aplikasi</option>
-                <option>Email</option>
-                <option>Sistem Operasi</option>
+              <select
+                disabled={availableSeri.length === 0}
+                value={selectedSeri}
+                onChange={(e) => setSelectedSeri(e.target.value)}
+                className="flex-1 border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">Semua</option>
+                {availableSeri.map((seri, i) => (
+                  <option key={i} value={seri}>
+                    {seri}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Jenis */}
-            <div className="flex items-center gap-2">
-              <label className="w-29 text-sm font-semibold text-gray-700">
-                No Seri
-              </label>
-              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>IT</option>
-                <option>Non-IT</option>
-              </select>
-            </div>
-
-            <div className="flex items-center  gap-2">
-              <label className="w-29 text-sm font-semibold text-gray-700">
-                Rating
-              </label>
-              <select className="flex-1 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F2C59]">
-                <option>Semua</option>
-                <option>⭐</option>
-                <option>⭐⭐</option>
-                <option>⭐⭐⭐</option>
-                <option>⭐⭐⭐⭐</option>
-                <option>⭐⭐⭐⭐⭐</option>
+            {/* FILTER RATING */}
+            <div className="flex items-center gap-3">
+              <label className="w-24 text-sm font-semibold text-gray-700">Rating</label>
+              <select
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value)}
+                className="flex-1 border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="Semua">Semua</option>
+                <option value="1">⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="5">⭐⭐⭐⭐⭐</option>
               </select>
             </div>
           </div>
         </div>
 
-
-        {/* === Tabel Data === */}
+        {/* TABEL */}
         <div className="p-4 overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
@@ -119,43 +206,95 @@ export default function RatingTeknisi() {
                 <th className="p-3 text-center">Aksi</th>
               </tr>
             </thead>
+
             <tbody>
-              {dataRating.map((item) => (
-                <tr key={item.id} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-3 flex items-center gap-2">
-                    <img src={item.foto} alt={item.nama} className="w-8 h-8 rounded-full object-cover" />
-                    {item.nama}
-                  </td>
-                  <td className="p-3">{item.masuk}</td>
-                  <td className="p-3">{item.selesai}</td>
-                  <td className="p-3">{item.aset}</td>
-                  <td className="p-3">{item.seri}</td>
-                  <td className="p-3">{renderStars(item.rating)}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      className="text-[#0F2C59] hover:text-[#15397A]"
-                      onClick={() => navigate("/detailratingteknisi")} // ✅ Tambahan navigasi
-                    >
-                      <Eye className="w-5 h-5" />
-                    </button>
+              {currentData.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-6 text-gray-500">
+                    Tidak ada data ditemukan
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentData.map((item) => (
+                  <tr
+                    key={item.ticket_id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    <td className="p-3 flex items-center gap-2">
+                      <img
+                        src={item.creator?.profile || "/assets/default.png"}
+                        alt={item.creator?.full_name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      {item.creator?.full_name}
+                    </td>
+
+                    <td className="p-3">
+                      {new Date(item.pengerjaan_awal).toLocaleDateString("id-ID")}
+                    </td>
+
+                    <td className="p-3">
+                      {new Date(item.pengerjaan_akhir).toLocaleDateString("id-ID")}
+                    </td>
+
+                    <td className="p-3">{item.asset?.nama_asset}</td>
+
+                    <td className="p-3">{item.asset?.nomor_seri}</td>
+
+                    <td className="p-3">{renderStars(item.rating)}</td>
+
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() =>
+                          navigate(`/detailratingteknisi/${item.ticket_id}`, {
+                            state: { detail: item },
+                          })
+                        }
+                        className="text-[#0F2C59] hover:text-[#15397A]"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* === Pagination === */}
-        <div className="flex justify-between items-center p-4 border-t text-sm text-gray-600">
-          <p>Menampilkan data 1 sampai 10 dari 33 data</p>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">&lt;</button>
-            <button className="px-3 py-1 border rounded-lg bg-[#0F2C59] text-white">1</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">2</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">3</button>
-            <button className="px-3 py-1 border rounded-lg hover:bg-gray-100">&gt;</button>
+        {/* PAGINATION */}
+        {filteredData.length > 0 && (
+          <div className="flex justify-between items-center p-4 border-t text-sm">
+            <p>
+              Menampilkan {indexFirst + 1}–{Math.min(indexLast, filteredData.length)} dari{" "}
+              {filteredData.length} data
+            </p>
+
+            <div className="flex gap-2">
+              <button onClick={() => goToPage(currentPage - 1)} className="px-3 py-1 border rounded-lg hover:bg-gray-100">
+                &lt;
+              </button>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i + 1)}
+                  className={`px-3 py-1 border rounded-lg ${
+                    currentPage === i + 1
+                      ? "bg-[#0F2C59] text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button onClick={() => goToPage(currentPage + 1)} className="px-3 py-1 border rounded-lg hover:bg-gray-100">
+                &gt;
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

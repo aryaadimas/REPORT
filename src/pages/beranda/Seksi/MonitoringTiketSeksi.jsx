@@ -1,70 +1,74 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 
-
 export default function MonitoringTiketSeksi() {
-  const { id } = useParams();
+  const { ticketId } = useParams();
   const navigate = useNavigate();
-  const [lampiranName, setLampiranName] = useState("");
+  const token = localStorage.getItem("token");
 
-  const laporanData = [
-    {
-      id: "LPR831938",
-      pengirim: "Widiya Karim",
-      status: "Diproses",
-      prioritas: "Rendah",
-      judul: "Printer Sekarat",
-      kategori: "Non TI",
-      subKategori: "Jaringan",
-      jenis: "Barang",
-      dataAset: "Printer HP LaserJet Pro P1102W",
-      nomorSeri: "HP-LJ-P1102W-001",
-      lokasi: "Dinas Pendidikan Kantor Pusat",
-      rincian: "Printer gabisa ngacaasi ini haduu",
-      lampiran: "bukti-laporan.pdf",
-      penyelesaian: "Balik ke settingan biasanya",
-      foto: "/assets/shizuku.jpg",
-    },
-    {
-      id: "LPR931728",
-      pengirim: "Widiya Karim",
-      status: "Diproses",
-      prioritas: "Rendah",
-      judul: "Printer Sekarat",
-      kategori: "Non TI",
-      subKategori: "Jaringan",
-      jenis: "Barang",
-      dataAset: "Printer HP LaserJet Pro P1102W",
-      nomorSeri: "HP-LJ-P1102W-001",
-      lokasi: "Dinas Pendidikan Kantor Pusat",
-      rincian: "Printer gabisa ngacaasi ini haduu",
-      lampiran: "bukti-laporan.pdf",
-      penyelesaian: "Balik ke settingan biasanya",
-      foto: "/assets/shizuku.jpg",
-    },
-    {
-      id: "LPR907276",
-      pengirim: "Widiy Karim",
-      status: "Diproses",
-      prioritas: "Rendah",
-      judul: "Printer Sekarat",
-      kategori: "Non TI",
-      subKategori: "Jaringan",
-      jenis: "Barang",
-      dataAset: "Printer HP LaserJet Pro P1102W",
-      nomorSeri: "HP-LJ-P1102W-001",
-      lokasi: "Dinas Pendidikan Kantor Pusat",
-      rincian: "Printer gabisa ngacaasi ini haduu",
-      lampiran: "bukti-laporan.pdf",
-      penyelesaian: "Balik ke settingan biasanya",
-      foto: "/assets/shizuku.jpg",
-    },
-  ];
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
 
-  const laporan = laporanData.find((lap) => lap.id === id);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!laporan) {
+  /* ============================================================
+     FETCH DETAIL TIKET
+  ============================================================ */
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/tickets/seksi/assigned/teknisi/${ticketId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const json = await res.json();
+        setData(json); // BE return object langsung, bukan json.data
+      } catch (err) {
+        console.error("Gagal memuat detail tiket:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [ticketId]);
+
+  /* ============================================================
+     PRIORITAS BADGE
+  ============================================================ */
+  const getPriorityColor = (p) => {
+    if (!p) return "bg-gray-400";
+    switch (p.toLowerCase()) {
+      case "low":
+        return "bg-green-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "high":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  /* ============================================================
+     LOADING
+  ============================================================ */
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-600">
+        <h2 className="text-xl font-semibold">Memuat detail laporan...</h2>
+      </div>
+    );
+  }
+
+  /* ============================================================
+     DATA TIDAK ADA
+  ============================================================ */
+  if (!data || !data.ticket_id) {
     return (
       <div className="p-8 text-center text-gray-600">
         <h2 className="text-xl font-semibold">Data laporan tidak ditemukan</h2>
@@ -78,19 +82,12 @@ export default function MonitoringTiketSeksi() {
     );
   }
 
-  const getPriorityColor = (p) => {
-    switch (p) {
-      case "Rendah":
-        return "bg-green-500";
-      case "Sedang":
-        return "bg-yellow-500";
-      case "Tinggi":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  const asset = data.asset || {};
+  const files = data.files || [];
 
+  /* ============================================================
+     RENDER UI
+  ============================================================ */
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-[#0F2C59] mb-4">
@@ -99,172 +96,180 @@ export default function MonitoringTiketSeksi() {
 
       <div className="bg-white rounded-2xl shadow border border-gray-200 p-8 space-y-8">
 
-        {/* ==== Pengirim ==== */}
+
+        {/* =======================================================================
+            PENGIRIM - ID LAPORAN - STATUS - PRIORITAS
+        ======================================================================= */}
         <div className="space-y-4">
+          
+          {/* Pengirim */}
           <div className="flex items-center gap-4">
-            <label className="w-36 font-semibold text-gray-800">Pengirim</label>
+            <label className="w-40 font-semibold text-gray-800">Pengirim</label>
             <div className="flex items-center gap-3">
               <img
-                src={laporan.foto}
+                src="/assets/default.jpg"
                 className="w-9 h-9 rounded-full object-cover"
               />
               <span className="font-medium text-gray-700">
-                {laporan.pengirim}
+                {data.creator?.full_name}
               </span>
             </div>
           </div>
 
-          {/* ID */}
+          {/* ID Laporan */}
           <div className="flex items-center gap-4">
-            <label className="w-36 font-semibold text-gray-800">
-              ID Laporan
-            </label>
-            <div className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md w-48 text-center text-sm font-medium">
-              {laporan.id}
+            <label className="w-40 font-semibold text-gray-800">ID Laporan</label>
+            <div className="bg-gray-300 px-4 py-2 rounded-md text-sm w-48 text-center">
+              {data.ticket_code}
             </div>
           </div>
 
           {/* Status */}
           <div className="flex items-center gap-4">
-            <label className="w-36 font-semibold text-gray-800">Status</label>
-            <div className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md w-48 text-center text-sm font-medium">
-              {laporan.status}
+            <label className="w-40 font-semibold text-gray-800">Status</label>
+            <div className="bg-gray-300 px-4 py-2 rounded-md text-sm w-48 text-center">
+              {data.status_ticket_seksi || data.status}
             </div>
           </div>
 
           {/* Prioritas */}
           <div className="flex items-center gap-4">
-            <label className="w-36 font-semibold text-gray-800">
-              Level Prioritas
-            </label>
+            <label className="w-40 font-semibold text-gray-800">Prioritas</label>
             <div
               className={`px-4 py-2 rounded-md text-white w-48 text-center text-sm font-semibold ${getPriorityColor(
-                laporan.prioritas
+                data.priority
               )}`}
             >
-              {laporan.prioritas}
+              {data.priority}
             </div>
           </div>
         </div>
 
-        {/* ==== Judul ==== */}
-        <div className="pt-4 border-t">
+        {/* =======================================================================
+            JUDUL PELAPORAN
+        ======================================================================= */}
+        <div className="border-t pt-4">
           <label className="font-semibold text-gray-800">Judul Pelaporan</label>
           <input
             readOnly
-            value={laporan.judul}
+            value={data.title}
             className="w-full bg-gray-300 px-4 py-2 rounded-lg mt-1"
           />
         </div>
 
-        {/* ==== Data Aset - Nomor Seri (2 kolom) ==== */}
+        {/* =======================================================================
+            DATA ASET UTAMA (Nama Aset & Nomor Seri)
+        ======================================================================= */}
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="font-semibold text-gray-800">Data Aset</label>
+            <label className="font-medium text-gray-700">Nama Aset</label>
             <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1">
-              {laporan.dataAset}
+              {asset.nama_asset}
             </div>
           </div>
 
           <div>
-            <label className="font-semibold text-gray-800">Nomor Seri</label>
+            <label className="font-medium text-gray-700">Nomor Seri</label>
             <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1">
-              {laporan.nomorSeri}
+              {asset.nomor_seri}
             </div>
           </div>
         </div>
 
-        {/* ==== Kategori - SubKategori - Jenis (3 kolom) ==== */}
+        {/* =======================================================================
+            KATEGORI - SUBKATEGORI - JENIS ASSET
+        ======================================================================= */}
         <div className="grid grid-cols-3 gap-6">
           <div>
-            <label className="font-semibold text-gray-800">Kategori Aset</label>
+            <label className="font-medium text-gray-700">Kategori</label>
             <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1">
-              {laporan.kategori}
+              {asset.kategori}
             </div>
           </div>
 
           <div>
-            <label className="font-semibold text-gray-800">
-              Sub-Kategori Aset
-            </label>
+            <label className="font-medium text-gray-700">Sub-Kategori</label>
             <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1">
-              {laporan.subKategori}
+              {asset.subkategori_nama}
             </div>
           </div>
 
           <div>
-            <label className="font-semibold text-gray-800">Jenis Aset</label>
+            <label className="font-medium text-gray-700">Jenis Asset</label>
             <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1">
-              {laporan.jenis}
+              {asset.jenis_asset}
             </div>
           </div>
         </div>
 
-        {/* ==== Lokasi ==== */}
+        {/* =======================================================================
+            LOKASI KEJADIAN
+        ======================================================================= */}
         <div>
           <label className="font-semibold text-gray-800">Lokasi Kejadian</label>
-          <div className="bg-gray-300 px-4 py-2 rounded-lg mt-1 w-1/2">
-            {laporan.lokasi}
-          </div>
+          <input
+            readOnly
+            value={data.lokasi_kejadian}
+            className="w-full bg-gray-300 px-4 py-2 rounded-lg mt-1"
+          />
         </div>
 
-        {/* ==== Rincian ==== */}
+        {/* =======================================================================
+            RINCIAN MASALAH
+        ======================================================================= */}
         <div>
           <label className="font-semibold text-gray-800">Rincian Masalah</label>
           <textarea
             readOnly
             rows="3"
             className="w-full bg-gray-300 rounded px-4 py-2 mt-1"
-            value={laporan.rincian}
+            value={data.description}
           />
         </div>
 
-         {/* ========================= LAMPIRAN ========================= */}
-<div>
-  <label className="font-semibold text-gray-800">Lampiran File</label>
+        {/* =======================================================================
+            LAMPIRAN FILE (JIKA ADA)
+        ======================================================================= */}
+        <div>
+          <label className="font-semibold text-gray-800">Lampiran File</label>
 
-  <div className="mt-1 flex items-center gap-2">
-    {/* ICON TIDAK BISA DIKLIK */}
-    <FileText className="w-5 h-5 text-[#0F2C59]" />
+          {files.length === 0 ? (
+            <div className="text-gray-500 text-sm mt-1">Tidak ada lampiran</div>
+          ) : (
+            <div className="space-y-2 mt-2">
+              {files.map((file, index) => (
+                <a
+                  key={index}
+                  href={file.url}
+                  target="_blank"
+                  className="flex items-center gap-2 text-blue-600 underline text-sm"
+                >
+                  <FileText className="w-5 h-5" />
+                  {file.file_name}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
 
-    {/* HANYA TEKS YANG BISA DIKLIK */}
-    <span
-      onClick={() => document.getElementById("fileInputLampiran").click()}
-      className="text-sm underline text-[#0F2C59] cursor-pointer hover:text-[#15397A]"
-    >
-      {lampiranName ? lampiranName : "Klik untuk unggah foto"}
-    </span>
-  </div>
-
-  <input
-    id="fileInputLampiran"
-    type="file"
-    accept="image/png, image/jpeg, image/jpg"
-    className="hidden"
-    onChange={(e) => {
-      if (e.target.files[0]) {
-        setLampiranName(e.target.files[0].name);
-      }
-    }}
-  />
-</div>
-
-
-
-        {/* ==== Penyelesaian ==== */}
+        {/* =======================================================================
+            PENYELESAIAN YANG DIHARAPKAN
+        ======================================================================= */}
         <div>
           <label className="font-semibold text-gray-800">
-            Penyelesaian yang Diharapkan
+            Penyelesaian yang diharapkan
           </label>
           <textarea
             readOnly
-            rows="2"
+            rows="3"
             className="w-full bg-gray-300 rounded px-4 py-2 mt-1"
-            value={laporan.penyelesaian}
+            value={data.deskripsi_pengendalian_bidang || "Tidak ada data"}
           />
         </div>
 
-        {/* ==== Tombol ==== */}
+        {/* =======================================================================
+            TOMBOL KEMBALI
+        ======================================================================= */}
         <div className="flex justify-end pt-4">
           <button
             onClick={() => navigate(-1)}
@@ -273,6 +278,7 @@ export default function MonitoringTiketSeksi() {
             Kembali
           </button>
         </div>
+
       </div>
     </div>
   );

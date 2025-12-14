@@ -4,61 +4,13 @@ import LayoutOpd from "../../components/Layout/LayoutOPD";
 
 const RatingKepuasanOPD = () => {
   const [activeTab, setActiveTab] = useState("pelaporan");
-  const [tableData, setTableData] = useState([]);
+  const [allTableData, setAllTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterDataAset, setFilterDataAset] = useState("");
   const [filterNoSeri, setFilterNoSeri] = useState("");
   const [filterRating, setFilterRating] = useState("");
   const navigate = useNavigate();
-
-  const dummyData = [
-    {
-      name: "Haikal Saputra",
-      dataAset: "Laptop Lenovo ThinkPad X230",
-      date: "18/09/2024",
-      completionDate: "20/09/2024",
-      avatar: "/assets/Haechan.jpg",
-      nomorSeri: "LNV-TP-X230-001",
-      rating: 4,
-    },
-    {
-      name: "Rio Widoro",
-      dataAset: "PC Dell OptiPlex 3020",
-      date: "18/09/2024",
-      completionDate: "19/09/2024",
-      avatar: "/assets/Rio.jpeg",
-      nomorSeri: "DELL-OP-3020-001",
-      rating: 5,
-    },
-    {
-      name: "Lia Yustia",
-      dataAset: "Laptop HP EliteBook 840",
-      date: "17/09/2024",
-      completionDate: "22/09/2024",
-      avatar: "/assets/Lia.jpg",
-      nomorSeri: "HP-EB-840-001",
-      rating: 3,
-    },
-    {
-      name: "Ridwan Yusuf",
-      dataAset: "Printer HP LaserJet Pro P1102w",
-      date: "17/09/2024",
-      completionDate: "18/09/2024",
-      avatar: "/assets/Jaemin.jpg",
-      nomorSeri: "HP-LJ-P1102W-001",
-      rating: 4,
-    },
-    {
-      name: "Ella Meisya",
-      dataAset: "PC Dell OptiPlex 3020",
-      date: "17/09/2024",
-      completionDate: "20/09/2024",
-      avatar: "/assets/Ella.jpg",
-      nomorSeri: "DELL-OP-3020-002",
-      rating: 5,
-    },
-  ];
 
   useEffect(() => {
     const fetchRatingData = async () => {
@@ -69,8 +21,12 @@ const RatingKepuasanOPD = () => {
         const token = localStorage.getItem("token");
 
         if (!token) {
-          throw new Error("Token tidak ditemukan. Silakan login kembali.");
+          setError("Token tidak ditemukan. Silakan login kembali.");
+          setLoading(false);
+          return;
         }
+
+        console.log("📡 Fetching rating data from API...");
 
         const response = await fetch(
           "https://service-desk-be-production.up.railway.app/api/admin-opd/ratings",
@@ -83,36 +39,57 @@ const RatingKepuasanOPD = () => {
           }
         );
 
-        const data = await response.json();
-
         if (!response.ok) {
-          if (data.detail && data.detail.includes("admin OPD")) {
-            setError("Hanya admin OPD yang dapat mengakses data rating");
-            setTableData(dummyData);
-            return;
-          }
-          throw new Error(data.detail || "Gagal mengambil data rating");
+          throw new Error(`HTTP ${response.status}: Gagal mengambil data rating`);
         }
 
-        if (Array.isArray(data)) {
-          const formattedData = data.map((item) => ({
-            name: item.pelapor_nama || "N/A",
-            dataAset: item.aset_nama || "-",
-            date: item.tanggal_pelaporan || "N/A",
-            completionDate: item.tanggal_selesai || "N/A",
-            avatar: item.foto_profil || "/assets/default-avatar.jpg",
-            nomorSeri: item.nomor_seri || "-",
-            rating: item.rating || 0,
-            id: item.id,
-          }));
-          setTableData(formattedData);
+        const data = await response.json();
+        console.log("📥 API Response:", data);
+
+        if (data.data && Array.isArray(data.data)) {
+          const formattedData = data.data.map((item) => {
+            // Tentukan jenis berdasarkan ada/tidaknya asset
+            const jenisPelayanan = item.asset?.asset_id ? "pelaporan" : "pelayanan";
+            
+            return {
+              id: item.ticket_id,
+              name: item.user?.full_name || "N/A",
+              dataAset: item.asset?.nama_asset || "-",
+              tanggalAwal: item.created_at
+                ? new Date(item.created_at).toLocaleDateString("id-ID")
+                : "N/A",
+              tanggalSelesai: item.pengerjaan_akhir
+                ? new Date(item.pengerjaan_akhir).toLocaleDateString("id-ID")
+                : item.pengerjaan_akhir_teknisi
+                ? new Date(item.pengerjaan_akhir_teknisi).toLocaleDateString("id-ID")
+                : "N/A",
+              avatar: item.user?.profile || "/assets/default-avatar.jpg",
+              nomorSeri: item.asset?.nomor_seri || "-",
+              rating: item.rating || 0,
+              komentar: item.comment || "",
+              ticketCode: item.ticket_code,
+              status: item.status,
+              jenisPelayanan: jenisPelayanan,
+              hasAsset: !!item.asset?.asset_id,
+              kategoriAset: item.asset?.kategori || null,
+              subkategoriAset: item.asset?.subkategori_nama || null,
+            };
+          });
+          
+          setAllTableData(formattedData);
+          console.log("✅ Data formatted:", formattedData);
+          
+          // Log distribusi data
+          const pelaporanCount = formattedData.filter(item => item.jenisPelayanan === "pelaporan").length;
+          const pelayananCount = formattedData.filter(item => item.jenisPelayanan === "pelayanan").length;
+          console.log(`📊 Distribusi: Pelaporan: ${pelaporanCount}, Pelayanan: ${pelayananCount}`);
         } else {
-          setTableData(dummyData);
+          setAllTableData([]);
         }
       } catch (error) {
-        console.error("Error fetching rating data:", error);
+        console.error("❌ Error fetching rating data:", error);
         setError(error.message);
-        setTableData(dummyData);
+        setAllTableData([]);
       } finally {
         setLoading(false);
       }
@@ -121,21 +98,32 @@ const RatingKepuasanOPD = () => {
     fetchRatingData();
   }, []);
 
+  // Filter data berdasarkan tab aktif dan filter lainnya
   const getFilteredData = () => {
-    let filtered = [...tableData];
+    let filtered = [...allTableData];
 
+    // Filter berdasarkan tab aktif (Pelaporan/Pelayanan)
+    if (activeTab === "pelaporan") {
+      filtered = filtered.filter((item) => item.jenisPelayanan === "pelaporan");
+    } else if (activeTab === "pelayanan") {
+      filtered = filtered.filter((item) => item.jenisPelayanan === "pelayanan");
+    }
+
+    // Filter berdasarkan data aset
     if (filterDataAset) {
       filtered = filtered.filter((item) =>
         item.dataAset.toLowerCase().includes(filterDataAset.toLowerCase())
       );
     }
 
+    // Filter berdasarkan nomor seri
     if (filterNoSeri) {
       filtered = filtered.filter((item) =>
         item.nomorSeri.toLowerCase().includes(filterNoSeri.toLowerCase())
       );
     }
 
+    // Filter berdasarkan rating
     if (filterRating) {
       filtered = filtered.filter(
         (item) => item.rating === parseInt(filterRating)
@@ -146,6 +134,10 @@ const RatingKepuasanOPD = () => {
   };
 
   const filteredData = getFilteredData();
+
+  // Hitung statistik untuk setiap tab
+  const pelaporanData = allTableData.filter(item => item.jenisPelayanan === "pelaporan");
+  const pelayananData = allTableData.filter(item => item.jenisPelayanan === "pelayanan");
 
   const StarRating = ({ rating }) => {
     return (
@@ -174,6 +166,13 @@ const RatingKepuasanOPD = () => {
     window.location.reload();
   };
 
+  // Reset filter saat tab berubah
+  useEffect(() => {
+    setFilterDataAset("");
+    setFilterNoSeri("");
+    setFilterRating("");
+  }, [activeTab]);
+
   return (
     <LayoutOpd>
       <div className="min-h-screen bg-gray-50">
@@ -186,8 +185,25 @@ const RatingKepuasanOPD = () => {
               <h1 className="text-xl md:text-2xl font-bold text-[#226597] text-left">
                 Rating Kepuasan
               </h1>
+              
+              {/* Tab Info */}
+              <div className="mt-3 flex flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Total Data:</span>
+                  <span className="font-semibold text-gray-800">{allTableData.length}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Pelaporan:</span>
+                  <span className="font-semibold text-blue-600">{pelaporanData.length}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Pelayanan:</span>
+                  <span className="font-semibold text-green-600">{pelayananData.length}</span>
+                </div>
+              </div>
+              
               {error && (
-                <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 text-sm rounded">
+                <div className="mt-3 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
                   <div className="flex items-center">
                     <svg
                       className="w-5 h-5 mr-2"
@@ -220,7 +236,7 @@ const RatingKepuasanOPD = () => {
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    Pelaporan
+                    Pelaporan ({pelaporanData.length})
                   </button>
                   <button
                     onClick={() => setActiveTab("pelayanan")}
@@ -230,7 +246,7 @@ const RatingKepuasanOPD = () => {
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    Pelayanan
+                    Pelayanan ({pelayananData.length})
                   </button>
                 </div>
 
@@ -258,6 +274,15 @@ const RatingKepuasanOPD = () => {
                 </button>
               </div>
 
+              {/* Keterangan Tab */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-sm text-blue-700">
+                  {activeTab === "pelaporan" 
+                    ? "📋 Menampilkan rating untuk pelaporan masalah aset/barang"
+                    : "👨‍💼 Menampilkan rating untuk pelayanan umum (non-aset)"}
+                </p>
+              </div>
+
               {/* Filter Pencarian Card */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-4 md:mb-6">
                 <h2 className="text-base md:text-lg font-semibold text-[#226597] mb-6 text-left">
@@ -266,7 +291,7 @@ const RatingKepuasanOPD = () => {
 
                 {/* Filter Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Filter Data Aset */}
+                  {/* Filter Data Aset - hanya untuk pelaporan */}
                   <div className="text-left">
                     <div className="flex items-center gap-4">
                       <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20">
@@ -278,13 +303,17 @@ const RatingKepuasanOPD = () => {
                           value={filterDataAset}
                           onChange={(e) => setFilterDataAset(e.target.value)}
                           className="w-full text-xs md:text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Cari data aset..."
+                          placeholder={activeTab === "pelaporan" ? "Cari data aset..." : "Tidak berlaku untuk pelayanan"}
+                          disabled={activeTab === "pelayanan"}
                         />
+                        {activeTab === "pelayanan" && (
+                          <div className="absolute inset-0 bg-gray-100 opacity-50 rounded cursor-not-allowed"></div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Filter No. Seri */}
+                  {/* Filter No. Seri - hanya untuk pelaporan */}
                   <div className="text-left">
                     <div className="flex items-center gap-4">
                       <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20 ml-2">
@@ -296,13 +325,17 @@ const RatingKepuasanOPD = () => {
                           value={filterNoSeri}
                           onChange={(e) => setFilterNoSeri(e.target.value)}
                           className="w-full text-xs md:text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Cari nomor seri..."
+                          placeholder={activeTab === "pelaporan" ? "Cari nomor seri..." : "Tidak berlaku untuk pelayanan"}
+                          disabled={activeTab === "pelayanan"}
                         />
+                        {activeTab === "pelayanan" && (
+                          <div className="absolute inset-0 bg-gray-100 opacity-50 rounded cursor-not-allowed"></div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Filter Rating */}
+                  {/* Filter Rating - berlaku untuk semua */}
                   <div className="text-left">
                     <div className="flex items-center gap-4">
                       <div className="text-xs md:text-sm font-medium text-gray-700 whitespace-nowrap w-20 ml-4">
@@ -315,11 +348,11 @@ const RatingKepuasanOPD = () => {
                           className="w-full text-xs md:text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                         >
                           <option value="">Semua Rating</option>
-                          <option value="1">1 Bintang</option>
-                          <option value="2">2 Bintang</option>
-                          <option value="3">3 Bintang</option>
-                          <option value="4">4 Bintang</option>
-                          <option value="5">5 Bintang</option>
+                          <option value="5">5 Bintang (Sangat Puas)</option>
+                          <option value="4">4 Bintang (Puas)</option>
+                          <option value="3">3 Bintang (Cukup Puas)</option>
+                          <option value="2">2 Bintang (Kurang Puas)</option>
+                          <option value="1">1 Bintang (Tidak Puas)</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                           <svg
@@ -353,12 +386,16 @@ const RatingKepuasanOPD = () => {
                 ) : (
                   <>
                     {/* Desktop Table Header */}
-                    <div className="bg-[#226597] rounded-t-lg p-3 md:p-4 grid grid-cols-7 gap-2 md:gap-3 text-xs md:text-sm font-medium text-white text-left hidden md:grid">
+                    <div className="bg-[#226597] rounded-t-lg p-3 md:p-4 hidden md:grid grid-cols-7 gap-2 md:gap-3 text-xs md:text-sm font-medium text-white text-left">
                       <div className="min-w-[150px]">Pengirim</div>
                       <div className="min-w-[100px]">Tgl. Awal</div>
                       <div className="min-w-[100px]">Tgl. Selesai</div>
-                      <div className="min-w-[150px]">Data Aset</div>
-                      <div className="min-w-[120px]">No. Seri</div>
+                      <div className="min-w-[150px]">
+                        {activeTab === "pelaporan" ? "Data Aset" : "Jenis Layanan"}
+                      </div>
+                      <div className="min-w-[120px]">
+                        {activeTab === "pelaporan" ? "No. Seri" : "Kategori"}
+                      </div>
                       <div className="min-w-[80px]">Rating</div>
                       <div className="min-w-[60px]">Aksi</div>
                     </div>
@@ -367,12 +404,19 @@ const RatingKepuasanOPD = () => {
                     <div className="rounded-b-lg">
                       {filteredData.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
-                          Tidak ada data rating yang ditemukan
+                          {allTableData.length === 0
+                            ? error
+                              ? "Gagal memuat data rating"
+                              : "Tidak ada data rating"
+                            : activeTab === "pelaporan"
+                            ? `Tidak ada data pelaporan yang cocok dengan filter (Total: ${pelaporanData.length})`
+                            : `Tidak ada data pelayanan yang cocok dengan filter (Total: ${pelayananData.length})`
+                          }
                         </div>
                       ) : (
                         filteredData.map((item, index) => (
                           <div
-                            key={index}
+                            key={item.id || index}
                             className={`p-3 md:p-4 grid grid-cols-1 md:grid-cols-7 gap-3 md:gap-3 text-sm text-left items-center ${
                               index !== filteredData.length - 1
                                 ? "border-b border-gray-200"
@@ -388,6 +432,10 @@ const RatingKepuasanOPD = () => {
                                     src={item.avatar}
                                     alt={item.name}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = "/assets/default-avatar.jpg";
+                                    }}
                                   />
                                 ) : (
                                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -395,7 +443,8 @@ const RatingKepuasanOPD = () => {
                                       {item.name
                                         .split(" ")
                                         .map((n) => n[0])
-                                        .join("")}
+                                        .join("")
+                                        .toUpperCase()}
                                     </span>
                                   </div>
                                 )}
@@ -404,19 +453,37 @@ const RatingKepuasanOPD = () => {
                             </div>
 
                             <div className="hidden md:block text-gray-600 min-w-[100px]">
-                              {item.date}
+                              {item.tanggalAwal}
                             </div>
                             <div className="hidden md:block text-gray-600 min-w-[100px]">
-                              {item.completionDate}
+                              {item.tanggalSelesai}
                             </div>
                             <div className="hidden md:block text-gray-600 min-w-[150px]">
-                              {item.dataAset}
+                              {activeTab === "pelaporan" 
+                                ? item.dataAset 
+                                : item.dataAset !== "-" 
+                                  ? item.dataAset 
+                                  : "Layanan Umum"
+                              }
                             </div>
                             <div className="hidden md:block text-gray-600 min-w-[120px]">
-                              {item.nomorSeri}
+                              {activeTab === "pelaporan" 
+                                ? item.nomorSeri 
+                                : item.kategoriAset 
+                                  ? `${item.kategoriAset} - ${item.subkategoriAset || 'Umum'}`
+                                  : "Umum"
+                              }
                             </div>
                             <div className="hidden md:block min-w-[80px]">
                               <StarRating rating={item.rating} />
+                              <div className="text-xs text-gray-400 mt-1">
+                                {item.rating === 5 && "Sangat Puas"}
+                                {item.rating === 4 && "Puas"}
+                                {item.rating === 3 && "Cukup Puas"}
+                                {item.rating === 2 && "Kurang Puas"}
+                                {item.rating === 1 && "Tidak Puas"}
+                                {!item.rating && "-"}
+                              </div>
                             </div>
                             <div className="hidden md:block min-w-[60px]">
                               <button
@@ -446,7 +513,8 @@ const RatingKepuasanOPD = () => {
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-500 mt-4 p-3 md:p-4 border-t border-gray-200">
                       <div className="text-left order-2 sm:order-1">
                         Menampilkan {filteredData.length} dari{" "}
-                        {tableData.length} data
+                        {activeTab === "pelaporan" ? pelaporanData.length : pelayananData.length} data{" "}
+                        {activeTab === "pelaporan" ? "pelaporan" : "pelayanan"}
                       </div>
 
                       {/* Pagination Navigation */}

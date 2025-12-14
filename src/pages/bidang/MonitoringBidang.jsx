@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import React, { useState, useEffect } from "react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/solid";
 import {
   format,
   addMonths,
@@ -10,6 +13,7 @@ import {
   endOfWeek,
   addDays,
   isSameMonth,
+  parseISO,
 } from "date-fns";
 import { id } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -18,80 +22,67 @@ import LayoutBidang from "../../components/Layout/LayoutBidang";
 export default function MonitoringBidang() {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [filter, setFilter] = useState("Semua");
-  const [level, setLevel] = useState("Semua");
 
-  const dataTeknisi = [
-    {
-      nama: "Sri Wulandari",
-      bidang: "Keamanan",
-      foto: "/assets/shizuku.jpg",
-      level: "1",
-      laporan: [
-        {
-          id: "LP831938",
-          progress: 80,
-          start: new Date(2025, 10, 2),
-          end: new Date(2025, 10, 4),
-        },
-        {
-          id: "LP931728",
-          progress: 100,
-          start: new Date(2025, 10, 9),
-          end: new Date(2025, 10, 11),
-        },
-        {
-          id: "LP931720",
-          progress: 10,
-          start: new Date(2025, 10, 8),
-          end: new Date(2025, 10, 12),
-        },
-      ],
-    },
-    {
-      nama: "Galang Wardi",
-      bidang: "Jaringan",
-      foto: "/assets/Bokuto.jpg",
-      level: "2",
-      laporan: [
-        {
-          id: "LP907276",
-          progress: 50,
-          start: new Date(2025, 10, 2),
-          end: new Date(2025, 10, 3),
-        },
-        {
-          id: "LP826792",
-          progress: 100,
-          start: new Date(2025, 10, 10),
-          end: new Date(2025, 10, 11),
-        },
-      ],
-    },
-    {
-      nama: "Albert Madara",
-      bidang: "Perangkat Keras",
-      foto: "/assets/Suika.jpg",
-      level: "3",
-      laporan: [
-        {
-          id: "LP802476",
-          progress: 100,
-          start: new Date(2025, 10, 3),
-          end: new Date(2025, 10, 5),
-        },
-        {
-          id: "LP937282",
-          progress: 40,
-          start: new Date(2025, 10, 9),
-          end: new Date(2025, 10, 10),
-        },
-      ],
-    },
-  ];
+  const [allTickets, setAllTickets] = useState([]); // semua tiket untuk kalender
+  const [teknisiList, setTeknisiList] = useState([]); // daftar teknisi unik
+  const [selectedTeknisi, setSelectedTeknisi] = useState("Semua");
 
-  const [selectedTeknisi, setSelectedTeknisi] = useState(dataTeknisi[0]);
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
+  const token = localStorage.getItem("token");
 
+  // ======================================================
+  // 🔥 FETCH ALL ASSIGNED TICKETS
+  // ======================================================
+  const fetchAllAssigned = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/tickets/bidang/all/assigned`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+      const data = json.data || [];
+
+      // Ubah struktur jadikan 1 array untuk kalender
+      const mapped = data.map((item) => ({
+  id: item.ticket_code,                      // buat ditampilkan di kalender
+  ticket_id: item.ticket_id,                // buat dipakai ke endpoint detail
+  start: parseISO(item.pengerjaan_awal),
+  end: parseISO(item.pengerjaan_akhir),
+  teknisi_id: item.assigned_teknisi_id,
+  nama_teknisi: item.nama_teknisi,
+  progress: item.status === "selesai" ? 100 : 10,
+}));
+
+
+      setAllTickets(mapped);
+
+      // Ambil teknisi unik
+      const teknisiUnique = [
+        "Semua",
+        ...Array.from(new Set(mapped.map((t) => t.nama_teknisi))),
+      ];
+
+      setTeknisiList(teknisiUnique);
+    } catch (err) {
+      console.error("Error fetch all assigned:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllAssigned();
+  }, []);
+
+  // FILTER TICKET BY TEKNISI
+  const filteredTickets =
+    selectedTeknisi === "Semua"
+      ? allTickets
+      : allTickets.filter((t) => t.nama_teknisi === selectedTeknisi);
+
+  // ======================================================
+  // RENDER KALENDER
+  // ======================================================
   const renderDays = () => {
     const days = [
       "Senin",
@@ -104,9 +95,9 @@ export default function MonitoringBidang() {
     ];
     return (
       <div className="grid grid-cols-7 text-center font-semibold text-[#0F2C59] mb-3">
-        {days.map((day) => (
-          <div key={day} className="py-2">
-            {day}
+        {days.map((d) => (
+          <div key={d} className="py-2">
+            {d}
           </div>
         ))}
       </div>
@@ -122,19 +113,14 @@ export default function MonitoringBidang() {
     const rows = [];
     let days = [];
     let day = startDate;
-    const laporanList = selectedTeknisi.laporan;
 
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const formattedDate = format(day, "d");
-        const laporanHariIni = laporanList.filter(
+
+        const laporanHariIni = filteredTickets.filter(
           (lap) => day >= lap.start && day <= lap.end
         );
-        const laporanFiltered = laporanHariIni.filter((lap) => {
-          if (filter === "Progress") return lap.progress < 100;
-          if (filter === "Selesai") return lap.progress === 100;
-          return true;
-        });
 
         days.push(
           <div
@@ -150,10 +136,10 @@ export default function MonitoringBidang() {
             </span>
 
             <div className="flex flex-col gap-1 mt-5">
-              {laporanFiltered.map((lap) => (
+              {laporanHariIni.map((lap) => (
                 <div
                   key={lap.id}
-                  onClick={() => navigate(`/detailbidang/${lap.id}`)}
+                  onClick={() => navigate(`/detailbidang/${lap.ticket_id}`)}
                   className={`cursor-pointer text-white text-xs px-2 py-1 rounded-md w-fit transition ${
                     lap.progress === 100
                       ? "bg-[#0F2C59] hover:bg-[#1e448a]"
@@ -166,6 +152,7 @@ export default function MonitoringBidang() {
             </div>
           </div>
         );
+
         day = addDays(day, 1);
       }
 
@@ -174,122 +161,64 @@ export default function MonitoringBidang() {
           {days}
         </div>
       );
+
       days = [];
     }
 
     return <div>{rows}</div>;
   };
 
-  // Bungkus seluruh konten dengan LayoutBidang
+  // ======================================================
   return (
     <LayoutBidang>
       <div className="min-h-screen bg-[#f8fafc] py-8 px-6">
         <div className="bg-white shadow-lg rounded-2xl p-8 max-w-6xl mx-auto">
-          {/* === Judul Monitoring === */}
-          <h1 className="text-3xl font-bold text-[#226597] mb-2">Monitoring</h1>
+          {/* TITLE */}
+          <h1 className="text-3xl font-bold text-[#226597] mb-4">
+            Monitoring
+          </h1>
 
-          {/* === Tombol Filter Status (dalam box) === */}
-          <div className="flex justify-end mb-6">
-            <div className="flex gap-2 border border-gray-300 rounded-2xl px-3 py-2 bg-gray-50 shadow-sm">
-              {["Semua", "Progress", "Selesai"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setFilter(item)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    filter === item
-                      ? "bg-[#226597] text-white"
-                      : "text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* === Navigasi Bulan === */}
-          <div className="flex items-center gap-2 mb-8">
+          {/* NAVIGASI BULAN */}
+          <div className="flex items-center gap-3 mb-8">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="bg-[#226597] text-white p-2 rounded-lg hover:bg-[#15397A] transition"
+              className="bg-[#226597] text-white p-2 rounded-lg hover:bg-[#15397A]"
             >
-              <ChevronLeftIcon className="w-2 h-2" />
+              <ChevronLeftIcon className="w-4 h-4" />
             </button>
+
             <span className="text-gray-700 font-semibold text-lg capitalize">
-              {format(currentMonth, "MMMM", { locale: id })}
+              {format(currentMonth, "MMMM yyyy", { locale: id })}
             </span>
+
             <button
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="bg-[#226597] text-white p-2 rounded-lg hover:bg-[#15397A] transition"
+              className="bg-[#226597] text-white p-2 rounded-lg hover:bg-[#15397A]"
             >
-              <ChevronRightIcon className="w-2 h-2" />
+              <ChevronRightIcon className="w-4 h-4" />
             </button>
           </div>
 
-          {/* === Filter Dropdowns (Full Width, 3 Kolom) === */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* Level Teknisi */}
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">
-                Level Teknisi
-              </label>
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"
-              >
-                <option>Semua</option>
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-              </select>
-            </div>
+          {/* DROPDOWN PILIH TEKNISI */}
+          <div className="w-64 mb-6">
+            <label className="text-gray-600 text-sm mb-1 block">
+              Lihat Pekerjaan Teknisi
+            </label>
 
-            {/* Bidang Teknisi */}
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">
-                Bidang Teknisi
-              </label>
-              <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full">
-                <option>Semua</option>
-                <option>Keamanan</option>
-                <option>Jaringan</option>
-                <option>Perangkat Keras</option>
-              </select>
-            </div>
-
-            {/* Lihat Pekerjaan */}
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">
-                Lihat Pekerjaan
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 w-full bg-white">
-                <img
-                  src={selectedTeknisi.foto}
-                  alt={selectedTeknisi.nama}
-                  className="w-6 h-6 rounded-full mr-2 object-cover"
-                />
-                <select
-                  value={selectedTeknisi.nama}
-                  onChange={(e) => {
-                    const teknisi = dataTeknisi.find(
-                      (t) => t.nama === e.target.value
-                    );
-                    setSelectedTeknisi(teknisi);
-                  }}
-                  className="bg-transparent text-sm w-full outline-none"
-                >
-                  {dataTeknisi.map((t) => (
-                    <option key={t.nama} value={t.nama}>
-                      {t.nama}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <select
+              value={selectedTeknisi}
+              onChange={(e) => setSelectedTeknisi(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full bg-white"
+            >
+              {teknisiList.map((t, idx) => (
+                <option key={idx} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* === Kalender === */}
+          {/* RENDER DAYS & CELLS */}
           {renderDays()}
           {renderCells()}
         </div>

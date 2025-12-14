@@ -117,17 +117,14 @@ const ProfilePage = () => {
           return;
         }
 
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/me/masyarakat`,
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`/api/me/masyarakat`, {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           if (response.status === 401) {

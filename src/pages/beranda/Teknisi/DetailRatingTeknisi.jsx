@@ -1,23 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StarIcon } from "@heroicons/react/24/solid";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function DetailRatingTeknisi() {
   const navigate = useNavigate();
+  const { ticket_id } = useParams();
 
-  const ratingData = {
-    pengirim: "Widiya Karim",
-    idTiket: "LPR823838",
-    ratingPelayanan: 5,
-    komentar: "yayayayayap",
-    selesai: true,
-    aspek: {
-      kemudahan: 5,
-      kecepatan: 4,
-      kualitas: 5,
-    },
+  const BASE_URL = "https://service-desk-be-production.up.railway.app";
+  const token = localStorage.getItem("token");
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ============== FETCH DETAIL RATING ==============
+  const fetchDetail = async () => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/teknisi/ratings/${ticket_id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const result = await res.json();
+      setData(result);
+      setLoading(false);
+    } catch (err) {
+      console.error("Gagal fetch detail rating:", err);
+    }
   };
 
+  useEffect(() => {
+    fetchDetail();
+  }, [ticket_id]);
+
+  // ============== RENDER STARS ==============
   const renderStars = (count) =>
     Array.from({ length: 5 }).map((_, i) => (
       <StarIcon
@@ -28,6 +45,18 @@ export default function DetailRatingTeknisi() {
       />
     ));
 
+  // ============== LOADING ==============
+  if (loading || !data) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-gray-600 text-lg">
+        Memuat data...
+      </div>
+    );
+  }
+
+  const creator = data.creator || {};
+  const asset = data.asset || {};
+
   return (
     <div className="min-h-screen bg-[#f8fafc] py-8 px-6">
       <div className="bg-white shadow-lg rounded-2xl p-8 max-w-4xl mx-auto">
@@ -36,7 +65,7 @@ export default function DetailRatingTeknisi() {
           Rating
         </h1>
 
-        {/* === Pengirim dan ID Tiket (value di kanan tapi tidak ke ujung kanan) === */}
+        {/* === Pengirim & ID Tiket === */}
         <div className="space-y-4 mb-8">
           {/* Pengirim */}
           <div className="flex items-center">
@@ -45,12 +74,12 @@ export default function DetailRatingTeknisi() {
             </label>
             <div className="flex items-center gap-2">
               <img
-                src="/assets/shizuku.jpg"
-                alt={ratingData.pengirim}
+                src={creator.profile || "/assets/default.png"}
+                alt={creator.full_name}
                 className="w-8 h-8 rounded-full object-cover"
               />
               <span className="font-medium text-gray-800">
-                {ratingData.pengirim}
+                {creator.full_name}
               </span>
             </div>
           </div>
@@ -61,17 +90,17 @@ export default function DetailRatingTeknisi() {
               ID Tiket
             </label>
             <div className="bg-gray-300 px-14 py-2 rounded-lg text-gray-700 font-medium w-fit">
-              {ratingData.idTiket}
+              {data.ticket_code}
             </div>
           </div>
         </div>
 
-        {/* === Rating Kepuasan === */}
+        {/* === Rating Pelayanan === */}
         <div className="mb-6">
           <label className="text-gray-800 font-semibold block mb-2">
             Rating Kepuasan Pelayanan Kami
           </label>
-          <div className="flex">{renderStars(ratingData.ratingPelayanan)}</div>
+          <div className="flex">{renderStars(data.rating)}</div>
         </div>
 
         {/* === Komentar === */}
@@ -81,12 +110,76 @@ export default function DetailRatingTeknisi() {
           </label>
           <textarea
             className="w-full bg-gray-100 rounded-lg p-3 text-gray-700 text-sm resize-none h-24"
-            value={ratingData.komentar}
+            value={data.comment || "-"}
             readOnly
           />
         </div>
 
-        {/* === Tombol Batalkan === */}
+        {/* === Detail Aset === */}
+        <div className="mb-6 grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Data Aset</p>
+            <div className="bg-gray-100 rounded-lg p-2 text-gray-700 text-sm">
+              {asset.nama_asset || "-"}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Nomor Seri</p>
+            <div className="bg-gray-100 rounded-lg p-2 text-gray-700 text-sm">
+              {asset.nomor_seri || "-"}
+            </div>
+          </div>
+        </div>
+
+        {/* === Tanggal pengerjaan === */}
+        <div className="mb-6 grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Pengerjaan Awal</p>
+            <div className="bg-gray-100 rounded-lg p-2 text-gray-700 text-sm">
+              {new Date(data.pengerjaan_awal).toLocaleDateString("id-ID")}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Pengerjaan Akhir</p>
+            <div className="bg-gray-100 rounded-lg p-2 text-gray-700 text-sm">
+              {new Date(data.pengerjaan_akhir).toLocaleDateString("id-ID")}
+            </div>
+          </div>
+        </div>
+
+        {/* === Lokasi Kejadian === */}
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-gray-700">Lokasi Kejadian</p>
+          <div className="bg-gray-100 rounded-lg p-2 text-gray-700 text-sm">
+            {data.lokasi_kejadian || "-"}
+          </div>
+        </div>
+
+        {/* === Deskripsi Masalah === */}
+        <div className="mb-6">
+          <p className="text-sm font-semibold text-gray-700">Deskripsi</p>
+          <textarea
+            readOnly
+            className="w-full bg-gray-100 rounded-lg p-3 text-gray-700 text-sm resize-none h-24"
+            value={data.description || ""}
+          />
+        </div>
+
+        {/* === Penyelesaian yang Diharapkan === */}
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-gray-700">
+            Penyelesaian yang Diharapkan
+          </p>
+          <textarea
+            readOnly
+            className="w-full bg-gray-100 rounded-lg p-3 text-gray-700 text-sm resize-none h-24"
+            value={data.expected_resolution || ""}
+          />
+        </div>
+
+        {/* === BATALKAN BUTTON === */}
         <div className="flex justify-start">
           <button
             onClick={() => navigate(-1)}

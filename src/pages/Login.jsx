@@ -112,9 +112,11 @@ const LogIn = () => {
       password: formData.password,
     };
 
+    console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
+
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`,
+     const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`,
         {
           method: "POST",
           headers: {
@@ -195,9 +197,6 @@ const LogIn = () => {
         console.warn("Error saat fetch profil:", profileError);
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
 
       alert("Login berhasil!");
       navigate("/berandamasyarakat");

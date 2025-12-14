@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import LayoutOpd from "../../components/Layout/LayoutOPD";
@@ -8,6 +8,7 @@ const DraftBaru = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [availableTags, setAvailableTags] = useState([]); // State untuk tags dari backend
 
   const [formData, setFormData] = useState({
     penerimaDraft: {
@@ -26,6 +27,33 @@ const DraftBaru = () => {
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  // Fetch tags dari backend saat komponen mount
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/articles/tags", {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const tags = await response.json();
+          console.log("📋 Available tags:", tags);
+          setAvailableTags(tags);
+        } else {
+          console.error("Failed to fetch tags");
+        }
+      } catch (err) {
+        console.error("Error fetching tags:", err);
+      }
+    };
+
+    fetchTags();
+  }, []);
 
   // Fungsi validasi form
   const isFormValid = () => {
@@ -118,22 +146,96 @@ const DraftBaru = () => {
     }
   };
 
-  const handleKirimDraft = () => {
-    const draftData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
-      status: "dikirim",
-    };
+  const handleKirimDraft = async () => {
+    const token = localStorage.getItem("token");
 
-    console.log("Data draft:", draftData);
-    setShowConfirmation(false);
-    setShowSuccessPopup(true);
-    localStorage.setItem("draftArtikel", JSON.stringify(draftData));
+    if (!token) {
+      alert("Token tidak ditemukan. Silakan login kembali.");
+      navigate("/login");
+      return;
+    }
+
+    // Buat FormData untuk multipart/form-data
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.judul);
+    formDataToSend.append("content", formData.isiArtikel);
+
+    // tag_ids - array of string (required)
+    // Cari tag ID berdasarkan tag_name yang dipilih user
+    const selectedTag = availableTags.find(
+      (tag) => tag.tag_name === formData.layanan
+    );
+    const selectedTagId = selectedTag?.tag_id;
+
+    console.log("🏷️ Selected category:", formData.layanan);
+    console.log("🏷️ Found tag:", selectedTag);
+    console.log("🏷️ Tag ID:", selectedTagId);
+    console.log("🏷️ Available tags:", availableTags);
+
+    if (selectedTagId) {
+      formDataToSend.append("tag_ids", selectedTagId);
+    } else {
+      console.error("❌ No tag ID found for:", formData.layanan);
+    }
+
+    // cover_url (optional)
+    if (formData.coverImage && typeof formData.coverImage === "string") {
+      formDataToSend.append("cover_url", formData.coverImage);
+    }
+
+    // cover_file (optional) - jika ada file upload
+    if (formData.coverImage instanceof File) {
+      formDataToSend.append("cover_file", formData.coverImage);
+    }
+
+    console.log("🚀 Mengirim draft ke backend");
+    console.log("  - title:", formData.judul);
+    console.log("  - content length:", formData.isiArtikel.length);
+    console.log("  - tag_id:", selectedTagId);
+    console.log("🔑 Token:", token.substring(0, 20) + "...");
+
+    try {
+      const response = await fetch("/api/articles/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          // JANGAN set Content-Type untuk FormData, browser akan set otomatis dengan boundary
+        },
+        body: formDataToSend,
+      });
+
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", [...response.headers.entries()]);
+
+      const responseData = await response.json();
+      console.log("📥 Response data:", responseData);
+
+      // Log detail error jika ada
+      if (responseData.detail && Array.isArray(responseData.detail)) {
+        console.log("❌ Validation errors:");
+        responseData.detail.forEach((err, index) => {
+          console.log(`  ${index + 1}.`, err);
+        });
+      }
+
+      if (!response.ok) {
+        const errorMsg = Array.isArray(responseData.detail)
+          ? responseData.detail
+              .map((e) => `${e.loc?.join(".")} - ${e.msg}`)
+              .join("\n")
+          : responseData.detail ||
+            responseData.message ||
+            "Gagal mengirim draft";
+        throw new Error(errorMsg);
+      }
+
+      setShowConfirmation(false);
+      setShowSuccessPopup(true);
+    } catch (err) {
+      console.error("❌ Error mengirim draft:", err);
+      alert("Gagal mengirim draft: " + err.message);
+    }
   };
 
   const handleSuccessOk = () => {
@@ -141,21 +243,92 @@ const DraftBaru = () => {
     navigate("/dashboardopd");
   };
 
-  const handleSimpanDraft = () => {
-    const draftData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
-      status: "draft",
-    };
+  const handleSimpanDraft = async () => {
+    const token = localStorage.getItem("token");
 
-    console.log("Data draft:", draftData);
-    localStorage.setItem("draftArtikel", JSON.stringify(draftData));
-    alert("Draft berhasil disimpan!");
+    if (!token) {
+      alert("Token tidak ditemukan. Silakan login kembali.");
+      navigate("/login");
+      return;
+    }
+
+    // Buat FormData untuk multipart/form-data
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.judul);
+    formDataToSend.append("content", formData.isiArtikel);
+
+    // tag_ids - array of string (required)
+    // Cari tag ID berdasarkan tag_name yang dipilih user
+    const selectedTag = availableTags.find(
+      (tag) => tag.tag_name === formData.layanan
+    );
+    const selectedTagId = selectedTag?.tag_id;
+
+    console.log("🏷️ Selected category:", formData.layanan);
+    console.log("🏷️ Found tag:", selectedTag);
+    console.log("🏷️ Tag ID:", selectedTagId);
+
+    if (selectedTagId) {
+      formDataToSend.append("tag_ids", selectedTagId);
+    } else {
+      console.error("❌ No tag ID found for:", formData.layanan);
+    }
+
+    // cover_url (optional)
+    if (formData.coverImage && typeof formData.coverImage === "string") {
+      formDataToSend.append("cover_url", formData.coverImage);
+    }
+
+    // cover_file (optional)
+    if (formData.coverImage instanceof File) {
+      formDataToSend.append("cover_file", formData.coverImage);
+    }
+
+    console.log("💾 Menyimpan draft ke backend");
+    console.log("  - title:", formData.judul);
+    console.log("  - content length:", formData.isiArtikel.length);
+    console.log("  - tag_id:", selectedTagId);
+    console.log("🔑 Token:", token.substring(0, 20) + "...");
+
+    try {
+      const response = await fetch("/api/articles/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          // JANGAN set Content-Type untuk FormData
+        },
+        body: formDataToSend,
+      });
+
+      console.log("📡 Response status:", response.status);
+      const responseData = await response.json();
+      console.log("📥 Response data:", responseData);
+
+      // Log detail error jika ada
+      if (responseData.detail && Array.isArray(responseData.detail)) {
+        console.log("❌ Validation errors:");
+        responseData.detail.forEach((err, index) => {
+          console.log(`  ${index + 1}.`, err);
+        });
+      }
+
+      if (!response.ok) {
+        const errorMsg = Array.isArray(responseData.detail)
+          ? responseData.detail
+              .map((e) => `${e.loc?.join(".")} - ${e.msg}`)
+              .join("\n")
+          : responseData.detail ||
+            responseData.message ||
+            "Gagal menyimpan draft";
+        throw new Error(errorMsg);
+      }
+
+      alert("Draft berhasil disimpan!");
+    } catch (err) {
+      console.error("❌ Error menyimpan draft:", err);
+      alert("Gagal menyimpan draft: " + err.message);
+    }
   };
 
   const handleBatalkan = () => {
@@ -164,7 +337,7 @@ const DraftBaru = () => {
 
   const handleConfirmBatalkan = () => {
     setShowCancelConfirmation(false);
-    navigate("/lihatartikel");
+    navigate("/dashboardopd");
   };
 
   const handleCancelBatalkan = () => {
@@ -615,7 +788,7 @@ const DraftBaru = () => {
 
               <div className="flex justify-center gap-3">
                 <button
-                  onClick={() => navigate("/lihatartikel")}
+                  onClick={() => navigate("/dashboardopd")}
                   className="px-6 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors mt-4"
                 >
                   Oke
