@@ -136,30 +136,7 @@ export default function FormLaporan() {
 }, [authToken]);
 
 
-  const getFallbackSubKategori = () => {
-    return [
-      { id: 1, nama: "Server" },
-      { id: 2, nama: "Komputer Desktop" },
-      { id: 3, nama: "Laptop" },
-      { id: 4, nama: "Printer" },
-      { id: 5, nama: "Monitor" },
-      { id: 6, nama: "Keyboard" },
-      { id: 7, nama: "Mouse" },
-      { id: 8, nama: "Router" },
-      { id: 9, nama: "Switch" },
-      { id: 10, nama: "Kamera CCTV" },
-      { id: 11, nama: "Meja Kerja" },
-      { id: 12, nama: "Kursi Kerja" },
-      { id: 13, nama: "Lemari" },
-      { id: 14, nama: "AC" },
-      { id: 15, nama: "Telepon" },
-      { id: 16, nama: "Proyektor" },
-      { id: 17, nama: "UPS" },
-      { id: 18, nama: "Kendaraan Dinas" },
-      { id: 19, nama: "Mesin Fotocopy" },
-      { id: 20, nama: "Scanner" },
-    ];
-  };
+  
 
   const toggleDropdown = (dropdownName) => {
     setDropdowns((prev) => ({
