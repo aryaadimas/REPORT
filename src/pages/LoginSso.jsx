@@ -29,21 +29,18 @@ const LoginSso = () => {
     }
   };
 
-  const getRedirectPathByRoleName = (roleName) => {
-    const roleRedirects = {
-      diskominfo: "/dashboard-diskominfo",
-      opd: "/beranda",
-      verifikator: "/dashboard-verifikator",
-      auditor: "/dashboard-auditor",
-      "admin dinas": "/dashboard-admin-dinas",
-      teknisi: "/dashboardteknisi",
-      bidang: "/dashboardbidang",
-      seksi: "/dashboardseksi",
-      masyarakat: "/berandamasyarakat",
-    };
-
-    return roleRedirects[roleName.toLowerCase()] || "/beranda";
+  const getRedirectPathByRoleId = (roleId) => {
+  const roleRedirects = {
+    "1": "/dashboardkota",              // OPD
+    "2": "/dashboardopd",
+    "6": "/dashboardteknisi",
+    "7": "/dashboardbidang",
+    "8": "/berandaseksi",
   };
+
+  return roleRedirects[String(roleId)] || "/beranda";
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,26 +90,31 @@ const LoginSso = () => {
 
       const user = data.user || {};
       const userInfo = {
-        id: user.id,
-        name: user.name || user.full_name || "User",
-        email: user.email,
-        role_name: user.role_name || "opd",
-        dinas_id: user.dinas_id || 1,
-      };
+  id: user.id,
+  name: user.name || user.full_name || "User",
+  email: user.email,
+  role_id: user.role_id,              // 🔥 TAMBAHKAN
+  role_name: user.role?.nama || "",   // opsional
+  dinas_id: user.dinas_id || 1,
+};
+
 
       localStorage.setItem("user", JSON.stringify(userInfo));
       localStorage.setItem("userData", JSON.stringify(userInfo));
       localStorage.setItem("user_role_name", userInfo.role_name);
 
-      Swal.fire({
-        title: "Login Berhasil!",
-        text: `Selamat datang, ${userInfo.name}`,
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      }).then(() => {
-        navigate("/beranda");
-      });
+     Swal.fire({
+  title: "Login Berhasil!",
+  text: `Selamat datang, ${userInfo.name}`,
+  icon: "success",
+  timer: 2000,
+  showConfirmButton: false,
+}).then(() => {
+  const redirectPath = getRedirectPathByRoleId(userInfo.role_id);
+  navigate(redirectPath);
+});
+
+
     } catch (error) {
       Swal.fire("Login Gagal", error.message, "error");
     } finally {
