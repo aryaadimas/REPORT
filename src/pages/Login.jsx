@@ -36,7 +36,7 @@ const LogIn = () => {
 
     // Integrasi login dengan API
     const payload = {
-      login: formData.email,
+      email: formData.email,
       password: formData.password,
     };
 
