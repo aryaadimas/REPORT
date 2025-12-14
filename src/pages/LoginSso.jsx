@@ -32,7 +32,7 @@ const LoginSso = () => {
   const getRedirectPathByRoleId = (roleId) => {
   const roleRedirects = {
     "1": "/dashboardkota",              // OPD
-    "2": "/dashboardopd",
+    "5": "/dashboardopd",
     "6": "/dashboardteknisi",
     "7": "/dashboardbidang",
     "8": "/berandaseksi",

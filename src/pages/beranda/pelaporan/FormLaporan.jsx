@@ -9,9 +9,9 @@ export default function FormLaporan() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingSubKategori, setIsLoadingSubKategori] = useState(true);
-  const [subKategoriList, setSubKategoriList] = useState([]);
-  const [selectedSubKategori, setSelectedSubKategori] = useState(null);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+  const [assetList, setAssetList] = useState([]);
+  const [selectedAsset, setSelectedAsset] = useState(null);
   const [authToken, setAuthToken] = useState("");
 
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function FormLaporan() {
     lokasiKejadian: "",
     rincianMasalah: "",
     penyelesaianDiharapkan: "",
-    selectedSubKategoriId: "",
+    selectedAssetId: "",
   });
 
   const [dropdowns, setDropdowns] = useState({
@@ -89,47 +89,52 @@ export default function FormLaporan() {
   }, []);
 
   useEffect(() => {
-    const fetchSubKategori = async () => {
-      try {
-        setIsLoadingSubKategori(true);
-        console.log("Memulai fetch sub-kategori...");
+  const fetchAssets = async () => {
+    try {
+      setIsLoadingAssets(true);
+      console.log("Memulai fetch asset-barang...");
 
-        const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/api/sub-kategori",
-          {
-            method: "GET",
-            headers: {
-              accept: "application/json",
-            },
-          }
-        );
+      const formattedToken = authToken.startsWith("Bearer ")
+        ? authToken
+        : `Bearer ${authToken}`;
 
-        console.log("Response status sub-kategori:", response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Data sub-kategori diterima:", data);
-
-          const formattedSubKategori = data.map((item) => ({
-            id: item.id,
-            nama: item.nama,
-          }));
-          setSubKategoriList(formattedSubKategori);
-        } else {
-          console.error("Gagal fetch sub-kategori:", response.status);
-
-          setSubKategoriList(getFallbackSubKategori());
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/asset-barang?status_filter=aktif",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: formattedToken,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching sub-kategori:", error);
-        setSubKategoriList(getFallbackSubKategori());
-      } finally {
-        setIsLoadingSubKategori(false);
-      }
-    };
+      );
 
-    fetchSubKategori();
-  }, []);
+      console.log("Response status asset-barang:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Data asset-barang diterima:", data);
+        setAssetList(data.data || []);
+      } else {
+        console.error("Gagal fetch asset-barang:", response.status);
+        setAssetList([]);
+      }
+    } catch (error) {
+      console.error("Error fetching asset-barang:", error);
+      setAssetList([]);
+    } finally {
+      setIsLoadingAssets(false);
+    }
+  };
+
+  if (authToken) {
+    fetchAssets();
+  } else {
+    setIsLoadingAssets(false);
+    setAssetList([]);
+  }
+}, [authToken]);
+
 
   const getFallbackSubKategori = () => {
     return [
@@ -167,7 +172,7 @@ export default function FormLaporan() {
     const judulOk = formData.judulPelaporan.trim() !== "";
     const rincianOk = formData.rincianMasalah.trim() !== "";
     const penyelesaianOk = formData.penyelesaianDiharapkan.trim() !== "";
-    const subKategoriSelected = formData.selectedSubKategoriId.trim() !== "";
+    const assetSelected = formData.selectedAssetId.trim() !== "";
     const fileOk = uploadedFiles.length > 0;
 
     return (
@@ -179,16 +184,19 @@ export default function FormLaporan() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSelectSubKategori = (subKategori) => {
-    setSelectedSubKategori(subKategori);
-    setFormData((prev) => ({
-      ...prev,
-      dataAset: subKategori.nama,
-      subKategoriAset: subKategori.nama,
-      selectedSubKategoriId: subKategori.id.toString(),
-    }));
-    toggleDropdown("dataAset");
-  };
+  const handleSelectAsset = (asset) => {
+  setSelectedAsset(asset);
+  setFormData(prev => ({
+    ...prev,
+    dataAset: asset.nama_asset,
+    nomorSeri: asset.nomor_seri,
+    kategoriAset: asset.kategori,
+    subKategoriAset: asset.asset_barang?.sub_kategori?.nama || "",
+    jenisAset: asset.jenis,
+    selectedAssetId: asset.id.toString(),
+  }));
+};
+
 
   const handleNomorSeriChange = (value) => {
     setFormData((prev) => ({ ...prev, nomorSeri: value }));
@@ -262,12 +270,12 @@ export default function FormLaporan() {
         ? authToken
         : `Bearer ${authToken}`;
 
-      if (!formData.selectedSubKategoriId) {
+      if (!formData.selectedAssetId) {
         throw new Error("Silakan pilih sub-kategori terlebih dahulu.");
       }
       const formDataToSend = new FormData();
 
-      formDataToSend.append("asset_id", formData.selectedSubKategoriId || "");
+      formDataToSend.append("asset_id", formData.selectedAssetId || "");
       formDataToSend.append("title", formData.judulPelaporan || "");
       formDataToSend.append("lokasi_kejadian", formData.lokasiKejadian || "");
       formDataToSend.append("description", formData.rincianMasalah || "");
@@ -281,7 +289,7 @@ export default function FormLaporan() {
       });
 
       console.log("=== DATA YANG AKAN DIKIRIM ===");
-      console.log("Asset ID:", formData.selectedSubKategoriId);
+      console.log("Asset ID:", formData.selectedAssetId);
       console.log("Judul:", formData.judulPelaporan);
       console.log("Lokasi:", formData.lokasiKejadian);
       console.log("Deskripsi:", formData.rincianMasalah);
@@ -453,10 +461,10 @@ export default function FormLaporan() {
       lokasiKejadian: "",
       rincianMasalah: "",
       penyelesaianDiharapkan: "",
-      selectedSubKategoriId: "",
+      selectedAssetId: "",
     });
     setUploadedFiles([]);
-    setSelectedSubKategori(null);
+    setselectedAsset(null);
     setShowSuccessPopup(false);
   };
 
@@ -566,7 +574,7 @@ export default function FormLaporan() {
                       <button
                         onClick={() => toggleDropdown("dataAset")}
                         className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between"
-                        disabled={isLoadingSubKategori}
+                        disabled={isLoadingAssets}
                       >
                         <span
                           className={`flex-1 text-left ${
@@ -575,25 +583,25 @@ export default function FormLaporan() {
                               : "text-gray-400"
                           }`}
                         >
-                          {isLoadingSubKategori
+                          {isLoadingAssets
                             ? "Memuat data sub-kategori..."
                             : formData.dataAset || "Pilih sub-kategori"}
                         </span>
-                        {!isLoadingSubKategori && (
+                        {!isLoadingAssets && (
                           <ChevronDown size={16} className="text-gray-400" />
                         )}
                       </button>
-                      {dropdowns.dataAset && !isLoadingSubKategori && (
+                      {dropdowns.dataAset && !isLoadingAssets && (
                         <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
-                          {subKategoriList.length > 0 ? (
-                            subKategoriList.map((item) => (
+                          {assetList.length > 0 ? (
+                            assetList.map((item) => (
                               <div
                                 key={item.id}
-                                onClick={() => handleSelectSubKategori(item)}
+                                onClick={() => handleSelectAsset(item)}
                                 className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left truncate"
-                                title={item.nama}
+                                title={item.nama_asset}
                               >
-                                {item.nama}
+                                {item.nama_asset}
                               </div>
                             ))
                           ) : (
@@ -645,7 +653,7 @@ export default function FormLaporan() {
                         handleInputChange("subKategoriAset", e.target.value)
                       }
                       className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
-                      readOnly={!!selectedSubKategori}
+                      readOnly={!!selectedAsset}
                     />
                   </div>
 
