@@ -28,7 +28,7 @@ import SuksesPelayanan from "./pages/beranda/pengajuan/SuksesPelayanan";
 import SuksesPelaporan from "./pages/beranda/pelaporan/SuksesPelaporan";
 import DataDitemukan from "./pages/beranda/pelaporan/DataDitemukan";
 import LayoutPegawai from "./components/Layout/LayoutPegawai";
-import Riwayat from "./pages/masyarakat/riwayat";
+import Riwayat from "./pages/masyarakat/Riwayat";
 import LihatHistory from "./pages/masyarakat/LihatHistory";
 import LihatRating from "./pages/masyarakat/LihatRating";
 import BeriRating from "./pages/masyarakat/BeriRating";
