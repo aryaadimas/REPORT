@@ -26,7 +26,7 @@ const HeaderOpd = () => {
 
     // Tambahkan logika navigasi di sini
     if (item === "Profil Saya") {
-      navigate("/profilsaya");
+      navigate("/profilopd");
     } else if (item === "Tampilan") {
       navigate("/tampilan");
     } else if (item === "Keluar") {
@@ -68,7 +68,7 @@ const HeaderOpd = () => {
               {/* Avatar Profil */}
               <div className="w-8 h-8 md:w-9 md:h-9 rounded-full overflow-hidden flex-shrink-0">
                 <img
-                  src="/assets/Heungmin.jpg"
+                  src=""
                   alt="Profil"
                   className="w-full h-full object-cover"
                 />

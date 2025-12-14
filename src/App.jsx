@@ -62,7 +62,7 @@ import PengajuanMasyarakat from "./pages/beranda/Seksi/PengajuanMasyarakat"
 import LayoutTeknisi from "./components/Layout/LayoutTeknisi";
 import BuatFormRFC from "./pages/beranda/Teknisi/BuatFormRFC";
 import EditFormRFC from "./pages/beranda/Teknisi/EditFormRFC";
-import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC"
+import LihatFormRFC from "./pages/beranda/Teknisi/LihatFormRFC";
 import RFCTeknisi from "./pages/beranda/Teknisi/RFCTeknisi";
 import DashboardTeknisi from "./pages/beranda/Teknisi/DashboardTeknisi";
 import CekDetailTeknisi from "./pages/beranda/Teknisi/CekDetailTeknisi";
@@ -98,6 +98,9 @@ import ProfilMasyarakat from "./pages/masyarakat/ProfilMasyarakat";
 import LandingPage from "./pages/masyarakat/LandingPage";
 import LayoutMasyarakat from "./components/Layout/LayoutMasyarakat";
 
+//*-- Universal Profil --*/
+import ProfilUniversal from "./pages/Profil";
+
 //*-- Helpdesk --*/
 import HelpdeskChat from "./components/beranda/Helpdesk";
 
@@ -115,6 +118,8 @@ import KnowledgeBaseDraft from "./pages/adminopd/KnowledgeBaseDraft";
 import KnowledgeBaseDiajukan from "./pages/adminopd/KnowledgeBaseDiajukan";
 import DraftBaru from "./pages/adminopd/DraftBaru";
 import RatingKepuasanOpd from "./pages/adminopd/RatingKepuasanOpd";
+
+//*-- Statistik Pelaporan --*/
 import StatistikKategori from "./pages/adminopd/StatistikKategori";
 import StatistikPrioritas from "./pages/adminopd/StatistikPrioritas";
 import StatistikTahunan from "./pages/adminopd/StatistikTahunan";
@@ -211,7 +216,7 @@ function App() {
           <Route path="ratekotaopd/:opdName" element={<RateKotaOpd />} />
           <Route path="ratekotaopd" element={<RateKotaOpd />} />
           <Route path="knowledgebasekota" element={<KnowledgeBaseKota />} />
-          <Route path="aksikbkota" element={<AksiKBKota />} />
+          <Route path="aksikbkota/:articleId" element={<AksiKBKota />} />
           <Route path="kbeditorkota" element={<KBEditorKota />} />
           <Route path="lihatartikelkota" element={<LihatArtikelKota />} />
           <Route path="pengumumankota" element={<PengumumanKota />} />
@@ -231,7 +236,6 @@ function App() {
         {/* Layout MASYARAKAT */}
         <Route path="/" element={<LayoutMasyarakat />}>
           <Route path="berandamasyarakat" element={<BerandaMasyarakat />} />
-          <Route path="profilmasyarakat" element={<ProfilMasyarakat />} />
           <Route path="tampilanmasyarakat" element={<TampilanMasyarakat />} />
           <Route path="kbmasyarakat" element={<KBMasyarakat />} />
           <Route path="pelaporanmasyarakat" element={<PelaporanMasyarakat />} />
@@ -300,22 +304,23 @@ function App() {
         <Route path="/ratingkepuasanopd" element={<RatingKepuasanOpd />} />
         <Route path="/dataditemukan" element={<DataDitemukan />} />
         <Route path="/helpdesk" element={<HelpdeskChat />} />
-        <Route path="/statistikkategori" element={<StatistikKategori />} />
-        <Route path="/statistikprioritas" element={<StatistikPrioritas />} />
-        <Route path="/statistiktahunan" element={<StatistikTahunan />} />
+
+        {/* Statistik Pelaporan */}
+        <Route path="/StatistikKategori" element={<StatistikKategori />} />
+        <Route path="/StatistikPrioritas" element={<StatistikPrioritas />} />
+        <Route path="/StatistikTahunan" element={<StatistikTahunan />} />
+        <Route path="/StatistikBulanan" element={<StatistikBulanan />} />
         <Route path="/notifdibuat" element={<NotifDibuat />} />
         <Route path="/notifdiproses" element={<NotifDiproses />} />
         <Route path="/notifmaintenance" element={<NotifMaintenance />} />
         <Route path="/notifdarurat" element={<NotifDarurat />} />
         <Route path="/notifumum" element={<NotifUmum />} />
 
-
         <Route path="/detailbidang" element={<DetailBidang />} />
         <Route path="/lihatratingopd" element={<LihatRatingOpd />} />
         <Route path="/profilsaya" element={<Profil />} />
         <Route path="/tampilan" element={<Tampilan />} />
-        <Route path="/statistikbulanan" element={<StatistikBulanan />} />
-        <Route path="/lihatartikel" element={<LihatArtikel />} />
+        <Route path="/lihatartikel/:articleId" element={<LihatArtikel />} />
         <Route path="/kotakmasuk" element={<KotakMasuk />} />
         <Route path="/kotakmasukbidang" element={<KotakMasukBidang />} />
         <Route path="/kotakmasukopd" element={<KotakMasukOpd />} />
@@ -326,6 +331,15 @@ function App() {
         <Route path="berirating" element={<BeriRating />} />
         <Route path="reopenpegawai" element={<ReopenPegawai />} />
         <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
+
+        {/* Universal Profile Routes - untuk semua role */}
+        <Route path="/profil" element={<ProfilUniversal />} />
+        <Route path="/profilopd" element={<ProfilUniversal />} />
+        <Route path="/profilteknisi" element={<ProfilUniversal />} />
+        <Route path="/profilbidang" element={<ProfilUniversal />} />
+        <Route path="/profilseksi" element={<ProfilUniversal />} />
+        <Route path="/profilkota" element={<ProfilUniversal />} />
+        <Route path="/profilmasyarakat" element={<ProfilUniversal />} />
       </Routes>
     </Router>
   );

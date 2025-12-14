@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import LayoutOpd from "../../components/Layout/LayoutOPD";
 import KnowledgeBaseDiajukan from "./KnowledgeBaseDiajukan";
@@ -7,21 +7,104 @@ const KnowledgeBaseDraft = () => {
   const [activeTab, setActiveTab] = useState("draft");
   const navigate = useNavigate();
 
-  // Data tabel yang disederhanakan
-  const tableData = [
-    {
-      document: "Panduan Cek Status",
-      lastModified: "23/09/2024",
-    },
-    {
-      document: "Panduan Chat Helpdesk",
-      lastModified: "22/09/2024",
-    },
-    {
-      document: "Panduan Reopen Tiket",
-      lastModified: "21/09/2024",
-    },
-  ];
+  // State untuk data tabel
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Ambil data draft dari API saat komponen mount
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token");
+
+        console.log("📥 Fetching my articles...");
+
+        // Gunakan endpoint /api/articles/my-articles untuk artikel user yang login
+        const response = await fetch("/api/articles/my-articles", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("📡 Response status:", response.status);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Error response:", errorData);
+          throw new Error(errorData.detail || "Gagal mengambil data artikel");
+        }
+
+        const data = await response.json();
+        console.log("📥 Articles data:", data);
+        console.log(
+          "📥 Data type:",
+          Array.isArray(data) ? "array" : typeof data
+        );
+        console.log(
+          "📥 Data structure - total:",
+          data.total,
+          "items:",
+          data.data?.length
+        );
+
+        // Mapping data sesuai struktur backend: {total, data: [...]}
+        let articlesArray = [];
+
+        if (Array.isArray(data)) {
+          // Jika response adalah array langsung
+          articlesArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          // Jika response adalah object dengan property 'data'
+          articlesArray = data.data;
+        } else if (data && typeof data === "object") {
+          // Fallback: cek property lain yang mungkin berisi array
+          console.warn("⚠️ Response structure tidak expected:", data);
+          articlesArray = [];
+        }
+
+        if (articlesArray.length > 0) {
+          const mappedData = articlesArray.map((item) => {
+            console.log("📄 Article item:", item);
+            return {
+              document: item.title || "(Tanpa Judul)",
+              lastModified:
+                item.updated_at ||
+                item.updatedAt ||
+                item.created_at ||
+                item.createdAt
+                  ? new Date(
+                      item.updated_at ||
+                        item.updatedAt ||
+                        item.created_at ||
+                        item.createdAt
+                    ).toLocaleDateString("id-ID")
+                  : "-",
+              id: item.article_id || item.id,
+              status: item.status || "draft",
+              tags: item.tags || [],
+            };
+          });
+
+          console.log("✅ Mapped data:", mappedData);
+          setTableData(mappedData);
+        } else {
+          console.warn("⚠️ No articles found in response");
+          setTableData([]);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching articles:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDrafts();
+  }, []);
 
   // Jika tab aktif adalah "diajukan", render komponen KnowledgeBaseDiajukan dengan props
   if (activeTab === "diajukan") {
@@ -109,60 +192,83 @@ const KnowledgeBaseDraft = () => {
 
                   {/* Table Data */}
                   <div className="rounded-b-lg">
-                    {tableData.map((item, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 md:p-4 grid grid-cols-3 gap-2 md:gap-4 text-sm text-left items-center ${
-                          index !== tableData.length - 1
-                            ? "border-b border-gray-200"
-                            : ""
-                        }`}
-                      >
-                        {/* Dokumen dengan logo */}
-                        <div className="flex items-center space-x-3 min-w-[200px]">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M20.68 7.01449C20.4579 6.55044 20.1451 6.13561 19.76 5.79449L16.76 3.07449C16.0997 2.46924 15.2613 2.09388 14.37 2.00449H8.21C7.54756 1.9764 6.88615 2.08034 6.26425 2.31027C5.64236 2.5402 5.07241 2.89152 4.58757 3.34379C4.10273 3.79606 3.71269 4.34024 3.44014 4.94467C3.16758 5.5491 3.01797 6.2017 3 6.86449V17.1645C3.03538 18.164 3.36969 19.13 3.95975 19.9375C4.54981 20.745 5.36849 21.3571 6.31 21.6945C6.92211 21.9272 7.57609 22.0293 8.23 21.9945H15.79C16.4524 22.0226 17.1139 21.9186 17.7357 21.6887C18.3576 21.4588 18.9276 21.1075 19.4124 20.6552C19.8973 20.2029 20.2873 19.6587 20.5599 19.0543C20.8324 18.4499 20.982 17.7973 21 17.1345V8.56449C21.0048 8.03094 20.8957 7.50251 20.68 7.01449ZM7.68 6.61449H10.94C11.2052 6.61449 11.4596 6.71985 11.6471 6.90738C11.8346 7.09492 11.94 7.34927 11.94 7.61449C11.94 7.87971 11.8346 8.13406 11.6471 8.3216C11.4596 8.50913 11.2052 8.61449 10.94 8.61449H7.68C7.41478 8.61449 7.16043 8.50913 6.97289 8.3216C6.78536 8.13406 6.68 7.87971 6.68 7.61449C6.68 7.34927 6.78536 7.09492 6.97289 6.90738C7.16043 6.71985 7.41478 6.61449 7.68 6.61449ZM16.38 17.3245H7.68C7.41478 17.3245 7.16043 17.2191 6.97289 17.0316C6.78536 16.8441 6.68 16.5897 6.68 16.3245C6.68 16.0593 6.78536 15.8049 6.97289 15.6174C7.16043 15.4298 7.41478 15.3245 7.68 15.3245H16.38C16.6184 15.3585 16.8365 15.4773 16.9943 15.6592C17.1521 15.841 17.2389 16.0737 17.2389 16.3145C17.2389 16.5553 17.1521 16.788 16.9943 16.9698C16.8365 17.1517 16.6184 17.2705 16.38 17.3045V17.3245ZM16.38 12.9745H7.68C7.41478 12.9745 7.16043 12.8691 6.97289 12.6816C6.78536 12.4941 6.68 12.2397 6.68 11.9745C6.68 11.7093 6.78536 11.4549 6.97289 11.2674C7.16043 11.0798 7.41478 10.9745 7.68 10.9745H16.38C16.6452 10.9745 16.8996 11.0798 17.0871 11.2674C17.2746 11.4549 17.38 11.7093 17.38 11.9745C17.38 12.2397 17.2746 12.4941 17.0871 12.6816C16.8996 12.8691 16.6452 12.9745 16.38 12.9745ZM16.06 7.40449C15.9173 7.40581 15.7758 7.37885 15.6436 7.32517C15.5114 7.27148 15.3912 7.19214 15.2899 7.09172C15.1885 6.9913 15.1081 6.8718 15.0532 6.74011C14.9983 6.60842 14.97 6.46716 14.97 6.32449V3.67449C15.63 3.83449 18.2 6.47449 18.76 6.91449C18.9256 7.05401 19.0674 7.2195 19.18 7.40449H16.06Z"
-                                fill="#113F67"
-                              />
-                            </svg>
-                          </div>
-                          <span className="text-gray-800 font-medium truncate">
-                            {item.document}
-                          </span>
-                        </div>
-
-                        {/* Tanggal terakhir diubah */}
-                        <div className="text-gray-600 min-w-[120px]">
-                          {item.lastModified}
-                        </div>
-
-                        {/* Aksi */}
-                        <div className="min-w-[60px] flex justify-start">
-                          <button
-                            onClick={() => navigate("/aksibidang")}
-                            className="text-[#226597] hover:text-[#113F67] transition-colors duration-200"
-                          >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path d="M16.757 2.99766L9.291 10.4637L9.299 14.7107L13.537 14.7027L21 7.24066V19.9987C21 20.2639 20.8946 20.5182 20.7071 20.7058C20.5196 20.8933 20.2652 20.9987 20 20.9987H4C3.73478 20.9987 3.48043 20.8933 3.29289 20.7058C3.10536 20.5182 3 20.2639 3 19.9987V3.99866C3 3.73344 3.10536 3.47909 3.29289 3.29155C3.48043 3.10401 3.73478 2.99866 4 2.99866L16.757 2.99766ZM20.485 2.09766L21.9 3.51166L12.707 12.7047L11.295 12.7067L11.293 11.2907L20.485 2.09766Z" />
-                            </svg>
-                          </button>
-                        </div>
+                    {loading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Memuat data...
                       </div>
-                    ))}
+                    ) : error ? (
+                      <div className="p-4 text-center text-red-500">
+                        {error}
+                      </div>
+                    ) : tableData.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Tidak ada data draft
+                      </div>
+                    ) : (
+                      tableData.map((item, index) => (
+                        <div
+                          key={item.id || index}
+                          className={`p-3 md:p-4 grid grid-cols-3 gap-2 md:gap-4 text-sm text-left items-center ${
+                            index !== tableData.length - 1
+                              ? "border-b border-gray-200"
+                              : ""
+                          }`}
+                        >
+                          {/* Dokumen dengan logo */}
+                          <div className="flex items-center space-x-3 min-w-[200px]">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                              {/* ...existing code... */}
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M20.68 7.01449C20.4579 6.55044 20.1451 6.13561 19.76 5.79449L16.76 3.07449C16.0997 2.46924 15.2613 2.09388 14.37 2.00449H8.21C7.54756 1.9764 6.88615 2.08034 6.26425 2.31027C5.64236 2.5402 5.07241 2.89152 4.58757 3.34379C4.10273 3.79606 3.71269 4.34024 3.44014 4.94467C3.16758 5.5491 3.01797 6.2017 3 6.86449V17.1645C3.03538 18.164 3.36969 19.13 3.95975 19.9375C4.54981 20.745 5.36849 21.3571 6.31 21.6945C6.92211 21.9272 7.57609 22.0293 8.23 21.9945H15.79C16.4524 22.0226 17.1139 21.9186 17.7357 21.6887C18.3576 21.4588 18.9276 21.1075 19.4124 20.6552C19.8973 20.2029 20.2873 19.6587 20.5599 19.0543C20.8324 18.4499 20.982 17.7973 21 17.1345V8.56449C21.0048 8.03094 20.8957 7.50251 20.68 7.01449ZM7.68 6.61449H10.94C11.2052 6.61449 11.4596 6.71985 11.6471 6.90738C11.8346 7.09492 11.94 7.34927 11.94 7.61449C11.94 7.87971 11.8346 8.13406 11.6471 8.3216C11.4596 8.50913 11.2052 8.61449 10.94 8.61449H7.68C7.41478 8.61449 7.16043 8.50913 6.97289 8.3216C6.78536 8.13406 6.68 7.87971 6.68 7.61449C6.68 7.34927 6.78536 7.09492 6.97289 6.90738C7.16043 6.71985 7.41478 6.61449 7.68 6.61449ZM16.38 17.3245H7.68C7.41478 17.3245 7.16043 17.2191 6.97289 17.0316C6.78536 16.8441 6.68 16.5897 6.68 16.3245C6.68 16.0593 6.78536 15.8049 6.97289 15.6174C7.16043 15.4298 7.41478 15.3245 7.68 15.3245H16.38C16.6184 15.3585 16.8365 15.4773 16.9943 15.6592C17.1521 15.841 17.2389 16.0737 17.2389 16.3145C17.2389 16.5553 17.1521 16.788 16.9943 16.9698C16.8365 17.1517 16.6184 17.2705 16.38 17.3045V17.3245ZM16.38 12.9745H7.68C7.41478 12.9745 7.16043 12.8691 6.97289 12.6816C6.78536 12.4941 6.68 12.2397 6.68 11.9745C6.68 11.7093 6.78536 11.4549 6.97289 11.2674C7.16043 11.0798 7.41478 10.9745 7.68 10.9745H16.38C16.6452 10.9745 16.8996 11.0798 17.0871 11.2674C17.2746 11.4549 17.38 11.7093 17.38 11.9745C17.38 12.2397 17.2746 12.4941 17.0871 12.6816C16.8996 12.8691 16.6452 12.9745 16.38 12.9745ZM16.06 7.40449C15.9173 7.40581 15.7758 7.37885 15.6436 7.32517C15.5114 7.27148 15.3912 7.19214 15.2899 7.09172C15.1885 6.9913 15.1081 6.8718 15.0532 6.74011C14.9983 6.60842 14.97 6.46716 14.97 6.32449V3.67449C15.63 3.83449 18.2 6.47449 18.76 6.91449C18.9256 7.05401 19.0674 7.2195 19.18 7.40449H16.06Z"
+                                  fill="#113F67"
+                                />
+                              </svg>
+                            </div>
+                            <span className="text-gray-800 font-medium truncate">
+                              {item.document}
+                            </span>
+                          </div>
+
+                          {/* Tanggal terakhir diubah */}
+                          <div className="text-gray-600 min-w-[120px]">
+                            {item.lastModified}
+                          </div>
+
+                          {/* Aksi */}
+                          <div className="min-w-[60px] flex justify-start">
+                            <button
+                              onClick={() => {
+                                console.log(
+                                  "🔍 Navigating to article detail:",
+                                  item.id
+                                );
+                                navigate(`/lihatartikel/${item.id}`);
+                              }}
+                              className="text-[#226597] hover:text-[#113F67] transition-colors duration-200"
+                              title="Lihat detail artikel"
+                            >
+                              {/* ...existing code... */}
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M16.757 2.99766L9.291 10.4637L9.299 14.7107L13.537 14.7027L21 7.24066V19.9987C21 20.2639 20.8946 20.5182 20.7071 20.7058C20.5196 20.8933 20.2652 20.9987 20 20.9987H4C3.73478 20.9987 3.48043 20.8933 3.29289 20.7058C3.10536 20.5182 3 20.2639 3 19.9987V3.99866C3 3.73344 3.10536 3.47909 3.29289 3.29155C3.48043 3.10401 3.73478 2.99866 4 2.99866L16.757 2.99766ZM20.485 2.09766L21.9 3.51166L12.707 12.7047L11.295 12.7067L11.293 11.2907L20.485 2.09766Z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   {/* Pagination Info */}
