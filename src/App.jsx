@@ -97,6 +97,7 @@ import BeriRatingMasyarakat from "./pages/masyarakat/BeriRatingMasyarakat";
 import LihatRiwayatMasyarakat from "./pages/masyarakat/LihatRiwayatMasyarakat";
 import LihatRatingMasyarakat from "./pages/masyarakat/LihatRatingMasyarakat";
 import FormMasyarakat from "./pages/masyarakat/FormMasyarakat";
+import TiketDitolakMasyarakat from "./pages/masyarakat/TiketDitolakMasyarakat";
 
 //*-- Helpdesk --*/
 import HelpdeskChat from "./components/beranda/Helpdesk";
@@ -273,6 +274,7 @@ function App() {
           />
           <Route path="formmasyarakat" element={<FormMasyarakat />} />
         </Route>
+        <Route path="/tiketditolakmasyarakat" element={<TiketDitolakMasyarakat />} />
 
         {/* Halaman tanpa Layout (Auth) */}
         <Route path="/beranda" element={<Beranda />} />

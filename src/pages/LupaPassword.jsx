@@ -17,7 +17,7 @@ const LupaPassword = () => {
       ...formData,
       [name]: value,
     });
-    // Clear error ketika user mulai mengetik
+
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -30,12 +30,10 @@ const LupaPassword = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Reset errors
     setErrors({
       email: "",
     });
 
-    // Validasi email sederhana
     if (!formData.email) {
       setErrors({ email: "Email harus diisi" });
       setIsLoading(false);
@@ -51,11 +49,9 @@ const LupaPassword = () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Simpan email untuk digunakan di halaman MasukKode
       localStorage.setItem("resetEmail", formData.email);
 
-      // Navigasi langsung ke halaman MasukKode
-      navigate("/KataSandiBaru", {
+      navigate("/MasukKode", {
         state: { email: formData.email },
       });
     } catch (error) {
@@ -72,7 +68,6 @@ const LupaPassword = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
-          {/* Logo */}
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"
@@ -90,7 +85,6 @@ const LupaPassword = () => {
             kami akan mengirimkan instruksi untuk reset password
           </p>
 
-          {/* Form lupa password */}
           <form
             onSubmit={handleSubmit}
             className="w-full max-w-sm mb-6 text-left"
@@ -131,7 +125,6 @@ const LupaPassword = () => {
             </div>
           </form>
 
-          {/* Footer untuk mobile */}
           <div className="mt-8 pt-4 border-t border-gray-200 w-full md:hidden"></div>
         </div>
 

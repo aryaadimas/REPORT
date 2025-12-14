@@ -85,6 +85,7 @@ export default function RiwayatMasyarakat() {
                     ...item,
                     rating: detailData.rating,
                     files: detailData.files || [],
+                    creator: detailData.creator || item.creator,
                   };
                 }
                 return item;
@@ -125,8 +126,10 @@ export default function RiwayatMasyarakat() {
             created_at: item.created_at,
             status_ticket_pengguna: item.status_ticket_pengguna,
             rejection_reason_seksi: item.rejection_reason_seksi,
-
             rating_object: item.rating || null,
+            creator: item.creator || null,
+            ticket_code: item.ticket_code,
+            full_item: item,
           }));
 
           setDataRiwayat(formattedData);
@@ -155,11 +158,58 @@ export default function RiwayatMasyarakat() {
               priority: null,
               created_at: "2025-12-01T17:24:00.362405",
               status_ticket_pengguna: "selesai",
-              rejection_reason_seksi: "test",
+              rejection_reason_seksi: "Alasan penolakan contoh",
               rating_object: {
                 rating: 2,
                 comment: "tes",
                 created_at: "2025-12-10T13:06:38.701389",
+              },
+              creator: {
+                full_name: "Yono Wirenko",
+                email: "yonowinarko@legmail.com",
+              },
+              ticket_code: "SVD-PO-0014-MA",
+              full_item: {
+                ticket_id: "7d1022f9-e47a-4c1e-b354-3ccc82b1d12e",
+                title: "Laporan Pengaduan",
+                description: "string",
+                status: "selesai",
+                creator: {
+                  full_name: "Yono Wirenko",
+                  email: "yonowinarko@legmail.com",
+                },
+              },
+            },
+            {
+              id: "SVD-PO-0015-MA",
+              nama: "Laporan Parkir Liar",
+              tanggalSelesai: "05-12-2025",
+              lampiran: [],
+              ajukanKembali: true,
+              status: "rejected",
+              rating: null,
+              ticket_id: "8e1022f9-e47a-4c1e-b354-3ccc82b1d12f",
+              description: "Parkir sembarangan di jalan utama",
+              priority: null,
+              created_at: "2025-12-05T10:24:00.362405",
+              status_ticket_pengguna: "rejected",
+              rejection_reason_seksi:
+                "Bukti foto tidak jelas dan lokasi tidak spesifik",
+              rating_object: null,
+              creator: {
+                full_name: "Budi Santoso",
+                email: "budi.santoso@gmail.com",
+              },
+              ticket_code: "SVD-PO-0015-MA",
+              full_item: {
+                ticket_id: "8e1022f9-e47a-4c1e-b354-3ccc82b1d12f",
+                title: "Laporan Parkir Liar",
+                description: "Parkir sembarangan di jalan utama",
+                status: "rejected",
+                creator: {
+                  full_name: "Budi Santoso",
+                  email: "budi.santoso@gmail.com",
+                },
               },
             },
           ]);
@@ -181,7 +231,11 @@ export default function RiwayatMasyarakat() {
   };
 
   const handleLihatRiwayat = (item) => {
-    navigate("/lihatriwayatmasyarakat", { state: { item } });
+    if (item.status === "rejected") {
+      navigate("/tiketditolakmasyarakat", { state: { item } });
+    } else {
+      navigate("/lihatriwayatmasyarakat", { state: { item } });
+    }
   };
 
   const handleAjukanKembali = (item) => {
@@ -274,12 +328,12 @@ export default function RiwayatMasyarakat() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex flex-col sm:flex-row gap-2 ml-0 sm:ml-4 mt-3 sm:mt-0">
                       {(item.status === "selesai" ||
                         item.status === "rejected") && (
                         <button
                           onClick={() => handleAjukanKembali(item)}
-                          className="border border-red-400 text-red-500 px-3 py-1 rounded-lg text-xs hover:bg-red-50 transition whitespace-nowrap"
+                          className="border border-red-400 text-red-500 px-3 py-1.5 rounded-lg text-xs hover:bg-red-50 transition whitespace-nowrap"
                         >
                           Ajukan Kembali
                         </button>
@@ -288,14 +342,14 @@ export default function RiwayatMasyarakat() {
                       {item.rating ? (
                         <button
                           onClick={() => handleLihatRating(item)}
-                          className="border border-yellow-400 text-yellow-600 px-3 py-1 rounded-lg text-xs hover:bg-yellow-50 transition whitespace-nowrap"
+                          className="border border-yellow-400 text-yellow-600 px-3 py-1.5 rounded-lg text-xs hover:bg-yellow-50 transition whitespace-nowrap"
                         >
                           Lihat Rating
                         </button>
                       ) : item.status === "selesai" ? (
                         <button
                           onClick={() => handleBeriRating(item)}
-                          className="border border-yellow-400 text-yellow-600 px-3 py-1 rounded-lg text-xs hover:bg-yellow-50 transition whitespace-nowrap"
+                          className="border border-yellow-400 text-yellow-600 px-3 py-1.5 rounded-lg text-xs hover:bg-yellow-50 transition whitespace-nowrap"
                         >
                           Beri Rating
                         </button>
@@ -303,9 +357,11 @@ export default function RiwayatMasyarakat() {
 
                       <button
                         onClick={() => handleLihatRiwayat(item)}
-                        className="bg-[#0F2C59] text-white px-3 py-1 rounded-lg text-xs hover:bg-[#15397A] transition whitespace-nowrap"
+                        className="bg-[#0F2C59] text-white px-3 py-1.5 rounded-lg text-xs hover:bg-[#15397A] transition whitespace-nowrap"
                       >
-                        Lihat Riwayat
+                        {item.status === "rejected"
+                          ? "Lihat Detail Ditolak"
+                          : "Lihat Riwayat"}
                       </button>
                     </div>
                   </div>
@@ -328,50 +384,84 @@ export default function RiwayatMasyarakat() {
                     )}
                   </div>
 
-                  <div className="flex items-center mt-2">
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        item.status === "selesai"
-                          ? "bg-green-100 text-green-800"
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-2">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${
+                          item.status === "selesai"
+                            ? "bg-green-100 text-green-800"
+                            : item.status === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {item.status === "selesai"
+                          ? "Selesai"
                           : item.status === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {item.status === "selesai"
-                        ? "Selesai"
-                        : item.status === "rejected"
-                        ? "Ditolak"
-                        : item.status_ticket_pengguna || "Dalam Proses"}
-                    </span>
+                          ? "Ditolak"
+                          : item.status_ticket_pengguna || "Dalam Proses"}
+                      </span>
 
-                    {item.rating && (
-                      <div className="ml-3 flex items-center">
-                        <span className="text-xs text-gray-600 mr-1">
-                          Rating:
-                        </span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <span key={i} className="text-yellow-400 text-xs">
-                              {i < item.rating ? "★" : "☆"}
-                            </span>
-                          ))}
-                        </div>
-                        {item.rating_object?.comment && (
-                          <span className="text-xs text-gray-500 ml-2">
-                            ({item.rating_object.comment})
+                      {item.rating && (
+                        <div className="ml-3 flex items-center">
+                          <span className="text-xs text-gray-600 mr-1">
+                            Rating:
                           </span>
-                        )}
-                      </div>
-                    )}
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <span key={i} className="text-yellow-400 text-xs">
+                                {i < item.rating ? "★" : "☆"}
+                              </span>
+                            ))}
+                          </div>
+                          {item.rating_object?.comment && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({item.rating_object.comment})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {item.status === "rejected" &&
+                      item.rejection_reason_seksi && (
+                        <div className="text-xs text-gray-600 mt-1 sm:mt-0 sm:text-right max-w-md">
+                          <span className="font-medium">Alasan: </span>
+                          <span className="text-red-600">
+                            {item.rejection_reason_seksi.length > 60
+                              ? `${item.rejection_reason_seksi.substring(
+                                  0,
+                                  60
+                                )}...`
+                              : item.rejection_reason_seksi}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
               ))}
 
-              <p className="text-xs text-gray-500 mt-4">
-                Menampilkan data 1 sampai {dataRiwayat.length} dari{" "}
-                {dataRiwayat.length} data
-              </p>
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mb-2 sm:mb-0">
+                  Menampilkan data 1 sampai {dataRiwayat.length} dari{" "}
+                  {dataRiwayat.length} data
+                </p>
+
+                <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center mr-4">
+                    <div className="w-3 h-3 rounded-full bg-green-100 border border-green-300 mr-1"></div>
+                    <span>Selesai</span>
+                  </div>
+                  <div className="flex items-center mr-4">
+                    <div className="w-3 h-3 rounded-full bg-red-100 border border-red-300 mr-1"></div>
+                    <span>Ditolak</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-yellow-100 border border-yellow-300 mr-1"></div>
+                    <span>Proses</span>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>

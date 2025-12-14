@@ -10,26 +10,22 @@ const MasukKode = () => {
   const navigate = useNavigate();
 
   const handleCodeChange = (index, value) => {
-    // Hanya menerima angka dan maksimal 1 digit
     const numericValue = value.replace(/[^0-9]/g, "").slice(0, 1);
 
     const newCodes = [...codes];
     newCodes[index] = numericValue;
     setCodes(newCodes);
 
-    // Auto focus ke input berikutnya
     if (numericValue && index < 3) {
       document.getElementById(`code-${index + 1}`).focus();
     }
 
-    // Clear error
     if (errors.code) {
       setErrors({ code: "" });
     }
   };
 
   const handleKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === "Backspace" && !codes[index] && index > 0) {
       document.getElementById(`code-${index - 1}`).focus();
     }
@@ -39,22 +35,19 @@ const MasukKode = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Reset errors
     setErrors({ code: "" });
 
     const verificationCode = codes.join("");
 
-    // Validasi kode harus 4 digit
     if (verificationCode.length !== 4) {
       setErrors({ code: "Kode verifikasi harus 4 digit" });
       setIsLoading(false);
       return;
     }
 
-    const correctCode = "1234"; // Contoh kode yang benar
+    const correctCode = "1234";
 
     try {
-      // Simulasi API call dengan timeout
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (verificationCode === correctCode) {
@@ -76,7 +69,6 @@ const MasukKode = () => {
 
   const handleResendCode = async () => {
     try {
-      // Simulasi pengiriman ulang kode
       await new Promise((resolve) => setTimeout(resolve, 500));
       alert("Kode verifikasi telah dikirim ulang!");
     } catch (error) {
@@ -87,9 +79,7 @@ const MasukKode = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
-        {/* Kolom kiri - Form Verifikasi */}
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
-          {/* Logo */}
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"
@@ -105,12 +95,10 @@ const MasukKode = () => {
             Kami telah mengirimkan 4 digit kode
           </p>
 
-          {/* Form verifikasi */}
           <form
             onSubmit={handleSubmit}
             className="w-full max-w-sm mb-6 text-center"
           >
-            {/* 4 Kotak Input Kode */}
             <div className="flex justify-center space-x-3 mb-6">
               {codes.map((code, index) => (
                 <input
@@ -134,7 +122,6 @@ const MasukKode = () => {
               <p className="text-red-500 text-xs mb-4">{errors.code}</p>
             )}
 
-            {/* Jarak */}
             <div className="h-8"></div>
 
             <div>
@@ -148,7 +135,6 @@ const MasukKode = () => {
             </div>
           </form>
 
-          {/* Link untuk kirim ulang kode */}
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
               Tidak menerima kode?{" "}
@@ -162,11 +148,9 @@ const MasukKode = () => {
             </p>
           </div>
 
-          {/* Footer untuk mobile */}
           <div className="mt-8 pt-4 border-t border-gray-200 w-full md:hidden"></div>
         </div>
 
-        {/* Kolom kanan: gambar */}
         <div className="w-full md:w-1/2 bg-[#226597] flex items-start justify-start order-1 md:order-2">
           <img
             src="/assets/Login.png"

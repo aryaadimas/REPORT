@@ -23,7 +23,7 @@ const KataSandiBaru = () => {
       ...formData,
       [name]: value,
     });
-    // Clear error ketika user mulai mengetik
+
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -39,7 +39,6 @@ const KataSandiBaru = () => {
     }));
   };
 
-  // FUNGSI VALIDASI PASSWORD
   const validatePassword = (password) => {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -69,7 +68,6 @@ const KataSandiBaru = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Reset errors
     setErrors({
       newPassword: "",
       confirmPassword: "",
@@ -77,14 +75,12 @@ const KataSandiBaru = () => {
 
     let hasError = false;
 
-    // VALIDASI PASSWORD BARU
     const passwordError = validatePassword(formData.newPassword);
     if (passwordError) {
       setErrors((prev) => ({ ...prev, newPassword: passwordError }));
       hasError = true;
     }
 
-    // VALIDASI KONFIRMASI PASSWORD
     if (formData.newPassword !== formData.confirmPassword) {
       setErrors((prev) => ({
         ...prev,
@@ -99,10 +95,8 @@ const KataSandiBaru = () => {
     }
 
     try {
-      // Simulasi API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // LANGSUNG NAVIGASI KE LOGIN
       navigate("/login");
     } catch (error) {
       console.error("Error:", error);
@@ -118,7 +112,6 @@ const KataSandiBaru = () => {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl flex flex-col md:flex-row overflow-hidden">
         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col items-center text-center relative order-2 md:order-1">
-          {/* Logo */}
           <div className="mb-4 md:mb-6">
             <img
               src="/assets/Logo Report.png"
@@ -131,12 +124,10 @@ const KataSandiBaru = () => {
             Perbarui Kata Sandi
           </h1>
 
-          {/* Form reset password */}
           <form
             onSubmit={handleSubmit}
             className="w-full max-w-sm mb-6 text-left"
           >
-            {/* Kata Sandi Baru */}
             <div className="mb-6">
               <label
                 htmlFor="newPassword"
@@ -160,7 +151,7 @@ const KataSandiBaru = () => {
                   {errors.newPassword}
                 </p>
               )}
-              {/* Checkbox Tampilkan */}
+
               <div className="flex items-center mt-2">
                 <input
                   type="checkbox"
@@ -178,7 +169,6 @@ const KataSandiBaru = () => {
               </div>
             </div>
 
-            {/* Konfirmasi Kata Sandi */}
             <div className="mb-6">
               <label
                 htmlFor="confirmPassword"
@@ -202,7 +192,7 @@ const KataSandiBaru = () => {
                   {errors.confirmPassword}
                 </p>
               )}
-              {/* Checkbox Tampilkan */}
+
               <div className="flex items-center mt-2">
                 <input
                   type="checkbox"
@@ -220,7 +210,6 @@ const KataSandiBaru = () => {
               </div>
             </div>
 
-            {/* Button */}
             <div>
               <button
                 type="submit"
@@ -232,11 +221,9 @@ const KataSandiBaru = () => {
             </div>
           </form>
 
-          {/* Footer untuk mobile */}
           <div className="mt-8 pt-4 border-t border-gray-200 w-full md:hidden"></div>
         </div>
 
-        {/* Kolom kanan: gambar */}
         <div className="w-full md:w-1/2 bg-[#226597] flex items-start justify-start order-1 md:order-2">
           <img
             src="/assets/Login.png"
