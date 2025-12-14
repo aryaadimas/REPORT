@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
-const LogIn = () => {
+const LoginSso = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,95 +29,92 @@ const LogIn = () => {
     }
   };
 
+  const getRedirectPathByRoleName = (roleName) => {
+    const roleRedirects = {
+      diskominfo: "/dashboard-diskominfo",
+      opd: "/beranda",
+      verifikator: "/dashboard-verifikator",
+      auditor: "/dashboard-auditor",
+      "admin dinas": "/dashboard-admin-dinas",
+      teknisi: "/dashboardteknisi",
+      bidang: "/dashboardbidang",
+      seksi: "/dashboardseksi",
+      masyarakat: "/berandamasyarakat",
+    };
+
+    return roleRedirects[roleName.toLowerCase()] || "/beranda";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setErrors({ email: "", password: "" });
 
-    // Integrasi login dengan API
-    const payload = {
-      login: formData.email,
-      password: formData.password,
-    };
+    if (!formData.email || !formData.password) {
+      setErrors({
+        email: !formData.email ? "Email diperlukan" : "",
+        password: !formData.password ? "Password diperlukan" : "",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      console.log("Payload login:", payload);
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/login/sso",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            login: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
 
-      const response = await fetch("/api/login/sso", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Email atau password salah");
+      }
 
       const data = await response.json();
 
-      if (!response.ok) {
-        console.log("Login error:", data);
-        setErrors({
-          email: "Email atau password salah",
-          password: "",
-        });
-        setIsLoading(false);
-        return;
-      }
+      const token = data.access_token || data.token;
+      if (!token) throw new Error("Token tidak ditemukan");
 
-      // Simpan token
-      const token = data.access_token;
-      if (!token) {
-        alert("Login berhasil tetapi token tidak ditemukan.");
-        setIsLoading(false);
-        return;
-      }
-
+      localStorage.clear();
       localStorage.setItem("token", token);
-      console.log("Token tersimpan:", token.substring(0, 15) + "...");
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_token", token);
 
-      // Simpan user
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      const user = data.user || {};
+      const userInfo = {
+        id: user.id,
+        name: user.name || user.full_name || "User",
+        email: user.email,
+        role_name: user.role_name || "opd",
+        dinas_id: user.dinas_id || 1,
+      };
 
-        const roleId = data.user.role_id;
+      localStorage.setItem("user", JSON.stringify(userInfo));
+      localStorage.setItem("userData", JSON.stringify(userInfo));
+      localStorage.setItem("user_role_name", userInfo.role_name);
 
-        // Redirect berdasarkan role
-        // Backend mapping: 1=diskominfo(Kota), 2=opd(Pegawai), 3=verifikator,
-        // 5=admin dinas(Admin OPD), 6=teknisi, 7=bidang, 8=seksi, 9=masyarakat
-        switch (roleId) {
-          case "1": // diskominfo = Admin Kota
-            navigate("/dashboardkota");
-            break;
-          case "2": // opd = Pegawai OPD
-          case "3": // verifikator = diarahkan ke OPD
-          case "5": // admin dinas = Admin OPD
-            navigate("/dashboardopd");
-            break;
-          case "6": // teknisi
-            navigate("/dashboardteknisi");
-            break;
-          case "7": // bidang
-            navigate("/dashboardbidang");
-            break;
-          case "8": // seksi
-            navigate("/berandaseksi");
-            break;
-          case "9": // masyarakat (database terpisah)
-            navigate("/berandamasyarakat");
-            break;
-          default:
-            navigate("/");
-        }
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("ERROR LOGIN:", error);
-      alert("Terjadi kesalahan pada jaringan atau server.");
-      setErrors({
-        email: "Terjadi kesalahan",
-        password: "Terjadi kesalahan",
+      Swal.fire({
+        title: "Login Berhasil!",
+        text: `Selamat datang, ${userInfo.name}`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        navigate("/beranda");
       });
+    } catch (error) {
+      Swal.fire("Login Gagal", error.message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -136,10 +133,10 @@ const LogIn = () => {
           </div>
 
           <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-2">
-            Masuk
+            Login SSO
           </h1>
           <p className="text-gray-600 mb-6 md:mb-8 text-sm">
-            Gunakan email atau lainnya untuk melanjutkan
+            Untuk akun pemerintah/OPD dengan domain .go.id
           </p>
 
           <form
@@ -151,7 +148,7 @@ const LogIn = () => {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Alamat email
+                Email Pemerintah
               </label>
               <input
                 type="email"
@@ -161,13 +158,17 @@ const LogIn = () => {
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] focus:border-transparent ${
+                placeholder="contoh: opd@dinaskesehatan.go.id"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] ${
                   errors.email ? "border-red-500" : "border-gray-300"
                 } ${isLoading ? "bg-gray-100" : ""}`}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
+              <p className="text-xs text-gray-500 mt-1">
+                * Gunakan email pemerintah dengan domain .go.id
+              </p>
             </div>
 
             <div>
@@ -185,7 +186,8 @@ const LogIn = () => {
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] focus:border-transparent ${
+                placeholder="Masukkan password"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#226597] ${
                   errors.password ? "border-red-500" : "border-gray-300"
                 } ${isLoading ? "bg-gray-100" : ""}`}
               />
@@ -210,15 +212,6 @@ const LogIn = () => {
               </div>
             </div>
 
-            <div className="text-right mb-4">
-              <Link
-                to="/lupapassword"
-                className="text-sm text-[#226597] underline hover:no-underline"
-              >
-                Lupa kata sandi?
-              </Link>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
@@ -230,24 +223,25 @@ const LogIn = () => {
                   Memproses...
                 </>
               ) : (
-                "Masuk"
+                "Masuk SSO"
               )}
             </button>
           </form>
 
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
-              Belum punya akun?{" "}
+              Untuk login masyarakat umum,{" "}
               <Link
-                to="/register"
+                to="/login"
                 className="text-[#226597] hover:underline font-medium"
               >
-                Daftar di sini
+                klik di sini
               </Link>
             </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Akun SSO khusus untuk pemerintah/OPD
+            </p>
           </div>
-
-          
         </div>
 
         <div className="w-full md:w-1/2 bg-[#226597] flex items-start justify-start order-1 md:order-2">
@@ -262,4 +256,4 @@ const LogIn = () => {
   );
 };
 
-export default LogIn;
+export default LoginSso;

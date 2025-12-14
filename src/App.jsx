@@ -11,6 +11,7 @@ import BerandaMasyarakat from "./pages/masyarakat/BerandaMasyarakat";
 //*-- Auth --*/
 import Register from "./pages/Register";
 import LogIn from "./pages/Login";
+import LoginSso from "./pages/LoginSso";
 import LupaPassword from "./pages/LupaPassword";
 import MasukKode from "./pages/MasukKode";
 import KataSandiBaru from "./pages/KataSandiBaru";
@@ -97,6 +98,10 @@ import NotifWarRoom from "./pages/beranda/AdminKota/NotifWarRoom";
 import ProfilMasyarakat from "./pages/masyarakat/ProfilMasyarakat";
 import LandingPage from "./pages/masyarakat/LandingPage";
 import LayoutMasyarakat from "./components/Layout/LayoutMasyarakat";
+import BeriRatingMasyarakat from "./pages/masyarakat/BeriRatingMasyarakat";
+import LihatRiwayatMasyarakat from "./pages/masyarakat/LihatRiwayatMasyarakat";
+import LihatRatingMasyarakat from "./pages/masyarakat/LihatRatingMasyarakat";
+import FormMasyarakat from "./pages/masyarakat/FormMasyarakat";
 
 //*-- Universal Profil --*/
 import ProfilUniversal from "./pages/Profil";
@@ -231,10 +236,12 @@ function App() {
         {/* Layout PEGAWAI */}
         <Route path="/" element={<LayoutPegawai />}>
           <Route path="knowledgebase" element={<KnowledgeBase />} />
+          <Route path="reopenpegawai" element={<ReopenPegawai />} />
         </Route>
 
         {/* Layout MASYARAKAT */}
         <Route path="/" element={<LayoutMasyarakat />}>
+          <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
           <Route path="berandamasyarakat" element={<BerandaMasyarakat />} />
           <Route path="tampilanmasyarakat" element={<TampilanMasyarakat />} />
           <Route path="kbmasyarakat" element={<KBMasyarakat />} />
@@ -268,12 +275,26 @@ function App() {
             path="kotakmasukmasyarakat"
             element={<KotakMasukMasyarakat />}
           />
+          <Route
+            path="beriratingmasyarakat"
+            element={<BeriRatingMasyarakat />}
+          />
+          <Route
+            path="lihatriwayatmasyarakat"
+            element={<LihatRiwayatMasyarakat />}
+          />
+          <Route
+            path="lihatratingmasyarakat"
+            element={<LihatRatingMasyarakat />}
+          />
+          <Route path="formmasyarakat" element={<FormMasyarakat />} />
         </Route>
 
         {/* Halaman tanpa Layout (Auth) */}
         <Route path="/beranda" element={<Beranda />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<LogIn />} />
+        <Route path="/loginsso" element={<LoginSso />} />
         <Route path="/lupapassword" element={<LupaPassword />} />
         <Route path="/masukkode" element={<MasukKode />} />
         <Route path="/katasandibaru" element={<KataSandiBaru />} />
@@ -289,7 +310,7 @@ function App() {
         <Route path="/dashboardbidang" element={<DashboardBidang />} />
         <Route path="/detailbidang/:id" element={<DetailBidang />} />
         <Route path="/aksitiket" element={<AksiTiket />} />
-        <Route path="/lihatrating" element={<LihatRating />} />
+        {/* <Route path="/lihatrating" element={<LihatRating />} /> */}
         <Route path="/aksibidang" element={<AksiTiket />} />
         <Route path="/monitoringbidang" element={<MonitoringBidang />} />
         <Route path="/ratingkepuasan" element={<RatingKepuasan />} />
@@ -329,8 +350,6 @@ function App() {
         <Route path="lihatratingbidang" element={<LihatRatingBidang />} />
         <Route path="/lihatratingbidang/:ticket_id" element={<LihatRatingBidang />} />
         <Route path="berirating" element={<BeriRating />} />
-        <Route path="reopenpegawai" element={<ReopenPegawai />} />
-        <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
 
         {/* Universal Profile Routes - untuk semua role */}
         <Route path="/profil" element={<ProfilUniversal />} />

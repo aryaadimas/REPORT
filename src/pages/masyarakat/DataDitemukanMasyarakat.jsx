@@ -1,27 +1,124 @@
-import LayoutMasyarakat from "../../components/Layout/LayoutMasyarakat";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function DataDitemukanMasyarakat() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [ticketData, setTicketData] = useState(null);
 
-  // Ambil data dari FormLaporan melalui state navigasi
-  const laporanData = location.state?.laporanData || {};
+  const ticketCode = location.state?.ticketData?.ticket_code;
 
-  // Data tiket dengan OPD tujuan dari form
-  const ticketData = {
-    noTiket: "LPR318728",
-    pin: "228973",
-    jenisLayanan: "Pelaporan Online",
-    jenisPermohonan: laporanData.opdTujuan || "Dinas Pendidikan", // Ambil dari form
-    status: "Pending", // Status ditambahkan di sini
+  const getStatusColor = (status) => {
+    const statusMap = {
+      "Menunggu Diproses": "bg-yellow-500",
+      Pending: "bg-yellow-500",
+      "Dalam Proses": "bg-blue-500",
+      Selesai: "bg-green-500",
+      Ditolak: "bg-red-500",
+      Ditutup: "bg-gray-500",
+      Dibatalkan: "bg-gray-400",
+    };
+    return statusMap[status] || "bg-gray-300";
+  };
+
+  useEffect(() => {
+    const fetchTicketData = async () => {
+      try {
+        setLoading(true);
+
+        if (!ticketCode) {
+          console.log("No ticket code provided, using default");
+          setTicketData({
+            ticket_code: "SVD-PO-0052-MA",
+            status_ticket_pengguna: "Menunggu Diproses",
+            request_type: "pelaporan_online",
+            opd_name: "Dinas Kesehatan",
+          });
+          return;
+        }
+
+        const response = await fetch(
+          `https://service-desk-be-production.up.railway.app/api/track-ticket/${ticketCode}`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZDYyZGVkMy1kOWM0LTQxMWEtODc2OS0wMWZkMjU5MzE0MDIiLCJlbWFpbCI6Im1hc3NAZ21haWwuY29tIiwicm9sZV9pZCI6OSwicm9sZV9uYW1lIjoibWFzeWFyYWthdCIsImV4cCI6MTc2NTc4NzE3MX0.Ig-aV0ofrI7srjWX4RLTXZkB0i00PYVxEnGtyjwfsOU",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Tiket tidak ditemukan");
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+        }
+
+        const data = await response.json();
+        setTicketData(data);
+      } catch (err) {
+        console.error("Error fetching ticket data:", err);
+        setError(err.message);
+
+        setTicketData({
+          ticket_code: ticketCode || "SVD-PO-0052-MA",
+          status_ticket_pengguna: "Menunggu Diproses",
+          request_type: "pelaporan_online",
+          opd_name: "Dinas Kesehatan",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTicketData();
+  }, [ticketCode]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat data tiket...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !ticketData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 max-w-md mx-auto">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">
+            Terjadi Kesalahan
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => navigate("/pelacakanmasyarakat")}
+            className="bg-[#226597] hover:bg-[#1a507a] text-white py-2 px-6 rounded-md text-sm font-medium transition-colors w-full"
+          >
+            Kembali ke Pelacakan
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const displayData = ticketData || {
+    ticket_code: "SVD-PO-0052-MA",
+    status_ticket_pengguna: "Menunggu Diproses",
+    request_type: "pelaporan_online",
+    opd_name: "Dinas Kesehatan",
   };
 
   return (
-    <LayoutMasyarakat>
-      {/* Main Content Area */}
+    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
       <div className="flex-1 relative overflow-hidden">
-        {/* Custom SVG Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <svg
             width="100%"
@@ -66,9 +163,7 @@ export default function DataDitemukanMasyarakat() {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-6 md:py-8">
-          {/* Card Success */}
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* Header Card */}
             <div className="p-6">
               <div className="w-16 h-16 bg-[#226597] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
@@ -88,48 +183,48 @@ export default function DataDitemukanMasyarakat() {
               <h1 className="text-2xl font-semibold text-[#000000] text-center">
                 Data Ditemukan
               </h1>
+              {error && (
+                <div className="">
+                </div>
+              )}
             </div>
 
-            {/* Content */}
             <div className="p-6 space-y-6">
-              {/* Pengaduan Anda Section */}
               <div className="text-left">
-                {/* Pengaduan Anda Section */}
-                <div className="text-left">
-                  <h3 className="text-sm font-medium text-gray-600 mb-4">
-                    Pengaduan Anda:
-                  </h3>
+                <h3 className="text-sm font-medium text-gray-600 mb-4">
+                  Pengaduan Anda:
+                </h3>
 
-                  {/* No. Tiket dan Status - Rata Kiri */}
-                  <div className="space-y-3">
-                    {/* No. Tiket */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
-                        No. Tiket
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
+                      No. Tiket
+                    </span>
+                    <div className="bg-[#226597] text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
+                      <span className="text-sm font-medium">
+                        {displayData.ticket_code}
                       </span>
-                      <div className="bg-[#226597] text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
-                        <span className="text-sm font-medium">
-                          {ticketData.noTiket}
-                        </span>
-                      </div>
                     </div>
+                  </div>
 
-                    {/* Status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
-                        Status
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
+                      Status
+                    </span>
+                    <div
+                      className={`${getStatusColor(
+                        displayData.status_ticket_pengguna
+                      )} text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center`}
+                    >
+                      <span className="text-sm font-medium">
+                        {displayData.status_ticket_pengguna}
                       </span>
-                      <div className="bg-yellow-500 text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
-                        <span className="text-sm font-medium">Pending</span>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Jenis Layanan dan OPD Tujuan - Sebelahan */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {/* Jenis Layanan */}
                 <div>
                   <div className="flex items-center gap-2">
                     <svg
@@ -202,11 +297,12 @@ export default function DataDitemukanMasyarakat() {
                     </label>
                   </div>
                   <div className="text-sm text-gray-800 bg-gray-50 px-3 py-2 rounded-md ml-16 -mt-1">
-                    {ticketData.jenisLayanan}
+                    {displayData.request_type === "pelaporan_online"
+                      ? "Pelaporan Online"
+                      : displayData.request_type || "Pelaporan Online"}
                   </div>
                 </div>
 
-                {/* OPD Tujuan */}
                 <div>
                   <div className="flex items-center gap-2">
                     <svg
@@ -277,17 +373,15 @@ export default function DataDitemukanMasyarakat() {
                     </label>
                   </div>
                   <div className="text-sm text-gray-800 bg-gray-50 px-3 py-2 rounded-md ml-16 -mt-1">
-                    {ticketData.jenisPermohonan}
+                    {displayData.opd_name || "Dinas Kesehatan"}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="max-w-2xl mx-auto mt-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Cek Status Layanan */}
               <button
                 onClick={() => navigate("/pelacakanmasyarakat")}
                 className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
@@ -295,7 +389,6 @@ export default function DataDitemukanMasyarakat() {
                 Cek status layanan
               </button>
 
-              {/* Kembali ke Beranda */}
               <button
                 onClick={() => navigate("/berandamasyarakat")}
                 className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
@@ -306,6 +399,6 @@ export default function DataDitemukanMasyarakat() {
           </div>
         </div>
       </div>
-    </LayoutMasyarakat>
+    </div>
   );
 }

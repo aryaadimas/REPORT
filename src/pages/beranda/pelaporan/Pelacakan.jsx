@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 import { useNavigate } from "react-router-dom";
 
@@ -8,53 +8,131 @@ const Pelacakan = () => {
   const [reportId, setReportId] = useState("");
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errors, setErrors] = useState({ reportId: "" });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSearch = () => {
-    // Reset errors
+  const handleSearch = async () => {
     const newErrors = { reportId: "" };
+    let hasError = false;
 
-    // Validasi
-    if (!reportId) {
+    if (!reportId.trim()) {
       newErrors.reportId = "Harap isi ID Laporan dengan benar";
+      hasError = true;
     }
 
     setErrors(newErrors);
 
-    // Jika ada error, stop execution
-    if (!reportId) {
+    if (hasError) {
       return;
     }
 
     console.log("Searching for report:", { reportId });
 
-    // Validasi khusus: hanya ID LPR318728 yang dianggap benar
-    if (reportId === "LPR318728") {
-      // ID benar, navigasi ke halaman data ditemukan
-      console.log("ID LPR318728 ditemukan! Navigasi ke halaman data ditemukan");
-      navigate("/dataditemukan"); // Pastikan route ini ada di App.js
-    } else {
-      // ID salah, tampilkan error popup
+    try {
+      setIsLoading(true);
+      setShowErrorPopup(false);
+      setErrorMessage("");
+
+      const response = await fetch(
+        `https://service-desk-be-production.up.railway.app/api/track-ticket/${reportId}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+
+            Authorization:
+              "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8",
+          },
+        }
+      );
+
+      console.log("API Response status:", response.status);
+      console.log("API Response headers:", response.headers);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API Response data:", data);
+
+        if (data && data.ticket_code) {
+          navigate("/dataditemukan", {
+            state: {
+              ticketData: data,
+            },
+          });
+        } else {
+          setErrorMessage("Format data tidak valid. Silakan coba lagi.");
+          setShowErrorPopup(true);
+        }
+      } else {
+        console.log("API Error response:", response);
+
+        try {
+          const errorData = await response.json();
+          console.log("Error data:", errorData);
+
+          if (errorData.message) {
+            setErrorMessage(errorData.message);
+          } else {
+            throw new Error("No error message");
+          }
+        } catch {
+          if (response.status === 404) {
+            setErrorMessage(
+              `Tiket "${reportId}" tidak ditemukan. Periksa kembali ID Tiket Anda.`
+            );
+          } else if (response.status === 401) {
+            setErrorMessage("Sesi Anda telah berakhir. Silakan login kembali.");
+          } else if (response.status === 403) {
+            setErrorMessage(
+              "Anda tidak memiliki izin untuk mengakses data ini."
+            );
+          } else if (response.status === 500) {
+            setErrorMessage(
+              "Terjadi kesalahan server. Silakan coba lagi nanti."
+            );
+          } else {
+            setErrorMessage(`Gagal melacak tiket. Status: ${response.status}`);
+          }
+        }
+        setShowErrorPopup(true);
+      }
+    } catch (error) {
+      console.error("Error fetching ticket:", error);
+      setErrorMessage(
+        "Gagal terhubung ke server. Periksa koneksi internet Anda."
+      );
       setShowErrorPopup(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
     }
   };
 
   const closeErrorPopup = () => {
     setShowErrorPopup(false);
+    setErrorMessage("");
   };
 
-  // Clear error ketika user mulai mengetik
   const handleReportIdChange = (e) => {
-    setReportId(e.target.value);
+    const value = e.target.value;
+
+    setReportId(value ? value.toUpperCase() : value);
     if (errors.reportId) {
       setErrors((prev) => ({ ...prev, reportId: "" }));
+    }
+    if (errorMessage) {
+      setErrorMessage("");
     }
   };
 
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="flex-1 relative overflow-hidden">
-        {/* Custom SVG Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <svg
             width="100%"
@@ -99,7 +177,6 @@ const Pelacakan = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-6 md:py-8">
-          {/* Page Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#226597] mb-3 md:py-4">
               Pelacakan Laporan
@@ -109,9 +186,7 @@ const Pelacakan = () => {
             </p>
           </div>
 
-          {/* Tracking Form */}
           <div className="max-w-xl mx-auto">
-            {/* ID Laporan Section - Responsive Layout */}
             <div className="mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap sm:min-w-[120px] text-left">
@@ -127,7 +202,9 @@ const Pelacakan = () => {
                       type="text"
                       value={reportId}
                       onChange={handleReportIdChange}
-                      className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm md:text-base"
+                      onKeyPress={handleKeyPress}
+                      className="w-full px-3 py-2 border-0 focus:ring-0 focus:outline-none bg-transparent text-sm md:text-base placeholder-gray-400"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -137,31 +214,41 @@ const Pelacakan = () => {
                   <p className="text-red-500 text-sm mt-1">{errors.reportId}</p>
                 </div>
               )}
+              <div className="text-left sm:ml-[136px] mt-2">
+                <p className="text-gray-500 text-xs">
+                  Masukkan ID Tiket yang Anda terima
+                </p>
+              </div>
             </div>
 
-            {/* Search Button - Responsive Positioning */}
             <div className="flex justify-center sm:justify-start mt-6 sm:ml-36">
               <button
                 onClick={handleSearch}
-                className="bg-[#226597] hover:bg-[#1a507a] text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+                disabled={isLoading}
+                className="bg-[#226597] hover:bg-[#1a507a] text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 w-full sm:w-auto justify-center disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Search size={20} />
-                Cari
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Mencari...
+                  </>
+                ) : (
+                  <>
+                    <Search size={20} />
+                    Cari
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Error Popup - Responsive */}
       {showErrorPopup && (
         <>
-          {/* Overlay */}
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            {/* Popup Content */}
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-sm w-full mx-auto">
               <div className="text-center">
-                {/* Warning Icon - Center aligned */}
                 <div className="flex justify-center mb-4">
                   <svg
                     width="60"
@@ -178,15 +265,13 @@ const Pelacakan = () => {
                   </svg>
                 </div>
 
-                {/* Error Message */}
                 <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
                   Data tidak ditemukan!
                 </h3>
                 <p className="text-gray-600 text-sm md:text-base mb-6">
-                  Cek kembali inputan Anda
+                  {errorMessage || "Cek kembali inputan Anda"}
                 </p>
 
-                {/* OK Button - Responsive */}
                 <div className="flex justify-center">
                   <button
                     onClick={closeErrorPopup}

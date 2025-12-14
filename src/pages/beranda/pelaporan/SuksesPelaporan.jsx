@@ -1,112 +1,100 @@
 import { Download } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function SuksesPelayanan() {
+export default function SuksesPelaporan() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [ticketData, setTicketData] = useState(null);
 
-  // Ambil data dari FormLaporan melalui state navigasi
-  const laporanData = location.state?.laporanData || {};
+  useEffect(() => {
+    const storedTicket = localStorage.getItem("currentTicket");
+    const locationTicket = location.state?.ticketData;
 
-  // Data tiket dengan OPD tujuan dari form
-  const ticketData = {
-    noTiket: "LPR318728",
-    tanggal: "18-10-2025",
-    waktu: "08:14 A.M.",
-    jenisLayanan: "Pelaporan Online",
-    opdTujuan: laporanData.opdTujuan || "Dinas Pendidikan",
-    judulPelaporan: laporanData.judulPelaporan || "Router Terganggu",
-    dataAset: laporanData.dataAset || "Printer HP LaserJet Pro P1102w",
-    nomorSeri: laporanData.nomorSeri || "HP-LJ-P1102W-001",
-    kategoriAset: laporanData.kategoriAset || "TI",
-    subKategoriAset: laporanData.subKategoriAset || "Jaringan",
-    jenisAset: laporanData.jenisAset || "Barang",
-    lokasiKejadian: laporanData.lokasiKejadian || "Dispendik Pusat",
-    nama: laporanData.nama || "Sri Wulandari",
-    nip: laporanData.nip || "20001142023052053",
-    divisi: laporanData.divisi || "Divisi Sumber Daya Manusia",
-  };
+    if (locationTicket) {
+      setTicketData(locationTicket);
+      localStorage.setItem("currentTicket", JSON.stringify(locationTicket));
+    } else if (storedTicket) {
+      try {
+        setTicketData(JSON.parse(storedTicket));
+      } catch (error) {
+        console.error("Error parsing stored ticket:", error);
+      }
+    }
+  }, [location.state]);
 
-  // Fungsi untuk generate dan download PDF menggunakan jsPDF
   const handleDownloadPDF = async () => {
+    if (!ticketData) return;
+
     try {
       setIsGenerating(true);
 
-      // Dynamic import jsPDF untuk mengurangi bundle size
       const { jsPDF } = await import("jspdf");
 
-      // Buat PDF baru
       const doc = new jsPDF();
 
-      // Set font
       doc.setFont("helvetica");
 
-      // Header - persis seperti gambar
-      doc.setFontSize(20);
-      doc.setTextColor(0, 0, 0); // Hitam
-      doc.text("Tiket Anda Berhasil Dibuat", 105, 20, { align: "center" });
+      doc.setFillColor(34, 101, 151);
+      doc.rect(0, 0, 210, 30, "F");
 
-      doc.setFontSize(16);
-      doc.text("Laporan Anda Telah Berhasil Dikirim", 105, 30, {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("Tiket Berhasil Dibuat", 105, 18, { align: "center" });
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "normal");
+      doc.text("Permohonan Anda Telah Berhasil Dikirim", 105, 25, {
         align: "center",
       });
 
-      // Deskripsi bahasa Indonesia
       doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100); // Abu-abu
+      doc.setTextColor(100, 100, 100);
       const description =
         "Terima kasih atas laporan Anda. Laporan telah tercatat, kami akan menindaklanjuti sesuai prosedur dalam waktu yang ditentukan. Silakan pantau perkembangan laporan melalui menu Cek Status Layanan.";
       doc.text(description, 105, 45, { align: "center", maxWidth: 180 });
 
-      // Garis pemisah
       doc.setDrawColor(200, 200, 200);
       doc.line(20, 60, 190, 60);
 
-      // No. Tiket - tanpa kotak, seperti gambar
-      doc.setFontSize(14);
+      doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
       doc.text("No. Tiket:", 20, 75);
 
-      doc.setFontSize(24);
-      doc.setTextColor(34, 101, 151); // Warna biru #226597
+      doc.setFontSize(28);
+      doc.setTextColor(34, 101, 151);
       doc.setFont("helvetica", "bold");
       doc.text(ticketData.noTiket, 105, 75, { align: "center" });
 
-      // Garis pemisah kedua
       doc.setDrawColor(200, 200, 200);
       doc.line(20, 85, 190, 85);
 
-      // Detail tiket: - Header
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
-      doc.text("Detail tiket:", 20, 95);
+      doc.text("Detail Tiket", 20, 95);
 
-      // Data detail - Format tabel seperti gambar (hanya 1 kolom)
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
 
       let yPos = 105;
       const leftColumnX = 20;
-      const valueColumnX = 80; // Posisi untuk nilai setelah ":"
+      const valueColumnX = 80;
 
-      // Fungsi untuk menambahkan baris data seperti gambar
       const addDataRow = (label, value) => {
         doc.setTextColor(100, 100, 100);
         doc.text(`${label}`, leftColumnX, yPos);
         doc.setTextColor(0, 0, 0);
-        // Format dengan titik dua di tengah seperti gambar
         const labelWidth = doc.getTextWidth(label);
         const colonX = leftColumnX + labelWidth + 2;
         doc.text(":", colonX, yPos);
-        doc.text(value, valueColumnX, yPos);
+        doc.text(value || "-", valueColumnX, yPos);
         yPos += 7;
       };
 
-      // Data sesuai urutan gambar
       addDataRow("Nomor Tiket", ticketData.noTiket);
       addDataRow(
         "Tanggal / waktu laporan dibuat",
@@ -120,16 +108,17 @@ export default function SuksesPelayanan() {
       addDataRow("Kategori Aset", ticketData.kategoriAset);
       addDataRow("Sub Kategori Aset", ticketData.subKategoriAset);
       addDataRow("Jenis Aset", ticketData.jenisAset);
-      addDataRow("Nama Aset", "Router"); // Hardcoded seperti gambar
+      addDataRow("Nama Aset", ticketData.jenisAset);
       addDataRow("Lokasi Kejadian", ticketData.lokasiKejadian);
+      addDataRow("Nama", ticketData.nama);
+      addDataRow("NIP", ticketData.nip);
+      addDataRow("Divisi", ticketData.divisi);
 
-      // Garis pemisah footer
       yPos += 5;
       doc.setDrawColor(200, 200, 200);
       doc.line(20, yPos, 190, yPos);
       yPos += 10;
 
-      // Footer - persis seperti gambar
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
 
@@ -146,7 +135,6 @@ export default function SuksesPelayanan() {
       doc.text(footerText3, 20, yPos);
       yPos += 10;
 
-      // Copyright
       doc.setFontSize(8);
       doc.text("© 2025 REPORT – Sistem Pelaporan Layanan.", 105, yPos, {
         align: "center",
@@ -156,10 +144,11 @@ export default function SuksesPelayanan() {
         "Dokumen dicetak otomatis dan sah tanpa tanda tangan.",
         105,
         yPos,
-        { align: "center" }
+        {
+          align: "center",
+        }
       );
 
-      // Simpan PDF
       doc.save(`Tiket_${ticketData.noTiket}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -168,10 +157,9 @@ export default function SuksesPelayanan() {
       setIsGenerating(false);
     }
   };
-
-  // Fallback jika jsPDF gagal diimport
   const handleDownloadFallback = () => {
-    // Buat konten teks sederhana
+    if (!ticketData) return;
+
     const content = `
 TIKET LAPORAN - ${ticketData.noTiket}
 =========================================
@@ -219,12 +207,23 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
     URL.revokeObjectURL(url);
   };
 
+  if (!ticketData) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mx-auto mb-4"></div>
+            <p className="text-gray-600">Memuat data tiket...</p>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
   return (
     <LayoutPegawai>
       <div className="min-h-screen bg-gray-50 pt-20">
-        {/* Main Content Area */}
         <div className="flex-1 relative overflow-hidden">
-          {/* Custom SVG Background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <svg
               width="100%"
@@ -269,9 +268,7 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
           </div>
 
           <div className="relative z-10 container mx-auto px-4 py-6 md:py-8">
-            {/* Card Success */}
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-              {/* Header Card */}
               <div className="p-6">
                 <div className="w-16 h-16 bg-[#226597] rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
@@ -304,12 +301,9 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Info Tiket */}
                 <div className="text-center">
                   <div className="space-y-8">
-                    {/* No. Tiket - Rata Tengah */}
                     <div className="text-center mb-2">
                       <div className="flex flex-col items-center gap-3">
                         <span className="text-sm font-medium text-gray-600">
@@ -323,9 +317,7 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                       </div>
                     </div>
 
-                    {/* Jenis Layanan dan OPD Tujuan - Sebelahan */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                      {/* Jenis Layanan */}
                       <div>
                         <div className="flex items-start gap-4">
                           <svg
@@ -404,7 +396,6 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                         </div>
                       </div>
 
-                      {/* OPD Tujuan */}
                       <div>
                         <div className="flex items-start gap-4">
                           <svg
@@ -484,7 +475,6 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                   </div>
                 </div>
 
-                {/* Tombol Unduh Tiket */}
                 <div className="text-right">
                   <button
                     onClick={handleDownloadPDF}
@@ -507,10 +497,8 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="max-w-2xl mx-auto mt-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* Cek Status Layanan */}
                 <button
                   onClick={() => navigate("/pelacakan")}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
@@ -518,15 +506,13 @@ Dokumen dicetak otomatis dan sah tanpa tanda tangan.
                   Cek status layanan
                 </button>
 
-                {/* Buat Laporan Baru */}
                 <button
-                  onClick={() => navigate("/pelaporanonline")}
+                  onClick={() => navigate("/formlaporan")}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"
                 >
                   Buat laporan baru
                 </button>
 
-                {/* Kembali ke Beranda */}
                 <button
                   onClick={() => navigate("/beranda")}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white py-3 rounded-md text-sm font-medium transition-colors text-center"

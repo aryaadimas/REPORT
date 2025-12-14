@@ -1,19 +1,23 @@
-import { useState, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileText, XCircle, ChevronDown } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 
 export default function FormLaporan() {
-  const [selectedReasons, setSelectedReasons] = useState([]);
-  const [priority, setPriority] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showCancelWarning, setShowCancelWarning] = useState(false); // Tambahkan state untuk warning
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingSubKategori, setIsLoadingSubKategori] = useState(true);
+  const [subKategoriList, setSubKategoriList] = useState([]);
+  const [selectedSubKategori, setSelectedSubKategori] = useState(null);
+  const [authToken, setAuthToken] = useState("");
+
   const [formData, setFormData] = useState({
-    nama: "Haikal Saputra",
-    nip: "haikalsaputra@gmail.com",
-    divisi: "Divisi Sumber Daya Manusia",
+    nama: "",
+    email: "",
+    divisi: "",
     judulPelaporan: "",
     dataAset: "",
     nomorSeri: "",
@@ -23,23 +27,133 @@ export default function FormLaporan() {
     lokasiKejadian: "",
     rincianMasalah: "",
     penyelesaianDiharapkan: "",
+    selectedSubKategoriId: "",
   });
 
   const [dropdowns, setDropdowns] = useState({
     dataAset: false,
-    nomorSeri: false,
-    kategoriAset: false,
-    subKategoriAset: false,
-    jenisAset: false,
   });
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const selectedOpd = location.state?.selectedOpd || {
-    name: "Dinas Pendidikan",
-    logo: "/assets/Dinas Pendidikan.png",
+  const defaultOpd = {
+    name: "Dinas Kesehatan",
+    logo: "/assets/Dinas Kesehatan.png",
+    id: 1,
+  };
+
+  useEffect(() => {
+    console.log("Mengambil data dari localStorage...");
+
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("auth_token") ||
+      localStorage.getItem("access_token") ||
+      sessionStorage.getItem("token") ||
+      sessionStorage.getItem("auth_token") ||
+      "";
+
+    console.log("Token ditemukan:", token ? "Ya" : "Tidak");
+
+    if (token) {
+      setAuthToken(token);
+      console.log("Token disimpan di state:", token.substring(0, 50) + "...");
+    } else {
+      console.warn("Token tidak ditemukan di localStorage/sessionStorage");
+      alert("Token tidak ditemukan. Silakan login terlebih dahulu.");
+    }
+
+    const userDataStr =
+      localStorage.getItem("user") ||
+      localStorage.getItem("userData") ||
+      localStorage.getItem("user_data") ||
+      "";
+
+    if (userDataStr) {
+      try {
+        const userData = JSON.parse(userDataStr);
+        console.log("User data ditemukan:", userData);
+        setFormData((prev) => ({
+          ...prev,
+          nama: userData.name || userData.nama || "User",
+          email: userData.email || "",
+          divisi: userData.unit_kerja || userData.divisi || "",
+        }));
+      } catch (error) {
+        console.error("Gagal parse user data:", error);
+      }
+    } else {
+      console.warn("User data tidak ditemukan di localStorage");
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchSubKategori = async () => {
+      try {
+        setIsLoadingSubKategori(true);
+        console.log("Memulai fetch sub-kategori...");
+
+        const response = await fetch(
+          "https://service-desk-be-production.up.railway.app/api/sub-kategori",
+          {
+            method: "GET",
+            headers: {
+              accept: "application/json",
+            },
+          }
+        );
+
+        console.log("Response status sub-kategori:", response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Data sub-kategori diterima:", data);
+
+          const formattedSubKategori = data.map((item) => ({
+            id: item.id,
+            nama: item.nama,
+          }));
+          setSubKategoriList(formattedSubKategori);
+        } else {
+          console.error("Gagal fetch sub-kategori:", response.status);
+
+          setSubKategoriList(getFallbackSubKategori());
+        }
+      } catch (error) {
+        console.error("Error fetching sub-kategori:", error);
+        setSubKategoriList(getFallbackSubKategori());
+      } finally {
+        setIsLoadingSubKategori(false);
+      }
+    };
+
+    fetchSubKategori();
+  }, []);
+
+  const getFallbackSubKategori = () => {
+    return [
+      { id: 1, nama: "Server" },
+      { id: 2, nama: "Komputer Desktop" },
+      { id: 3, nama: "Laptop" },
+      { id: 4, nama: "Printer" },
+      { id: 5, nama: "Monitor" },
+      { id: 6, nama: "Keyboard" },
+      { id: 7, nama: "Mouse" },
+      { id: 8, nama: "Router" },
+      { id: 9, nama: "Switch" },
+      { id: 10, nama: "Kamera CCTV" },
+      { id: 11, nama: "Meja Kerja" },
+      { id: 12, nama: "Kursi Kerja" },
+      { id: 13, nama: "Lemari" },
+      { id: 14, nama: "AC" },
+      { id: 15, nama: "Telepon" },
+      { id: 16, nama: "Proyektor" },
+      { id: 17, nama: "UPS" },
+      { id: 18, nama: "Kendaraan Dinas" },
+      { id: 19, nama: "Mesin Fotocopy" },
+      { id: 20, nama: "Scanner" },
+    ];
   };
 
   const toggleDropdown = (dropdownName) => {
@@ -50,20 +164,14 @@ export default function FormLaporan() {
   };
 
   const isFormValid = () => {
+    const judulOk = formData.judulPelaporan.trim() !== "";
+    const rincianOk = formData.rincianMasalah.trim() !== "";
+    const penyelesaianOk = formData.penyelesaianDiharapkan.trim() !== "";
+    const subKategoriSelected = formData.selectedSubKategoriId.trim() !== "";
+    const fileOk = uploadedFiles.length > 0;
+
     return (
-      formData.nama.trim() !== "" &&
-      formData.nip.trim() !== "" &&
-      formData.divisi.trim() !== "" &&
-      formData.judulPelaporan.trim() !== "" &&
-      formData.dataAset.trim() !== "" &&
-      formData.nomorSeri.trim() !== "" &&
-      formData.kategoriAset.trim() !== "" &&
-      formData.subKategoriAset.trim() !== "" &&
-      formData.jenisAset.trim() !== "" &&
-      formData.lokasiKejadian.trim() !== "" &&
-      formData.rincianMasalah.trim() !== "" &&
-      formData.penyelesaianDiharapkan.trim() !== "" &&
-      uploadedFiles.length > 0
+      judulOk && rincianOk && penyelesaianOk && subKategoriSelected && fileOk
     );
   };
 
@@ -71,11 +179,38 @@ export default function FormLaporan() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleSelectSubKategori = (subKategori) => {
+    setSelectedSubKategori(subKategori);
+    setFormData((prev) => ({
+      ...prev,
+      dataAset: subKategori.nama,
+      subKategoriAset: subKategori.nama,
+      selectedSubKategoriId: subKategori.id.toString(),
+    }));
+    toggleDropdown("dataAset");
+  };
+
+  const handleNomorSeriChange = (value) => {
+    setFormData((prev) => ({ ...prev, nomorSeri: value }));
+  };
+
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
+
+    const remainingSlots = 2 - uploadedFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (filesToAdd.length < files.length) {
+      alert(
+        `Maksimal 2 file. ${
+          files.length - filesToAdd.length
+        } file tidak ditambahkan.`
+      );
+    }
+
     setUploadedFiles((prev) => [
       ...prev,
-      ...files.map((file) => ({
+      ...filesToAdd.map((file) => ({
         file,
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
@@ -99,147 +234,317 @@ export default function FormLaporan() {
   };
 
   const handleKonfirmasiKirim = () => {
+    if (!authToken) {
+      alert("Anda belum login. Silakan login terlebih dahulu.");
+      return;
+    }
+
     if (isFormValid()) {
       setShowConfirmation(true);
     } else {
-      alert("Harap lengkapi semua field yang wajib diisi!");
+      alert(
+        "Harap lengkapi semua field yang wajib diisi dan lampirkan minimal 1 file!"
+      );
     }
   };
 
-  const handleKirimLaporan = () => {
-    const laporanData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
-      status: "dikirim",
-      opdTujuan: selectedOpd.name,
-    };
+  const handleKirimLaporan = async () => {
+    try {
+      setIsSubmitting(true);
 
-    console.log("Data laporan:", laporanData);
+      if (!authToken) {
+        throw new Error(
+          "Token autentikasi tidak tersedia. Silakan login kembali."
+        );
+      }
 
-    setShowConfirmation(false);
-    setShowSuccessPopup(true);
+      const formattedToken = authToken.startsWith("Bearer ")
+        ? authToken
+        : `Bearer ${authToken}`;
+
+      if (!formData.selectedSubKategoriId) {
+        throw new Error("Silakan pilih sub-kategori terlebih dahulu.");
+      }
+      const formDataToSend = new FormData();
+
+      formDataToSend.append("asset_id", formData.selectedSubKategoriId || "");
+      formDataToSend.append("title", formData.judulPelaporan || "");
+      formDataToSend.append("lokasi_kejadian", formData.lokasiKejadian || "");
+      formDataToSend.append("description", formData.rincianMasalah || "");
+      formDataToSend.append(
+        "expected_resolution",
+        formData.penyelesaianDiharapkan || ""
+      );
+
+      uploadedFiles.forEach((fileObj, index) => {
+        formDataToSend.append(`files[${index}]`, fileObj.file);
+      });
+
+      console.log("=== DATA YANG AKAN DIKIRIM ===");
+      console.log("Asset ID:", formData.selectedSubKategoriId);
+      console.log("Judul:", formData.judulPelaporan);
+      console.log("Lokasi:", formData.lokasiKejadian);
+      console.log("Deskripsi:", formData.rincianMasalah);
+      console.log("Expected Resolution:", formData.penyelesaianDiharapkan);
+      console.log("Token:", formattedToken.substring(0, 50) + "...");
+      console.log("Jumlah file:", uploadedFiles.length);
+
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/pelaporan-online",
+        {
+          method: "POST",
+          headers: {
+            accept: "application/json",
+            Authorization: formattedToken,
+          },
+          body: formDataToSend,
+        }
+      );
+
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (response.status === 401) {
+        const errorText = await response.text();
+        console.error("Error 401 detail:", errorText);
+        throw new Error(
+          "Sesi Anda telah berakhir atau token tidak valid. Silakan login kembali."
+        );
+      }
+
+      if (response.status === 422) {
+        const errorData = await response.json();
+        console.error("Validation error:", errorData);
+        throw new Error(
+          `Validasi gagal: ${JSON.stringify(errorData.errors || errorData)}`
+        );
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response text:", errorText);
+        throw new Error(
+          `Gagal mengirim laporan (HTTP ${
+            response.status
+          }): ${errorText.substring(0, 100)}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Success response:", result);
+
+      const ticketData = {
+        noTiket:
+          result.ticket?.ticket_code ||
+          `LYN${Math.floor(100000 + Math.random() * 900000)}`,
+        ticket_id: result.ticket?.ticket_id || Date.now(),
+        tanggal: new Date().toLocaleDateString("id-ID"),
+        waktu: new Date().toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        jenisLayanan: "Pelaporan Online",
+        opdTujuan: result.ticket?.opd_nama || defaultOpd.name,
+        judulPelaporan: formData.judulPelaporan,
+        dataAset: formData.dataAset,
+        nomorSeri: formData.nomorSeri,
+        kategoriAset: formData.kategoriAset,
+        subKategoriAset: formData.subKategoriAset,
+        jenisAset: formData.jenisAset,
+        lokasiKejadian: formData.lokasiKejadian,
+        nama: formData.nama,
+        nip: formData.email,
+        divisi: formData.divisi,
+        rincianMasalah: formData.rincianMasalah,
+        penyelesaianDiharapkan: formData.penyelesaianDiharapkan,
+
+        apiResponse: result,
+      };
+
+      setShowConfirmation(false);
+      setShowSuccessPopup(true);
+
+      localStorage.setItem("lastTicket", JSON.stringify(ticketData));
+      localStorage.setItem("currentTicket", JSON.stringify(ticketData));
+      sessionStorage.setItem("currentTicket", JSON.stringify(ticketData));
+
+      setTimeout(() => {
+        const successPopup = document.querySelector(".success-popup");
+        if (successPopup) {
+          const ticketCodeElement = successPopup.querySelector(".ticket-code");
+          if (ticketCodeElement && result.ticket?.ticket_code) {
+            ticketCodeElement.textContent = result.ticket.ticket_code;
+          }
+        }
+      }, 100);
+    } catch (error) {
+      setShowConfirmation(false);
+
+      let errorMessage = error.message;
+
+      if (errorMessage.includes("401")) {
+        errorMessage = "Sesi Anda telah berakhir. Silakan login kembali.";
+      }
+
+      if (errorMessage.includes("fetch") || errorMessage.includes("network")) {
+        errorMessage =
+          "Koneksi jaringan bermasalah. Periksa koneksi internet Anda.";
+      }
+
+      alert("Gagal mengirim laporan: " + errorMessage);
+      console.error("Error mengirim laporan:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSuccessOk = () => {
+    const savedTicket = localStorage.getItem("currentTicket");
+    let ticketData;
+
+    if (savedTicket) {
+      try {
+        ticketData = JSON.parse(savedTicket);
+      } catch (error) {
+        ticketData = {
+          noTiket: `LYN${Math.floor(100000 + Math.random() * 900000)}`,
+          tanggal: new Date().toLocaleDateString("id-ID"),
+          waktu: new Date().toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          jenisLayanan: "Pelaporan Online",
+          opdTujuan: defaultOpd.name,
+          judulPelaporan: formData.judulPelaporan,
+          dataAset: formData.dataAset,
+          nomorSeri: formData.nomorSeri,
+          kategoriAset: formData.kategoriAset,
+          subKategoriAset: formData.subKategoriAset,
+          jenisAset: formData.jenisAset,
+          lokasiKejadian: formData.lokasiKejadian,
+          nama: formData.nama,
+          nip: formData.email,
+          divisi: formData.divisi,
+          rincianMasalah: formData.rincianMasalah,
+          penyelesaianDiharapkan: formData.penyelesaianDiharapkan,
+        };
+      }
+    }
+
     navigate("/SuksesPelaporan", {
       state: {
-        laporanData: {
-          ...formData,
-          uploadedFiles: uploadedFiles.map((file) => ({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-          })),
-          tanggal: new Date().toISOString(),
-          status: "dikirim",
-          opdTujuan: selectedOpd.name,
-        },
+        ticketData: ticketData,
       },
     });
+
+    setFormData({
+      nama: "",
+      email: "",
+      divisi: "",
+      judulPelaporan: "",
+      dataAset: "",
+      nomorSeri: "",
+      kategoriAset: "",
+      subKategoriAset: "",
+      jenisAset: "",
+      lokasiKejadian: "",
+      rincianMasalah: "",
+      penyelesaianDiharapkan: "",
+      selectedSubKategoriId: "",
+    });
+    setUploadedFiles([]);
+    setSelectedSubKategori(null);
+    setShowSuccessPopup(false);
   };
 
   const handleBatalkan = () => {
-    // Tampilkan warning popup ketika tombol batalkan diklik
     setShowCancelWarning(true);
   };
 
   const handleConfirmCancel = () => {
-    // Konfirmasi batalkan dan navigasi
     setShowCancelWarning(false);
     navigate(-1);
   };
 
   const handleCancelCancel = () => {
-    // Batal konfirmasi, tutup popup
     setShowCancelWarning(false);
   };
 
-  // Data dropdown options
-  const dataAsetOptions = [
-    "Laptop Lenovo ThinkPad X230",
-    "Printer HP LaserJet Pro P1102w",
-    "PC Dell OptiPlex 3020",
-    "Laptop ASUS ZenBook UX305FA ",
-    "Printer Canon PIXMA MP287",
-    "Laptop HP EliteBook 840",
-    "Printer Epson L3110",
-  ];
-
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
-          {/* Form Pelaporan dalam Card */}
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* Header Form */}
             <div className="p-6 border-b border-gray-200 text-center">
               <h2 className="text-2xl font-bold text-[#226597]">
                 Pelaporan Online
               </h2>
+              {!authToken && (
+                <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded-md">
+                  <p className="text-sm text-red-700">
+                    ⚠️ Anda belum login. Silakan login terlebih dahulu.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Kirim laporan ke */}
               <div className="space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-start w-full gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     Kirim laporan ke
                   </label>
-                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start">
-                    {selectedOpd.logo && (
-                      <img
-                        src={selectedOpd.logo}
-                        alt={`Logo ${selectedOpd.name}`}
-                        className="w-5 h-5 object-cover rounded"
-                      />
-                    )}
-                    <span className="text-sm">{selectedOpd.name}</span>
+                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start min-w-[200px]">
+                    <img
+                      src={defaultOpd.logo}
+                      alt={`Logo ${defaultOpd.name}`}
+                      className="w-5 h-5 object-cover rounded"
+                    />
+                    <span className="text-sm">{defaultOpd.name}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Form Fields - Sesuai Gambar */}
               <div className="space-y-4">
-                {/* Nama */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Nama
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.nama}
+                    <span className="text-gray-700 font-medium">
+                      {formData.nama || "Data pengguna"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Email */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Email
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.nip}
+                    <span className="text-gray-700 font-medium">
+                      {formData.email || "Email pengguna"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Divisi */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Divisi
                   </label>
                   <div className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-xs text-center">
-                    {formData.divisi}
+                    <span className="text-gray-700 font-medium">
+                      {formData.divisi || "Divisi pengguna"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Judul Pelaporan */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
-                    Judul Pelaporan
+                    Judul Pelaporan <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -252,17 +557,16 @@ export default function FormLaporan() {
                   />
                 </div>
 
-                {/* Data Aset dan Nomor Seri */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Data Aset */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
-                      Data Aset
+                      Data Aset <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
                         onClick={() => toggleDropdown("dataAset")}
                         className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between"
+                        disabled={isLoadingSubKategori}
                       >
                         <span
                           className={`flex-1 text-left ${
@@ -271,30 +575,37 @@ export default function FormLaporan() {
                               : "text-gray-400"
                           }`}
                         >
-                          {formData.dataAset || "Pilih data aset"}
+                          {isLoadingSubKategori
+                            ? "Memuat data sub-kategori..."
+                            : formData.dataAset || "Pilih sub-kategori"}
                         </span>
-                        <ChevronDown size={16} className="text-gray-400" />
+                        {!isLoadingSubKategori && (
+                          <ChevronDown size={16} className="text-gray-400" />
+                        )}
                       </button>
-                      {dropdowns.dataAset && (
+                      {dropdowns.dataAset && !isLoadingSubKategori && (
                         <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
-                          {dataAsetOptions.map((option) => (
-                            <div
-                              key={option}
-                              onClick={() => {
-                                handleInputChange("dataAset", option);
-                                toggleDropdown("dataAset");
-                              }}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left"
-                            >
-                              {option}
+                          {subKategoriList.length > 0 ? (
+                            subKategoriList.map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => handleSelectSubKategori(item)}
+                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left truncate"
+                                title={item.nama}
+                              >
+                                {item.nama}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                              Tidak ada data sub-kategori
                             </div>
-                          ))}
+                          )}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Nomor Seri */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
                       Nomor Seri
@@ -302,17 +613,13 @@ export default function FormLaporan() {
                     <input
                       type="text"
                       value={formData.nomorSeri || ""}
-                      onChange={(e) =>
-                        handleInputChange("nomorSeri", e.target.value)
-                      }
+                      onChange={(e) => handleNomorSeriChange(e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-sm"
                     />
                   </div>
                 </div>
 
-                {/* Kategori Aset, Sub-Kategori Aset, dan Jenis Aset */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Kategori Aset */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
                       Kategori Aset
@@ -323,11 +630,10 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("kategoriAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
                     />
                   </div>
 
-                  {/* Sub-Kategori Aset */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
                       Sub-Kategori Aset
@@ -338,11 +644,11 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("subKategoriAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
+                      readOnly={!!selectedSubKategori}
                     />
                   </div>
 
-                  {/* Jenis Aset */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
                       Jenis Aset
@@ -353,15 +659,14 @@ export default function FormLaporan() {
                       onChange={(e) =>
                         handleInputChange("jenisAset", e.target.value)
                       }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left"
                     />
                   </div>
                 </div>
 
-                {/* Lokasi Kejadian */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
-                    Lokasi Kejadian
+                    Lokasi Kejadian <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -375,10 +680,9 @@ export default function FormLaporan() {
                 </div>
               </div>
 
-              {/* Rincian Masalah */}
               <div className="space-y-2 text-left">
                 <label className="text-sm font-medium text-gray-700 block">
-                  Rincian Masalah
+                  Rincian Masalah <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
                   Jelaskan lebih rinci terkait masalah tersebut agar kami dapat
@@ -394,15 +698,14 @@ export default function FormLaporan() {
                 />
               </div>
 
-              {/* Upload File */}
               <div className="space-y-2 text-left">
                 <label className="text-sm font-medium text-gray-700 block">
-                  Tambahkan file
+                  Tambahkan file <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
                   Lampirkan screenshot, log, atau dokumen terkait untuk membantu
                   kami memahami masalah Anda lebih cepat. (Maksimal unggah 2
-                  file dengan format PDF)
+                  file)
                 </p>
 
                 <input
@@ -411,11 +714,18 @@ export default function FormLaporan() {
                   onChange={handleFileUpload}
                   multiple
                   className="hidden"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  disabled={!authToken}
                 />
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-[#226597] hover:bg-[#1a507a] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center w-full sm:w-auto gap-2"
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center w-full sm:w-auto gap-2 ${
+                    authToken && uploadedFiles.length < 2
+                      ? "bg-[#226597] hover:bg-[#1a507a] text-white cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                  disabled={!authToken || uploadedFiles.length >= 2}
                 >
                   <svg
                     width="7"
@@ -426,13 +736,15 @@ export default function FormLaporan() {
                   >
                     <path
                       d="M2.2375 4.04576V8.54107C2.24269 8.86979 2.37692 9.18328 2.61121 9.41391C2.84551 9.64453 3.16109 9.77379 3.48984 9.77379C3.8186 9.77379 4.13418 9.64453 4.36847 9.41391C4.60277 9.18328 4.73699 8.86979 4.74219 8.54107L4.74625 2.64888C4.74966 2.36792 4.69726 2.08908 4.5921 1.82852C4.48694 1.56796 4.33111 1.33087 4.13364 1.13098C3.93616 0.931099 3.70098 0.7724 3.44171 0.664087C3.18245 0.555773 2.90426 0.5 2.62328 0.5C2.3423 0.5 2.06412 0.555773 1.80485 0.664087C1.54559 0.7724 1.3104 0.931099 1.11293 1.13098C0.915452 1.33087 0.759618 1.56796 0.654458 1.82852C0.549298 2.08908 0.496904 2.36792 0.500313 2.64888V8.58076C0.494588 8.9763 0.567552 9.36904 0.714962 9.73614C0.862372 10.1032 1.08129 10.4374 1.35898 10.7191C1.63667 11.0009 1.9676 11.2246 2.33253 11.3773C2.69746 11.53 3.0891 11.6086 3.48469 11.6086C3.88028 11.6086 4.27192 11.53 4.63685 11.3773C5.00177 11.2246 5.3327 11.0009 5.61039 10.7191C5.88809 10.4374 6.107 10.1032 6.25441 9.73614C6.40182 9.36904 6.47479 8.9763 6.46906 8.58076V3.03763"
-                      stroke="white"
+                      stroke="currentColor"
                       strokeWidth="1"
                       strokeMiterlimit="10"
                       strokeLinecap="round"
                     />
                   </svg>
-                  Lampirkan file
+                  {uploadedFiles.length >= 2
+                    ? "Maksimal 2 file"
+                    : "Lampirkan file"}
                 </button>
 
                 {uploadedFiles.length > 0 && (
@@ -470,10 +782,10 @@ export default function FormLaporan() {
                 )}
               </div>
 
-              {/* Penyelesaian yang Diharapkan */}
               <div className="space-y-2 text-left">
                 <label className="text-sm font-medium text-gray-700 block">
-                  Penyelesaian yang Diharapkan
+                  Penyelesaian yang Diharapkan{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
                   Jelaskan terkait harapan Anda terkait penyelesaian masalah
@@ -490,7 +802,6 @@ export default function FormLaporan() {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between pt-6 gap-3 sm:gap-0 border-t border-gray-200">
                 <button
                   onClick={handleBatalkan}
@@ -501,14 +812,18 @@ export default function FormLaporan() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button
                     onClick={handleKonfirmasiKirim}
+                    disabled={isSubmitting || !authToken}
                     className={`px-6 py-2 rounded-md text-sm font-medium transition-colors text-center ${
-                      isFormValid()
+                      isFormValid() && !isSubmitting && authToken
                         ? "bg-[#226597] hover:bg-[#1a507a] text-white cursor-pointer"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
-                    disabled={!isFormValid()}
                   >
-                    Kirim
+                    {isSubmitting
+                      ? "Mengirim..."
+                      : !authToken
+                      ? "Login Terlebih Dahulu"
+                      : "Kirim"}
                   </button>
                 </div>
               </div>
@@ -517,7 +832,6 @@ export default function FormLaporan() {
         </div>
       </div>
 
-      {/* Popup Konfirmasi */}
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
@@ -547,13 +861,22 @@ export default function FormLaporan() {
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <button
                   onClick={handleKirimLaporan}
-                  className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Ya, saya yakin
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Mengirim...
+                    </span>
+                  ) : (
+                    "Ya, saya yakin"
+                  )}
                 </button>
                 <button
                   onClick={() => setShowConfirmation(false)}
-                  className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   Batalkan
                 </button>
@@ -563,7 +886,6 @@ export default function FormLaporan() {
         </div>
       )}
 
-      {/* Popup Warning Batalkan */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
@@ -609,12 +931,10 @@ export default function FormLaporan() {
         </div>
       )}
 
-      {/* Popup Berhasil Dikirim */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 success-popup">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
             <div className="text-center">
-              {/* Logo Success */}
               <div className="flex justify-center mb-4">
                 <svg
                   width="70"
@@ -643,6 +963,15 @@ export default function FormLaporan() {
               <h3 className="text-2xl font-semibold text-gray-900 mb-2">
                 Laporan berhasil terkirim!
               </h3>
+
+              <div className="mt-4 p-3 bg-green-50 rounded-md">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">ID Tiket:</span>{" "}
+                  <span className="ticket-code">
+                    LYN{Math.floor(100000 + Math.random() * 900000)}
+                  </span>
+                </p>
+              </div>
 
               <div className="flex justify-center">
                 <button

@@ -23,7 +23,6 @@ const SidebarMasyarakat = () => {
 
   return (
     <aside className="fixed top-0 left-0 w-64 h-screen bg-white shadow-md flex flex-col z-50">
-      {/* === Logo === */}
       <div className="flex items-center gap-4 px-6 py-5">
         <img src="/assets/Logo Report.png" alt="Logo" className="w-12 h-12" />
         <h1 className="font-bold text-2xl bg-gradient-to-r from-[#EE1D52] to-[#507687] text-transparent bg-clip-text tracking-wide">
@@ -31,7 +30,6 @@ const SidebarMasyarakat = () => {
         </h1>
       </div>
 
-      {/* === Menu Navigasi === */}
       <nav className="flex-1 mt-1 overflow-y-auto">
         {menuItems.map((item, index) => (
           <NavLink

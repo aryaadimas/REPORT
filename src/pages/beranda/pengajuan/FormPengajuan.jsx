@@ -1,65 +1,331 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FileText, XCircle, ChevronDown } from "lucide-react";
 import LayoutPegawai from "../../../components/Layout/LayoutPegawai";
 
 export default function FormPengajuan() {
-  const [selectedReasons, setSelectedReasons] = useState([]);
-  const [priority, setPriority] = useState("");
+  const [priority, setPriority] = useState("medium");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [showCancelWarning, setShowCancelWarning] = useState(false); // Tambahkan state untuk warning
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastResponse, setLastResponse] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [subKategori, setSubKategori] = useState([]);
+  const [loadingSubKategori, setLoadingSubKategori] = useState(false);
+  const [opdData, setOpdData] = useState(null);
+  const [isLoadingOpd, setIsLoadingOpd] = useState(false);
+
   const [formData, setFormData] = useState({
-    nama: "Haikal Saputra",
-    nip: "haikalsaputra@gmail.com",
-    divisi: "Divisi Sumber Daya Manusia",
+    nama: "",
+    nip: "",
+    divisi: "",
     judulPelaporan: "",
     dataAset: "",
-    nomorSeri: "",
-    kategoriAset: "",
-    subKategoriAset: "",
-    jenisAset: "",
     lokasiKejadian: "",
     rincianMasalah: "",
     penyelesaianDiharapkan: "",
+    selectedSubKategoriId: "",
   });
 
   const [dropdowns, setDropdowns] = useState({
     dataAset: false,
-    nomorSeri: false,
-    kategoriAset: false,
-    subKategoriAset: false,
-    jenisAset: false,
   });
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const selectedOpd = location.state?.selectedOpd || {
-    name: "Dinas Pendidikan",
-    logo: "/assets/Dinas Pendidikan.png",
+  const defaultOpd = {
+    name: "Dinas Kesehatan",
+    logo: "/assets/Dinas Kesehatan.png",
   };
 
-  const toggleDropdown = (dropdownName) => {
-    setDropdowns((prev) => ({
-      ...prev,
-      [dropdownName]: !prev[dropdownName],
-    }));
+  const getToken = () => {
+    return (
+      localStorage.getItem("access_token") ||
+      localStorage.getItem("token") ||
+      "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8"
+    );
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoadingUser(true);
+        const token = getToken();
+
+        console.log("🌐 Mengambil data user dari API /me...");
+
+        const endpoints = [
+          "https://service-desk-be-production.up.railway.app/me",
+          "https://service-desk-be-production.up.railway.app/api/me",
+        ];
+
+        let response = null;
+        let result = null;
+
+        for (const endpoint of endpoints) {
+          try {
+            console.log(`🔄 Mencoba endpoint: ${endpoint}`);
+            response = await fetch(endpoint, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            });
+
+            console.log(`📡 Status ${endpoint}:`, response.status);
+
+            if (response.ok) {
+              result = await response.json();
+              console.log(`✅ Berhasil dari ${endpoint}:`, result);
+              break;
+            }
+          } catch (err) {
+            console.warn(`⚠️ Gagal akses ${endpoint}:`, err.message);
+          }
+        }
+
+        if (!response || !response.ok) {
+          throw new Error(
+            `Semua endpoint gagal. Status terakhir: ${response?.status}`
+          );
+        }
+
+        let user = null;
+
+        if (result.status === "success" && result.user) {
+          user = result.user;
+        } else if (result.data) {
+          user = result.data;
+        } else if (result && (result.name || result.email)) {
+          user = result;
+        }
+
+        if (user) {
+          console.log("👤 Data user yang ditemukan:", user);
+
+          const nama =
+            user.name ||
+            user.full_name ||
+            user.username ||
+            "OPD Dinas Kesehatan";
+          const email = user.email || "opd@dinaskesehatan.go.id";
+          const unitKerja =
+            user.unit_kerja ||
+            user.division ||
+            user.department ||
+            "Bidang Kesehatan Masyarakat";
+
+          setUserData(user);
+          setFormData((prev) => ({
+            ...prev,
+            nama: nama,
+            nip: email,
+            divisi: unitKerja,
+          }));
+
+          localStorage.setItem(
+            "user_data",
+            JSON.stringify({
+              name: nama,
+              email: email,
+              unit_kerja: unitKerja,
+              dinas: user.dinas || "Dinas Kesehatan",
+              dinas_id: user.dinas_id || user.unit_kerja_id || 1,
+              user_id: user.id || 1,
+            })
+          );
+
+          console.log("✅ Data user berhasil diambil:", {
+            nama,
+            email,
+            unitKerja,
+          });
+        } else {
+          console.warn(
+            "⚠️ Format data tidak dikenali, menggunakan data OPD Dinas Kesehatan"
+          );
+          throw new Error("Format data tidak dikenali");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching user data:", error);
+
+        const fallbackData = {
+          nama: "OPD Dinas Kesehatan",
+          nip: "opd@dinaskesehatan.go.id",
+          divisi: "Bidang Kesehatan Masyarakat",
+        };
+
+        setFormData((prev) => ({
+          ...prev,
+          ...fallbackData,
+        }));
+
+        localStorage.setItem(
+          "user_data",
+          JSON.stringify({
+            name: fallbackData.nama,
+            email: fallbackData.nip,
+            unit_kerja: fallbackData.divisi,
+            dinas: "Dinas Kesehatan",
+            dinas_id: 1,
+            user_id: 1,
+          })
+        );
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    const fetchOpdData = async () => {
+      try {
+        setIsLoadingOpd(true);
+
+        let dinasId = 1;
+        const userDataStr = localStorage.getItem("user_data");
+
+        if (userDataStr) {
+          try {
+            const userData = JSON.parse(userDataStr);
+            dinasId = userData.dinas_id || 1;
+          } catch (error) {
+            console.warn("Error parsing user_data:", error);
+          }
+        } else if (userData && (userData.dinas_id || userData.dinasId)) {
+          dinasId = userData.dinas_id || userData.dinasId || 1;
+        }
+
+        console.log(`📡 Fetching OPD data untuk dinas ID: ${dinasId}`);
+
+        const response = await fetch(
+          `https://service-desk-be-production.up.railway.app/opd/dinas/${dinasId}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("✅ Data OPD berhasil diambil:", result);
+
+        if (result.data) {
+          const opdInfo = {
+            id: result.data.id,
+            name: result.data.nama,
+            logo: result.data.file_path || defaultOpd.logo,
+            created_at: result.data.created_at,
+            updated_at: result.data.updated_at,
+          };
+
+          setOpdData(opdInfo);
+          localStorage.setItem("current_opd", JSON.stringify(opdInfo));
+        }
+      } catch (error) {
+        console.error("❌ Error fetching OPD data:", error);
+
+        const savedOpd = localStorage.getItem("current_opd");
+        if (savedOpd) {
+          try {
+            setOpdData(JSON.parse(savedOpd));
+          } catch (e) {
+            setOpdData(defaultOpd);
+          }
+        } else {
+          setOpdData(location.state?.selectedOpd || defaultOpd);
+        }
+      } finally {
+        setIsLoadingOpd(false);
+      }
+    };
+
+    if (!loadingUser) {
+      fetchOpdData();
+    }
+  }, [loadingUser, userData, location.state]);
+
+  useEffect(() => {
+    const fetchSubKategori = async () => {
+      try {
+        setLoadingSubKategori(true);
+        const response = await fetch(
+          "https://service-desk-be-production.up.railway.app/api/sub-kategori",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (Array.isArray(result)) {
+          setSubKategori(result);
+          console.log(
+            "Data sub-kategori berhasil diambil:",
+            result.length,
+            "item"
+          );
+        } else {
+          console.error("Format response tidak sesuai:", result);
+
+          setSubKategori([
+            { id: 1, nama: "Server" },
+            { id: 2, nama: "Komputer Desktop" },
+            { id: 3, nama: "Laptop" },
+            { id: 4, nama: "Printer" },
+            { id: 5, nama: "Monitor" },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching sub-kategori:", error);
+
+        setSubKategori([
+          { id: 1, nama: "Server" },
+          { id: 2, nama: "Komputer Desktop" },
+          { id: 3, nama: "Laptop" },
+          { id: 4, nama: "Printer" },
+          { id: 5, nama: "Monitor" },
+          { id: 6, nama: "Keyboard" },
+          { id: 7, nama: "Mouse" },
+        ]);
+      } finally {
+        setLoadingSubKategori(false);
+      }
+    };
+
+    fetchSubKategori();
+  }, []);
+
+  const toggleDropdown = (name) => {
+    setDropdowns((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
   const isFormValid = () => {
     return (
-      formData.nama.trim() !== "" &&
-      formData.nip.trim() !== "" &&
-      formData.divisi.trim() !== "" &&
       formData.judulPelaporan.trim() !== "" &&
       formData.dataAset.trim() !== "" &&
-      formData.nomorSeri.trim() !== "" &&
-      formData.kategoriAset.trim() !== "" &&
-      formData.subKategoriAset.trim() !== "" &&
-      formData.jenisAset.trim() !== "" &&
+      formData.selectedSubKategoriId.trim() !== "" &&
       formData.lokasiKejadian.trim() !== "" &&
       formData.rincianMasalah.trim() !== "" &&
       formData.penyelesaianDiharapkan.trim() !== "" &&
@@ -69,6 +335,15 @@ export default function FormPengajuan() {
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectSubKategori = (subKategoriItem) => {
+    setFormData((prev) => ({
+      ...prev,
+      dataAset: subKategoriItem.nama,
+      selectedSubKategoriId: subKategoriItem.id.toString(),
+    }));
+    toggleDropdown("dataAset");
   };
 
   const handleFileUpload = (event) => {
@@ -87,7 +362,7 @@ export default function FormPengajuan() {
   };
 
   const handleRemoveFile = (fileId) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const formatFileSize = (bytes) => {
@@ -102,90 +377,131 @@ export default function FormPengajuan() {
     if (isFormValid()) {
       setShowConfirmation(true);
     } else {
-      alert("Harap lengkapi semua field yang wajib diisi!");
+      const missing = [];
+      if (!formData.judulPelaporan.trim()) missing.push("Judul Pengajuan");
+      if (!formData.dataAset.trim()) missing.push("Jenis Aset");
+      if (!formData.selectedSubKategoriId.trim()) missing.push("ID Jenis Aset");
+      if (!formData.lokasiKejadian.trim()) missing.push("Lokasi Penempatan");
+      if (!formData.rincianMasalah.trim())
+        missing.push("Rincian Pengajuan Pelayanan");
+      if (!formData.penyelesaianDiharapkan.trim())
+        missing.push("Penyelesaian yang Diharapkan");
+      if (uploadedFiles.length === 0) missing.push("File Lampiran");
+      alert(`Harap lengkapi: ${missing.join(", ")}`);
     }
   };
 
-  const handleKirimLaporan = () => {
-    const laporanData = {
-      ...formData,
-      uploadedFiles: uploadedFiles.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      })),
-      tanggal: new Date().toISOString(),
-      status: "dikirim",
-      opdTujuan: selectedOpd.name,
-    };
+  const handleKirimLaporan = async () => {
+    setIsSubmitting(true);
 
-    console.log("Data laporan:", laporanData);
+    try {
+      const token = getToken();
+      const apiFormData = new FormData();
 
-    setShowConfirmation(false);
-    setShowSuccessPopup(true);
+      apiFormData.append("title", formData.judulPelaporan);
+      apiFormData.append("description", formData.rincianMasalah);
+      apiFormData.append(
+        "expected_resolution",
+        formData.penyelesaianDiharapkan
+      );
+
+      apiFormData.append(
+        "nama_asset",
+        parseInt(formData.selectedSubKategoriId) || 3
+      );
+
+      apiFormData.append("lokasi_penempatan", formData.lokasiKejadian);
+      apiFormData.append("priority", priority);
+
+      uploadedFiles.forEach((fileObj) => {
+        apiFormData.append("files[]", fileObj.file);
+      });
+
+      console.log("Mengirim FormData:");
+      console.log("Jenis Aset yang dipilih:", formData.dataAset);
+      console.log("ID Jenis Aset:", formData.selectedSubKategoriId);
+      console.log("OPD Tujuan:", opdData?.name || defaultOpd.name);
+      for (let [key, value] of apiFormData.entries()) {
+        console.log(key, value.name || value);
+      }
+
+      const response = await fetch(
+        "https://service-desk-be-production.up.railway.app/api/pengajuan-pelayanan",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: apiFormData,
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        console.error("Error dari backend:", err);
+        throw new Error(JSON.stringify(err));
+      }
+
+      const result = await response.json();
+      console.log("Sukses:", result);
+      setLastResponse(result);
+      setShowConfirmation(false);
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error("Gagal:", error);
+      alert(`Gagal mengirim: ${error.message}`);
+      setShowConfirmation(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSuccessOk = () => {
     navigate("/SuksesPelayanan", {
       state: {
-        laporanData: {
+        pengajuanData: {
           ...formData,
-          uploadedFiles: uploadedFiles.map((file) => ({
-            name: file.name,
-            size: file.size,
-            type: file.type,
+          uploadedFiles: uploadedFiles.map((f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
           })),
           tanggal: new Date().toISOString(),
           status: "dikirim",
-          opdTujuan: selectedOpd.name,
+          opdTujuan: opdData?.name || defaultOpd.name,
+          ticket_id: lastResponse?.ticket_id || "",
+          ticket_code: lastResponse?.ticket_code || "TICKET-" + Date.now(),
+          api_response: lastResponse || {},
         },
       },
     });
   };
 
-  const handleBatalkan = () => {
-    // Tampilkan warning popup ketika tombol batalkan diklik
-    setShowCancelWarning(true);
-  };
-
+  const handleBatalkan = () => setShowCancelWarning(true);
   const handleConfirmCancel = () => {
-    // Konfirmasi batalkan dan navigasi
     setShowCancelWarning(false);
     navigate(-1);
   };
+  const handleCancelCancel = () => setShowCancelWarning(false);
 
-  const handleCancelCancel = () => {
-    // Batal konfirmasi, tutup popup
-    setShowCancelWarning(false);
-  };
-
-  // Data dropdown options
-  const dataAsetOptions = [
-    "Laptop Lenovo ThinkPad X230",
-    "Printer HP LaserJet Pro P1102w",
-    "PC Dell OptiPlex 3020",
-    "Laptop ASUS ZenBook UX305FA ",
-    "Printer Canon PIXMA MP287",
-    "Laptop HP EliteBook 840",
-    "Printer Epson L3110",
-  ];
-
-  const nomorSeriOptions = [
-    "DELL-OP-3020-001",
-    "DELL-OP-3020-002",
-    "DELL-OP-3020-003",
-    "DELL-OP-3020-004",
-    "DELL-OP-3020-005",
-  ];
+  if (loadingUser) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data pengguna...</p>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
 
   return (
     <LayoutPegawai>
-      {/* Main Content Area */}
       <div className="min-h-screen bg-gray-50 pt-4">
         <div className="px-4 md:px-6 py-4 md:py-8">
-          {/* Form Pelaporan dalam Card */}
           <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md border border-gray-200">
-            {/* Header Form */}
             <div className="p-6 border-b border-gray-200 text-center">
               <h2 className="text-2xl font-bold text-[#226597]">
                 Pengajuan Pelayanan
@@ -193,28 +509,38 @@ export default function FormPengajuan() {
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Kirim laporan ke */}
               <div className="space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-start w-full gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
                     Kirim laporan ke
                   </label>
-                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start">
-                    {selectedOpd.logo && (
-                      <img
-                        src={selectedOpd.logo}
-                        alt={`Logo ${selectedOpd.name}`}
-                        className="w-5 h-5 object-cover rounded"
-                      />
+                  <div className="bg-[#226597] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 justify-center sm:justify-start min-w-[200px]">
+                    {isLoadingOpd ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span className="text-sm">Memuat OPD...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={opdData?.logo || defaultOpd.logo}
+                          alt={`Logo ${opdData?.name || defaultOpd.name}`}
+                          className="w-5 h-5 object-cover rounded"
+                          onError={(e) => {
+                            e.target.src = defaultOpd.logo;
+                            e.target.onerror = null;
+                          }}
+                        />
+                        <span className="text-sm">
+                          {opdData?.name || defaultOpd.name}
+                        </span>
+                      </>
                     )}
-                    <span className="text-sm">{selectedOpd.name}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Form Fields - Sesuai Gambar */}
               <div className="space-y-4">
-                {/* Nama */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Nama
@@ -224,7 +550,6 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Email */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Email
@@ -234,7 +559,6 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Divisi */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <label className="text-sm font-medium text-gray-700 sm:w-24 text-left whitespace-nowrap">
                     Divisi
@@ -244,10 +568,9 @@ export default function FormPengajuan() {
                   </div>
                 </div>
 
-                {/* Judul Pelaporan */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
-                    Judul Pelaporan
+                    Judul Pengajuan
                   </label>
                   <input
                     type="text"
@@ -256,145 +579,60 @@ export default function FormPengajuan() {
                     onChange={(e) =>
                       handleInputChange("judulPelaporan", e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
 
-                {/* Data Aset dan Nomor Seri */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Data Aset */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Data Aset
-                    </label>
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleDropdown("dataAset")}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between"
-                      >
-                        <span
-                          className={`flex-1 text-left ${
-                            formData.dataAset
-                              ? "text-gray-700"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {formData.dataAset || "Pilih data aset"}
-                        </span>
-                        <ChevronDown size={16} className="text-gray-400" />
-                      </button>
-                      {dropdowns.dataAset && (
-                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
-                          {dataAsetOptions.map((option) => (
-                            <div
-                              key={option}
-                              onClick={() => {
-                                handleInputChange("dataAset", option);
-                                toggleDropdown("dataAset");
-                              }}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left"
-                            >
-                              {option}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Nomor Seri */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Nomor Seri
-                    </label>
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleDropdown("nomorSeri")}
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between"
-                      >
-                        <span
-                          className={`flex-1 text-left ${
-                            formData.nomorSeri
-                              ? "text-gray-700"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {formData.nomorSeri || "Pilih nomor seri"}
-                        </span>
-                        <ChevronDown size={16} className="text-gray-400" />
-                      </button>
-                      {dropdowns.nomorSeri && (
-                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
-                          {nomorSeriOptions.map((option) => (
-                            <div
-                              key={option}
-                              onClick={() => {
-                                handleInputChange("nomorSeri", option);
-                                toggleDropdown("nomorSeri");
-                              }}
-                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left"
-                            >
-                              {option}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Kategori Aset, Sub-Kategori Aset, dan Jenis Aset */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Kategori Aset */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Kategori Aset
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.kategoriAset}
-                      onChange={(e) =>
-                        handleInputChange("kategoriAset", e.target.value)
-                      }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
-                    />
-                  </div>
-
-                  {/* Sub-Kategori Aset */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Sub-Kategori Aset
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.subKategoriAset}
-                      onChange={(e) =>
-                        handleInputChange("subKategoriAset", e.target.value)
-                      }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
-                    />
-                  </div>
-
-                  {/* Jenis Aset */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Jenis Aset
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.jenisAset}
-                      onChange={(e) =>
-                        handleInputChange("jenisAset", e.target.value)
-                      }
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
-                    />
-                  </div>
-                </div>
-
-                {/* Lokasi Kejadian */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 block">
-                    Lokasi Pelayanan
+                    Jenis Aset
+                  </label>
+                  <div className="relative">
+                    <button
+                      onClick={() => toggleDropdown("dataAset")}
+                      disabled={loadingSubKategori}
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span
+                        className={`flex-1 text-left ${
+                          formData.dataAset ? "text-gray-700" : "text-gray-400"
+                        }`}
+                      >
+                        {loadingSubKategori
+                          ? "Memuat jenis aset..."
+                          : formData.dataAset || "Pilih jenis aset"}
+                      </span>
+                      <ChevronDown size={16} className="text-gray-400" />
+                    </button>
+                    {dropdowns.dataAset && !loadingSubKategori && (
+                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 mt-1 max-h-60 overflow-y-auto">
+                        {subKategori.length > 0 ? (
+                          subKategori.map((item) => (
+                            <div
+                              key={item.id}
+                              onClick={() => handleSelectSubKategori(item)}
+                              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-left truncate"
+                              title={item.nama}
+                            >
+                              {item.nama}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                            Tidak ada data jenis aset
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formData.selectedSubKategoriId && (
+                    <p className="text-xs text-gray-500 mt-1"></p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">
+                    Lokasi Penempatan
                   </label>
                   <input
                     type="text"
@@ -403,13 +641,12 @@ export default function FormPengajuan() {
                     onChange={(e) =>
                       handleInputChange("lokasiKejadian", e.target.value)
                     }
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-left placeholder:text-left"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                 </div>
               </div>
 
-              {/* Rincian Masalah */}
-              <div className="space-y-2 text-left">
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Rincian Pengajuan Pelayanan
                 </label>
@@ -423,32 +660,29 @@ export default function FormPengajuan() {
                   onChange={(e) =>
                     handleInputChange("rincianMasalah", e.target.value)
                   }
-                  className="w-full px-3 py-2 min-h-[120px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-sm"
+                  className="w-full px-3 py-2 min-h-[120px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              {/* Upload File */}
-              <div className="space-y-2 text-left">
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Tambahkan file
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  Lampirkan screenshot, log, atau dokumen terkait untuk membantu
-                  kami memahami masalah Anda lebih cepat. (Maksimal unggah 2
-                  file dengan format PDF)
+                  Lampirkan screenshot, log, atau dokumen terkait (maksimal 2
+                  file, format PDF/JPG/PNG)
                 </p>
-
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileUpload}
                   multiple
+                  accept=".pdf,.jpg,.jpeg,.png"
                   className="hidden"
                 />
-
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-[#226597] hover:bg-[#1a507a] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center w-full sm:w-auto gap-2"
+                  className="bg-[#226597] hover:bg-[#1a507a] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
                   <svg
                     width="7"
@@ -470,48 +704,43 @@ export default function FormPengajuan() {
 
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <div className="space-y-2">
-                      {uploadedFiles.map((file) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md p-3"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0 flex-1">
-                            <FileText
-                              size={16}
-                              className="text-gray-400 flex-shrink-0"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-700 truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {formatFileSize(file.size)}
-                              </p>
-                            </div>
+                    {uploadedFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-md p-3"
+                      >
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <FileText
+                            size={16}
+                            className="text-gray-400 flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-700 truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(file.size)}
+                            </p>
                           </div>
-                          <button
-                            onClick={() => handleRemoveFile(file.id)}
-                            className="text-red-500 hover:text-red-700 transition-colors flex-shrink-0 ml-2"
-                          >
-                            <XCircle size={16} />
-                          </button>
                         </div>
-                      ))}
-                    </div>
+                        <button
+                          onClick={() => handleRemoveFile(file.id)}
+                          className="text-red-500 hover:text-red-700 ml-2 flex-shrink-0"
+                        >
+                          <XCircle size={16} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Penyelesaian yang Diharapkan */}
-              <div className="space-y-2 text-left">
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">
                   Penyelesaian yang Diharapkan
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  Jelaskan terkait harapan Anda terkait penyelesaian pengajuan
-                  tersebut agar kami dapat lebih menyesuaikan untuk
-                  menyelesaikan masalah ini
+                  Jelaskan harapan Anda terkait penyelesaian pengajuan ini
                 </p>
                 <textarea
                   placeholder="Ketik disini..."
@@ -519,176 +748,170 @@ export default function FormPengajuan() {
                   onChange={(e) =>
                     handleInputChange("penyelesaianDiharapkan", e.target.value)
                   }
-                  className="w-full px-3 py-2 min-h-[120px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-sm"
+                  className="w-full px-3 py-2 min-h-[120px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row justify-between pt-6 gap-3 sm:gap-0 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row justify-between pt-6 gap-3 border-t border-gray-200">
                 <button
                   onClick={handleBatalkan}
-                  className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors text-center"
+                  className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
                 >
                   Batalkan
                 </button>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <button
-                    onClick={handleKonfirmasiKirim}
-                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors text-center ${
-                      isFormValid()
-                        ? "bg-[#226597] hover:bg-[#1a507a] text-white cursor-pointer"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                    disabled={!isFormValid()}
+                <button
+                  onClick={handleKonfirmasiKirim}
+                  disabled={
+                    !isFormValid() || isSubmitting || loadingSubKategori
+                  }
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isFormValid() && !isSubmitting && !loadingSubKategori
+                      ? "bg-[#226597] hover:bg-[#1a507a] text-white"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  {isSubmitting ? "Mengirim..." : "Kirim"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <svg
+                    width="70"
+                    height="70"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    Kirim
+                    <path
+                      d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
+                      fill="#FF5F57"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  Apakah Anda yakin ingin mengirim?
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Cek kembali inputan Anda sebelum mengirim!
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <button
+                    onClick={handleKirimLaporan}
+                    disabled={isSubmitting}
+                    className={`px-4 py-2 rounded-md font-medium ${
+                      isSubmitting
+                        ? "bg-gray-400"
+                        : "bg-[#226597] hover:bg-[#1a507a] text-white"
+                    }`}
+                  >
+                    {isSubmitting ? "Mengirim..." : "Ya, saya yakin"}
+                  </button>
+                  <button
+                    onClick={() => setShowConfirmation(false)}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700"
+                  >
+                    Batalkan
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Popup Konfirmasi */}
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <svg
-                  width="70"
-                  height="70"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
-                    fill="#FF5F57"
-                  />
-                </svg>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Apakah Anda yakin ingin mengirim?
-              </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Cek kembali inputan Anda sebelum mengirim!
-              </p>
-
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button
-                  onClick={handleKirimLaporan}
-                  className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors"
-                >
-                  Ya, saya yakin
-                </button>
-                <button
-                  onClick={() => setShowConfirmation(false)}
-                  className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
-                >
-                  Batalkan
-                </button>
+        {showCancelWarning && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <svg
+                    width="70"
+                    height="70"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
+                      fill="#FF5F57"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  Apakah Anda yakin ingin kembali?
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  Data yang Anda inputkan tidak akan tersimpan!
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="px-4 py-2 bg-[#226597] text-white rounded-md font-medium hover:bg-[#1a507a]"
+                  >
+                    Ya, saya yakin!
+                  </button>
+                  <button
+                    onClick={handleCancelCancel}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700"
+                  >
+                    Batalkan
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Popup Warning Batalkan */}
-      {showCancelWarning && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <svg
-                  width="70"
-                  height="70"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M50 0C77.615 0 100 22.385 100 50C100 77.615 77.615 100 50 100C22.385 100 0 77.615 0 50C0 22.385 22.385 0 50 0ZM50 10C39.3913 10 29.2172 14.2143 21.7157 21.7157C14.2143 29.2172 10 39.3913 10 50C10 60.6087 14.2143 70.7828 21.7157 78.2843C29.2172 85.7857 39.3913 90 50 90C60.6087 90 70.7828 85.7857 78.2843 78.2843C85.7857 70.7828 90 60.6087 90 50C90 39.3913 85.7857 29.2172 78.2843 21.7157C70.7828 14.2143 60.6087 10 50 10ZM50 65C51.3261 65 52.5979 65.5268 53.5355 66.4645C54.4732 67.4021 55 68.6739 55 70C55 71.3261 54.4732 72.5979 53.5355 73.5355C52.5979 74.4732 51.3261 75 50 75C48.6739 75 47.4021 74.4732 46.4645 73.5355C45.5268 72.5979 45 71.3261 45 70C45 68.6739 45.5268 67.4021 46.4645 66.4645C47.4021 65.5268 48.6739 65 50 65ZM50 20C51.3261 20 52.5979 20.5268 53.5355 21.4645C54.4732 22.4021 55 23.6739 55 25V55C55 56.3261 54.4732 57.5979 53.5355 58.5355C52.5979 59.4732 51.3261 60 50 60C48.6739 60 47.4021 59.4732 46.4645 58.5355C45.5268 57.5979 45 56.3261 45 55V25C45 23.6739 45.5268 22.4021 46.4645 21.4645C47.4021 20.5268 48.6739 20 50 20Z"
-                    fill="#FF5F57"
-                  />
-                </svg>
-              </div>
+        {showSuccessPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <svg
+                    width="70"
+                    height="70"
+                    viewBox="0 0 90 90"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M44.6667 86.3333C56.1725 86.3333 66.5892 81.6696 74.1294 74.1294C81.6696 66.5892 86.3333 56.1725 86.3333 44.6667C86.3333 33.1608 81.6696 22.7442 74.1294 15.2039C66.5892 7.66371 56.1725 3 44.6667 3C33.1608 3 22.7442 7.66371 15.2039 15.2039C7.66371 22.7442 3 33.1608 3 44.6667C3 56.1725 7.66371 66.5892 15.2039 74.1294C22.7442 81.6696 33.1608 86.3333 44.6667 86.3333Z"
+                      fill="white"
+                      stroke="#27C840"
+                      strokeWidth="6"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M28 46.3333L39.6667 58L62 35.6667"
+                      stroke="#27C840"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-semibold mb-2">
+                  Pengajuan berhasil terkirim!
+                </h3>
 
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Apakah Anda yakin ingin kembali?
-              </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Data yang Anda inputkan tidak akan tersimpan!
-              </p>
-
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button
-                  onClick={handleConfirmCancel}
-                  className="px-4 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors"
-                >
-                  Ya, saya yakin!
-                </button>
-                <button
-                  onClick={handleCancelCancel}
-                  className="px-4 py-2 bg-red-600 border border-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
-                >
-                  Batalkan
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Popup Berhasil Dikirim */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
-            <div className="text-center">
-              {/* Logo Success */}
-              <div className="flex justify-center mb-4">
-                <svg
-                  width="70"
-                  height="70"
-                  viewBox="0 0 90 90"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M44.6667 86.3333C56.1725 86.3333 66.5892 81.6696 74.1294 74.1294C81.6696 66.5892 86.3333 56.1725 86.3333 44.6667C86.3333 33.1608 81.6696 22.7442 74.1294 15.2039C66.5892 7.66371 56.1725 3 44.6667 3C33.1608 3 22.7442 7.66371 15.2039 15.2039C7.66371 22.7442 3 33.1608 3 44.6667C3 56.1725 7.66371 66.5892 15.2039 74.1294C22.7442 81.6696 33.1608 86.3333 44.6667 86.3333Z"
-                    fill="white"
-                    stroke="#27C840"
-                    strokeWidth="6"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M28 46.3333L39.6667 58L62 35.6667"
-                    stroke="#27C840"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-
-              <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                Laporan berhasil terkirim!
-              </h3>
-
-              <div className="flex justify-center">
                 <button
                   onClick={handleSuccessOk}
-                  className="px-6 py-2 bg-[#226597] text-white rounded-md text-sm font-medium hover:bg-[#1a5078] transition-colors mt-6"
+                  className="mt-6 px-6 py-2 bg-[#226597] text-white rounded-md font-medium hover:bg-[#1a507a]"
                 >
                   Oke
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </LayoutPegawai>
   );
 }

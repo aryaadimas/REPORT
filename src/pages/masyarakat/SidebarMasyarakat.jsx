@@ -7,21 +7,23 @@ const SidebarMasyarakat = () => {
 
   const [activeItem, setActiveItem] = useState("");
 
-  // Deteksi item aktif berdasarkan path URL - IMPROVED
   useEffect(() => {
     const path = location.pathname;
-    console.log("Current path:", path); // Debugging
+    console.log("Current path:", path);
 
     if (
       path === "/" ||
       path === "/BerandaMasyarakat" ||
       path === "/berandamasyarakat" ||
-      path === "/BerandaMasyarakat.jsx" // Tambahan untuk handle kemungkinan path
+      path === "/BerandaMasyarakat.jsx"
     ) {
       setActiveItem("berandamasyarakat");
     } else if (path === "/kotakmasuk" || path === "/KotakMasuk") {
       setActiveItem("kotakmasuk");
-    } else if (path === "/riwayatmasyarakat" || path === "/riwayatrmasyarakat") {
+    } else if (
+      path === "/riwayatmasyarakat" ||
+      path === "/riwayatrmasyarakat"
+    ) {
       setActiveItem("riwayatmasyarakat");
     } else {
       setActiveItem("");
@@ -33,7 +35,7 @@ const SidebarMasyarakat = () => {
       id: "berandamasyarakat",
       label: "Beranda",
       icon: "/assets/Logo Beranda.png",
-      path: "/BerandaMasyarakat", // Pastikan path ini sama dengan route di App.js
+      path: "/BerandaMasyarakat",
     },
     {
       id: "kotakmasuk",
@@ -50,15 +52,13 @@ const SidebarMasyarakat = () => {
   ];
 
   const handleNavigation = (item) => {
-    console.log("Navigating to:", item.path); // Debugging
+    console.log("Navigating to:", item.path);
     navigate(item.path);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Navigation */}
       <div className="w-64 bg-white shadow-sm border-r p-6 fixed left-0 top-0 h-screen overflow-y-auto">
-        {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
           <div className="flex justify-center mb-6">
             <img
@@ -97,7 +97,6 @@ const SidebarMasyarakat = () => {
           </div>
         </div>
 
-        {/* Menu */}
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => (
             <button
@@ -122,10 +121,7 @@ const SidebarMasyarakat = () => {
         </nav>
       </div>
 
-      {/* Spacer untuk konten utama */}
-      <div className="flex-1 ml-64">
-        {/* Konten router akan tampil di sini */}
-      </div>
+      <div className="flex-1 ml-64"></div>
     </div>
   );
 };

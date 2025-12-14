@@ -1,27 +1,361 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Download } from "lucide-react";
 import LayoutPegawai from "../../components/Layout/LayoutPegawai";
 
-export default function NotifDiproses() {
+export default function NotifDiprosesPegawai() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [notificationData, setNotificationData] = useState(null);
 
-  // Ambil data dari form pengajuan melalui state navigasi
-  const pengajuanData = location.state?.pengajuanData || {};
+  const notificationId = params.id || location.state?.notificationId;
+  const stateNotificationData = location.state?.notificationData;
+  const notificationType = location.state?.type;
 
-  // Data tiket dengan jenis permohonan dari form
+  const getStatusColor = (status) => {
+    const statusMap = {
+      "Menunggu Diproses": "bg-yellow-500",
+      Pending: "bg-yellow-500",
+      "Dalam Proses": "bg-blue-500",
+      Diproses: "bg-blue-500",
+      Selesai: "bg-green-500",
+      Ditolak: "bg-red-500",
+      Ditutup: "bg-gray-500",
+      Dibatalkan: "bg-gray-400",
+    };
+    return statusMap[status] || "bg-gray-300";
+  };
+
+  useEffect(() => {
+    if (stateNotificationData) {
+      console.log("Menggunakan data dari state:", stateNotificationData);
+      setNotificationData(stateNotificationData);
+      setLoading(false);
+      return;
+    }
+
+    if (!notificationId) {
+      navigate("/kotakmasuk");
+      return;
+    }
+
+    const fetchNotificationData = async () => {
+      try {
+        setLoading(true);
+
+        const token =
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("token") ||
+          "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FyaXNlLWFwcC5teS5pZC9hcGkvbG9naW4iLCJpYXQiOjE3NjUzOTM5MzAsImV4cCI6MTc2NTk5ODczMCwibmJmIjoxNzY1MzkzOTMwLCJqdGkiOiJGSW15YU1XZ1Zkck5aTkVPIiwic3ViIjoiNSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.KSswG95y_yvfNmpH5hLBNXnuVfiaycCD4YN5JMRYQy8";
+
+        // Gunakan endpoint untuk pegawai
+        const response = await fetch(
+          `https://service-desk-be-production.up.railway.app/api/tickets/pegawai/${notificationId}`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Data notifikasi pegawai:", data);
+
+        setNotificationData(data);
+      } catch (err) {
+        console.error("Error fetching notification data:", err);
+        setError(err.message);
+
+        // Fallback data untuk pegawai jika API error
+        setNotificationData({
+          ticket_id: "8b0239ae-5ac7-4891-ab91-732ea79f1c0c",
+          ticket_code: "SVD-PO-0055-PG",
+          title: "Printer tidak berfungsi",
+          description: "Printer di ruangan kepala bagian tidak bisa mencetak",
+          priority: "Low",
+          status: "selesai",
+          rejection_reason_seksi: null,
+          created_at: "2025-12-08T05:07:51.607302",
+          lokasi_kejadian: "Gedung A Lantai 3",
+          expected_resolution: "Printer dapat berfungsi normal",
+          pengerjaan_awal: "2025-12-08T05:09:02.779980",
+          pengerjaan_akhir: "2025-12-08T05:09:09.020061",
+          status_ticket_pengguna: "Selesai",
+          status_ticket_seksi: "normal",
+          status_ticket_teknisi: "selesai",
+          creator: {
+            user_id: "8a762f5a-8fb1-43af-b912-991a58a372cc",
+            full_name: "Sri Wulandari",
+            email: "sri.wulandari@company.com",
+            profile: null,
+          },
+          asset: {
+            asset_id: 1052,
+            nama_asset: "Laptop Dell Latitude 5420",
+            kode_bmd: "BRG-001",
+            nomor_seri: "DL5420-001",
+            kategori: "ti",
+            subkategori_nama: "Server",
+            jenis_asset: "barang",
+            lokasi_asset: null,
+            opd_id_asset: 1,
+          },
+          files: [],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotificationData();
+  }, [notificationId, navigate, stateNotificationData]);
+
+  const formatTimeAgo = (isoString) => {
+    if (!isoString) return "2 hari yang lalu";
+
+    const createdTime = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - createdTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) {
+      return `${diffMins} menit yang lalu`;
+    } else if (diffHours < 24) {
+      return `${diffHours} jam yang lalu`;
+    } else {
+      return `${diffDays} hari yang lalu`;
+    }
+  };
+
+  const handleDownloadTicket = async () => {
+    if (!notificationData) return;
+
+    const ticketData = {
+      noTiket: notificationData.ticket_code || "SVD-PO-0055-PG",
+      jenisLayanan: "Pelaporan Internal",
+      jenisPermohonan:
+        notificationData.asset?.nama_asset || "Laptop Dell Latitude 5420",
+      status: notificationData.status_ticket_pengguna || "Menunggu Diproses",
+      tanggalDibuat: notificationData.created_at
+        ? new Date(notificationData.created_at).toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : new Date().toLocaleDateString("id-ID"),
+      waktuDibuat: notificationData.created_at
+        ? new Date(notificationData.created_at).toLocaleTimeString("id-ID")
+        : new Date().toLocaleTimeString("id-ID"),
+      title: notificationData.title || "Laporan Tiket",
+      description: notificationData.description || "Tidak ada deskripsi",
+      lokasi: notificationData.lokasi_kejadian || "Tidak ditentukan",
+    };
+
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+
+      doc.setFontSize(20);
+      doc.setTextColor(34, 101, 151);
+      doc.text("TIKET LAYANAN INTERNAL", 105, 20, { align: "center" });
+
+      doc.setDrawColor(34, 101, 151);
+      doc.setLineWidth(0.5);
+      doc.line(20, 25, 190, 25);
+
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("SERVICE DESK INTERNAL", 105, 35, { align: "center" });
+      doc.setFontSize(12);
+      doc.text("Perusahaan Internal", 105, 42, { align: "center" });
+
+      doc.setFontSize(14);
+      doc.setTextColor(34, 101, 151);
+      doc.text("INFORMASI TIKET", 20, 55);
+
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+
+      doc.setFont(undefined, "bold");
+      doc.text("No. Tiket:", 20, 65);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.noTiket, 60, 65);
+
+      doc.setFont(undefined, "bold");
+      doc.text("Status:", 20, 72);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.status, 60, 72);
+
+      doc.setFont(undefined, "bold");
+      doc.text("Judul Laporan:", 20, 79);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.title, 60, 79);
+
+      doc.setFont(undefined, "bold");
+      doc.text("Aset:", 20, 86);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.jenisPermohonan, 60, 86);
+
+      doc.setFont(undefined, "bold");
+      doc.text("Tanggal:", 20, 93);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.tanggalDibuat, 60, 93);
+
+      doc.setFont(undefined, "bold");
+      doc.text("Lokasi:", 20, 100);
+      doc.setFont(undefined, "normal");
+      doc.text(ticketData.lokasi, 60, 100);
+
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Deskripsi:", 20, 115);
+      doc.text(ticketData.description, 20, 122, { maxWidth: 170 });
+
+      doc.text(
+        "Tiket ini merupakan bukti pengajuan layanan internal.",
+        20,
+        140
+      );
+      doc.text(
+        "Mohon simpan nomor tiket untuk melacak status penyelesaian.",
+        20,
+        145
+      );
+
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Dokumen ini dicetak secara otomatis oleh sistem", 105, 160, {
+        align: "center",
+      });
+      doc.text(
+        `Tanggal cetak: ${new Date().toLocaleDateString(
+          "id-ID"
+        )} ${new Date().toLocaleTimeString("id-ID")}`,
+        105,
+        165,
+        { align: "center" }
+      );
+
+      doc.rect(10, 10, 190, 280);
+
+      doc.save(`Tiket-${ticketData.noTiket}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Gagal mengunduh tiket. Silakan coba lagi.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597] mx-auto"></div>
+            <p className="mt-4 text-gray-600">Memuat data notifikasi...</p>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
+  if (error && !notificationData) {
+    return (
+      <LayoutPegawai>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-red-600 mb-4">
+              Terjadi Kesalahan
+            </h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={() => navigate("/kotakmasuk")}
+              className="bg-[#226597] hover:bg-[#1a507a] text-white py-2 px-6 rounded-md text-sm font-medium transition-colors w-full"
+            >
+              Kembali ke Kotak Masuk
+            </button>
+          </div>
+        </div>
+      </LayoutPegawai>
+    );
+  }
+
   const ticketData = {
-    noTiket: "LYN215491",
+    noTiket: notificationData?.ticket_code || "SVD-PO-0055-PG",
     pin: "228973",
-    jenisLayanan: "Pengajuan Pelayanan",
-    jenisPermohonan: pengajuanData.jenisPermohonan || "Reset Password", // Ambil dari form
+    jenisLayanan: "Pelaporan Internal",
+    jenisPermohonan:
+      notificationData?.asset?.nama_asset || "Laptop Dell Latitude 5420",
+  };
+
+  const displayStatus =
+    notificationData?.status_ticket_pengguna ||
+    notificationData?.status ||
+    "Menunggu Diproses";
+
+  const getPageTitle = () => {
+    if (notificationType === "Tiket Dibuat") {
+      return "Tiket Dibuat";
+    } else if (notificationType === "Status Tiket Diperbarui") {
+      return "Status Tiket Diperbarui";
+    }
+
+    if (displayStatus === "Menunggu Diproses") {
+      return "Tiket Dibuat";
+    }
+    return "Status Tiket Diperbarui";
+  };
+
+  const getStatusMessage = () => {
+    const status = displayStatus;
+    const ticketNo = ticketData.noTiket;
+
+    switch (status) {
+      case "Menunggu Diproses":
+        return `Tiket ${ticketNo} sedang menunggu untuk diproses oleh tim terkait.`;
+      case "Dalam Proses":
+      case "Diproses":
+        return `Tiket ${ticketNo} kini sedang diproses oleh tim teknis.`;
+      case "Selesai":
+        return `Tiket ${ticketNo} telah selesai diproses.`;
+      case "Ditolak":
+        return `Tiket ${ticketNo} telah ditolak.`;
+      default:
+        return `Status tiket ${ticketNo} telah diperbarui.`;
+    }
+  };
+
+  const getStatusHeading = () => {
+    const status = displayStatus;
+
+    switch (status) {
+      case "Menunggu Diproses":
+        return "⏳ Tiket Anda Sedang Menunggu Diproses";
+      case "Dalam Proses":
+      case "Diproses":
+        return "🛠️ Laporan Anda sedang kami tangani!";
+      case "Selesai":
+        return "✅ Tiket Anda Telah Selesai";
+      case "Ditolak":
+        return "❌ Tiket Anda Ditolak";
+      default:
+        return "📋 Status Tiket Diperbarui";
+    }
   };
 
   return (
     <LayoutPegawai>
       <div className="min-h-screen bg-gray-50">
-        {/* Main Content - Simple structure */}
         <div className="pt-4 pb-8">
-          {/* Header dan Button Kembali */}
           <div className="px-4 mb-6">
             <div className="max-w-6xl mx-auto">
               <button
@@ -47,27 +381,26 @@ export default function NotifDiproses() {
             </div>
           </div>
 
-          {/* Content Section */}
           <div className="px-4">
             <div className="max-w-6xl mx-auto">
-              {/* Outer Card */}
               <div className="bg-white rounded-2xl shadow-xl border border-gray-300 p-6 md:p-8">
-                {/* Header Tiket Dibuat */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div>
-                    <h1 className="text-xl font-semibold text-[#000000] mb-4">
-                      Status Tiket Diperbarui
+                    <h1 className="text-xl md:text-2xl font-semibold text-[#000000] mb-4">
+                      {getPageTitle()}
                     </h1>
                     <div className="bg-[#226597] text-white px-4 py-1 rounded-2xl inline-block">
-                      <span className="text-sm font-medium">Status</span>
+                      <span className="text-sm font-medium">
+                        {getPageTitle() === "Tiket Dibuat" ? "Tiket" : "Status"}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">2 hari yang lalu</div>
+                  <div className="text-sm text-gray-500">
+                    {formatTimeAgo(notificationData?.created_at)}
+                  </div>
                 </div>
 
-                {/* Inner Card */}
                 <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg border border-gray-200 mb-8">
-                  {/* Header Card */}
                   <div className="p-6">
                     <div className="flex items-center justify-center mx-auto mb-4">
                       <img
@@ -76,22 +409,21 @@ export default function NotifDiproses() {
                         className="w-16 h-16 object-contain"
                       />
                     </div>
-                    <h1 className="text-2xl font-semibold text-[#000000] text-center">
-                      Status Tiket Diperbarui
+
+                    <h1 className="text-xl md:text-2xl font-semibold text-[#000000] text-center">
+                      {getPageTitle() === "Tiket Dibuat"
+                        ? "Laporan Anda Telah Berhasil Terkirim"
+                        : "Status Tiket Telah Diperbarui"}
                     </h1>
                   </div>
 
-                  {/* Content */}
                   <div className="p-6 space-y-6">
-                    {/* Pengaduan Anda Section */}
                     <div className="text-left">
                       <h3 className="text-sm font-medium text-gray-600 mb-4">
                         Pengaduan Anda:
                       </h3>
 
-                      {/* No. Tiket dan Status */}
                       <div className="space-y-3">
-                        {/* No. Tiket */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
                             No. Tiket
@@ -103,21 +435,24 @@ export default function NotifDiproses() {
                           </div>
                         </div>
 
-                        {/* Status */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <span className="text-sm font-medium text-gray-600 whitespace-nowrap w-16">
                             Status
                           </span>
-                          <div className="bg-yellow-500 text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center">
-                            <span className="text-sm font-medium">Pending</span>
+                          <div
+                            className={`${getStatusColor(
+                              displayStatus
+                            )} text-white px-6 py-2 rounded-lg inline-flex min-w-[200px] justify-center`}
+                          >
+                            <span className="text-sm font-medium">
+                              {displayStatus}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Jenis Layanan dan OPD Tujuan */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                      {/* Jenis Layanan */}
                       <div>
                         <div className="flex items-center gap-2">
                           <svg
@@ -194,7 +529,6 @@ export default function NotifDiproses() {
                         </div>
                       </div>
 
-                      {/* OPD Tujuan */}
                       <div>
                         <div className="flex items-center gap-2">
                           <svg
@@ -261,7 +595,7 @@ export default function NotifDiproses() {
                             </defs>
                           </svg>
                           <label className="text-sm font-medium text-gray-600">
-                            OPD Tujuan:
+                            Aset:
                           </label>
                         </div>
                         <div className="text-sm text-gray-800 bg-gray-50 px-3 py-2 rounded-md ml-16 -mt-1">
@@ -269,43 +603,59 @@ export default function NotifDiproses() {
                         </div>
                       </div>
                     </div>
+
+                    <div className="text-right pt-4">
+                      <button
+                        onClick={handleDownloadTicket}
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 px-0 py-2 text-sm font-medium transition-colors underline"
+                      >
+                        <Download className="w-4 h-4" />
+                        Unduh tiket
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Informasi Tambahan */}
                 <div className="space-y-6 text-left">
                   <div className="text-gray-800">
-                    <p className="font-semibold text-lg">
-                      🛠️ Laporan Anda sedang kami tangani!
+                    <p className="font-semibold text-lg md:text-xl">
+                      {getStatusHeading()}
                     </p>
-                    <div className="mt-2 text-sm">
-                      <p>
-                        Tiket{" "}
-                        <span className="font-bold text-[#226597]">
-                          #{ticketData.noTiket}
-                        </span>{" "}
-                        kini sedang diproses oleh tim teknis.
-                      </p>
-                      <p className="mt-2">
-                        Kami akan segera memberi kabar setelah ada pembaruan
-                        status berikutnya.
-                      </p>
+                    <div className="mt-2 text-sm md:text-base">
+                      <p>{getStatusMessage()}</p>
+                      {displayStatus === "Menunggu Diproses" && (
+                        <p className="mt-2">
+                          Tim akan segera memproses tiket Anda dalam waktu yang
+                          telah ditentukan.
+                        </p>
+                      )}
+                      {(displayStatus === "Dalam Proses" ||
+                        displayStatus === "Diproses") && (
+                        <p className="mt-2">
+                          Kami akan segera memberi kabar setelah ada pembaruan
+                          status berikutnya.
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm md:text-base">
                     <p>
-                      <span className="text-sm">Jenis Layanan:</span> Pelaporan
-                      Online
+                      <span>Jenis Layanan:</span> {ticketData.jenisLayanan}
                     </p>
                     <p>
-                      <span className="text-sm">OPD Tujuan:</span> Dinas
-                      Pendidikan
+                      <span>Aset:</span> {ticketData.jenisPermohonan}
                     </p>
+                    {notificationData?.lokasi_kejadian && (
+                      <p>
+                        <span>Lokasi Kejadian:</span>{" "}
+                        {notificationData.lokasi_kejadian}
+                      </p>
+                    )}
                   </div>
 
                   <div className="text-gray-800">
-                    <p className="text-sm">
+                    <p className="text-sm md:text-base">
                       Anda dapat memantau progres tiket di menu{" "}
                       <button
                         onClick={() => navigate("/pelacakan")}

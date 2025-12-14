@@ -1,7 +1,39 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [statistics, setStatistics] = useState({
+    total_opd: 0,
+    total_pelaporan: 0,
+    presentase_rating: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const response = await fetch(
+          "https://service-desk-be-production.up.railway.app/api/public/landing-page"
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.status === "success") {
+          setStatistics(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatistics();
+  }, []);
 
   const handleDaftarSekarang = () => {
     navigate("/Register");
@@ -21,69 +53,34 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center space-x-4">
               <img
                 src="/assets/Logo Report.png"
                 alt="Logo REPORT"
                 className="h-8 md:h-10"
               />
-
               <img
                 src="/assets/REPORT.png"
                 alt="REPORT"
                 className="w-16 md:w-20 object-contain"
               />
             </div>
-
-            {/* Navigation Menu */}
             <div className="flex items-center space-x-6">
               <button
                 onClick={handleLayananClick}
                 className="text-[#226597] hover:text-[#1a507a] font-medium transition-colors flex items-center space-x-1"
               >
                 <span>Layanan</span>
-                <svg
-                  width="10"
-                  height="5"
-                  viewBox="0 0 10 5"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M0.5 0.5L5 4.5L9.5 0.5"
-                    stroke="#113F67"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
               </button>
-
               <button
                 onClick={handleOpdClick}
                 className="text-[#226597] hover:text-[#1a507a] font-medium transition-colors flex items-center space-x-1"
               >
                 <span>OPD</span>
-                <svg
-                  width="10"
-                  height="5"
-                  viewBox="0 0 10 5"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M0.5 0.5L5 4.5L9.5 0.5"
-                    stroke="#113F67"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
               </button>
-
               <button
                 onClick={handleLoginClick}
                 className="bg-[#226597] hover:bg-[#1a507a] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
@@ -95,13 +92,10 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="relative overflow-hidden">
-        {/* Custom SVG Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden"></div>
         <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12">
-            {/* Konten Hero Section */}
             <div className="flex-1 max-w-2xl text-left ml-8 lg:ml-16 xl:ml-24">
               <div className="mb-16 md:mb-24">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#226597] mb-6 leading-snug">
@@ -111,12 +105,10 @@ export default function LandingPage() {
                   <br />
                   dengan Mudah
                 </h1>
-
                 <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed">
                   Sampaikan laporan dan keluhan Anda secara langsung ke instansi
                   terkait melalui satu portal terintegrasi.
                 </p>
-
                 <button
                   onClick={handleDaftarSekarang}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white px-8 py-3 rounded-md text-base font-medium transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
@@ -139,8 +131,6 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
-
-            {/* Gambar */}
             <div className="flex-1 flex justify-center lg:justify-end items-start">
               <img
                 src="/assets/Register Flip.png"
@@ -150,9 +140,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* About Section */}
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-16 mt-16 md:mt-24">
-            {/* Gambar Tentang Report */}
             <div className="flex-1 flex justify-center lg:justify-start items-start">
               <img
                 src="/assets/Tentang Report.png"
@@ -160,11 +148,8 @@ export default function LandingPage() {
                 className="max-w-[90%] lg:max-w-[450px] xl:max-w-[500px] h-auto object-contain ml-4 lg:ml-8 xl:ml-12"
               />
             </div>
-
-            {/* About Section */}
             <div className="flex-1 w-full max-w-full text-left mt-16 md:mt-24">
               <div className="mb-6">
-                {/* SVG Tentang REPORT */}
                 <div className="mb-4">
                   <img
                     src="/assets/TeksTentang.png"
@@ -173,7 +158,6 @@ export default function LandingPage() {
                   />
                 </div>
               </div>
-
               <div className="text-left">
                 <p className="text-gray-600 mb-8 text-base md:text-lg leading-relaxed">
                   Portal ini adalah layanan digital terpadu untuk masyarakat
@@ -208,11 +192,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Statistics Section */}
           <div className="mt-16 md:mt-24 mb-16 md:mb-24 py-12 bg-gradient-to-br from-[#226597] to-[#1a507a]">
             <div className="max-w-6xl mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-                {/* Card 1: OPD Terintegrasi */}
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex justify-center mb-4">
                     <img
@@ -222,14 +204,12 @@ export default function LandingPage() {
                     />
                   </div>
                   <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4">
-                    18
+                    {loading ? "..." : statistics.total_opd}
                   </div>
                   <div className="text-sm md:text-base text-gray-700 font-medium">
                     OPD telah terintegrasi
                   </div>
                 </div>
-
-                {/* Card 2: Laporan Diselesaikan */}
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex justify-center mb-4">
                     <img
@@ -239,14 +219,12 @@ export default function LandingPage() {
                     />
                   </div>
                   <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4">
-                    17K+
+                    {loading ? "..." : statistics.total_pelaporan}
                   </div>
                   <div className="text-sm md:text-base text-gray-700 font-medium">
                     Laporan telah diselesaikan
                   </div>
                 </div>
-
-                {/* Card 3: Kepuasan Pengguna */}
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                   <div className="flex justify-center mb-4">
                     <img
@@ -256,7 +234,9 @@ export default function LandingPage() {
                     />
                   </div>
                   <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4">
-                    97%
+                    {loading
+                      ? "..."
+                      : `${statistics.presentase_rating.toFixed(0)}%`}
                   </div>
                   <div className="text-sm md:text-base text-gray-700 font-medium whitespace-nowrap">
                     Pengguna puas menggunakan layanan
@@ -266,28 +246,23 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Testimoni Section */}
           <div className="mt-20 md:mt-32 mb-20 md:mb-32 bg-white">
             <div className="text-center mb-12 md:mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-black mb-4">
                 Testimoni Pengguna
               </h2>
             </div>
-
             <div className="max-w-7xl mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8">
-                {/* Testimoni 1 */}
                 <div className="bg-gradient-to-br from-[#226597] to-[#1a507a] rounded-xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-start mb-6">
                     <div className="flex-shrink-0 mr-4">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                          <img
-                            src="/assets/Lomon.png"
-                            alt="Budi Santoso"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <img
+                          src="/assets/Lomon.png"
+                          alt="Budi Santoso"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </div>
                   </div>
@@ -309,28 +284,18 @@ export default function LandingPage() {
                         Ketua RW 02 Kelurahan Wonokromo
                       </div>
                     </div>
-                    <div className="text-yellow-400 text-xl">
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                    </div>
+                    <div className="text-yellow-400 text-xl">★★★★★</div>
                   </div>
                 </div>
-
-                {/* Testimoni 2 */}
                 <div className="bg-gradient-to-br from-[#226597] to-[#1a507a] rounded-xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-start mb-6">
                     <div className="flex-shrink-0 mr-4">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                          <img
-                            src="/assets/Ryujin.jpg"
-                            alt="Budi Santoso"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <img
+                          src="/assets/Ryujin.jpg"
+                          alt="Hana Riana"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </div>
                   </div>
@@ -352,28 +317,18 @@ export default function LandingPage() {
                         Guru SMP Negeri 88 Kenjeran
                       </div>
                     </div>
-                    <div className="text-yellow-400 text-xl">
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                    </div>
+                    <div className="text-yellow-400 text-xl">★★★★★</div>
                   </div>
                 </div>
-
-                {/* Testimoni 3 */}
                 <div className="bg-gradient-to-br from-[#226597] to-[#1a507a] rounded-xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
                   <div className="flex items-start mb-6">
                     <div className="flex-shrink-0 mr-4">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                          <img
-                            src="/assets/Haechan.jpg"
-                            alt="Budi Santoso"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <img
+                          src="/assets/Haechan.jpg"
+                          alt="Widodo Sumarno"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </div>
                   </div>
@@ -395,20 +350,13 @@ export default function LandingPage() {
                         Pemilik Warung
                       </div>
                     </div>
-                    <div className="text-yellow-400 text-xl">
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                      <span>★</span>
-                    </div>
+                    <div className="text-yellow-400 text-xl">★★★★★</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* CTA Section */}
           <div className="bg-gradient-to-br from-[#226597] to-[#1a507a] py-16 md:py-20">
             <div className="max-w-4xl mx-auto px-4 text-center">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
@@ -440,12 +388,9 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Footer Section */}
         <footer className="bg-white text-gray-800 py-12 border-t border-gray-200">
           <div className="max-w-7xl mx-auto px-4">
-            {/* Bagian Atas - Logo dan Lapor Sekarang */}
             <div className="flex flex-col lg:flex-row items-start justify-between gap-8 mb-8">
-              {/* Logo */}
               <div className="flex items-center space-x-4">
                 <img
                   src="/assets/Logo Report.png"
@@ -458,8 +403,6 @@ export default function LandingPage() {
                   className="h-6 md:h-3"
                 />
               </div>
-
-              {/* Lapor Sekarang */}
               <div className="max-w-md mr-auto">
                 <h3 className="text-2xl md:text-3xl font-bold text-[#226597] mb-4">
                   Lapor Sekarang
@@ -472,7 +415,7 @@ export default function LandingPage() {
                   onClick={handleDaftarSekarang}
                   className="bg-[#226597] hover:bg-[#1a507a] text-white px-6 py-3 rounded-md text-base font-medium transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
                 >
-                  Daftar Sekarang 
+                  Daftar Sekarang
                   <svg
                     width="10"
                     height="17"
@@ -490,21 +433,13 @@ export default function LandingPage() {
                 </button>
               </div>
             </div>
-
-            {/* Garis Horizontal */}
             <div className="w-full h-px bg-gray-300 my-8"></div>
-
-            {/* Bagian Bawah - Menu dan Copyright */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              {/* Menu Footer */}
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center space-x-2">
-                  {/* Bahasa Indonesia */}
                   <span className="font-semibold text-[#226597]">
                     Bahasa Indonesia
                   </span>
-
-                  {/* Icon V dropdown */}
                   <svg
                     width="12"
                     height="8"

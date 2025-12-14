@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import LayoutMasyarakat from "../../components/Layout/LayoutMasyarakat";
 
 export default function Tampilan() {
   const [selectedTheme, setSelectedTheme] = useState("terang");
@@ -73,108 +72,91 @@ export default function Tampilan() {
   ];
 
   return (
-    <LayoutMasyarakat>
-      <div className="min-h-screen bg-gray-50">
-        {/* Main Content */}
-        <div className="px-4 md:px-6 py-4 md:py-8">
-          <div className="w-full max-w-8xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-semibold text-[#226597] mb-4 md:mb-6 text-left">
-              Tampilan
-            </h1>
+    <div className="w-full bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-2xl md:text-3xl font-semibold text-[#226597] mb-8">
+          Tampilan
+        </h1>
 
-            {/* Preferences Section */}
-            <div className="bg-white rounded-xl md:rounded-2xl shadow-md p-4 md:p-6 lg:p-8 mb-6 md:mb-8 flex flex-col md:flex-row items-start justify-between gap-6 md:gap-8">
-              {/* Kiri: Title + Deskripsi */}
-              <div className="w-full md:w-1/3">
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2 md:mb-3 text-left">
-                  Preferensi
-                </h2>
-                <p className="text-gray-600 text-sm text-left">
-                  Pilih preferensi tampilan Anda
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Preferensi
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Pilih preferensi tampilan Anda
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {themeOptions.map((theme) => (
+              <div key={theme.id}>
+                <button
+                  onClick={() => setSelectedTheme(theme.id)}
+                  className={`w-full mb-3 p-6 rounded-lg border-2 transition-all duration-200 ${
+                    selectedTheme === theme.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  {theme.preview}
+                </button>
+                <p className="text-sm font-medium text-gray-700">
+                  {theme.name}
                 </p>
               </div>
-
-              {/* Kanan: Pilihan Tema */}
-              <div className="w-full md:flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-                {themeOptions.map((theme) => (
-                  <div key={theme.id} className="text-left">
-                    <button
-                      onClick={() => setSelectedTheme(theme.id)}
-                      className={`w-full mb-2 md:mb-3 p-4 md:p-6 rounded-lg md:rounded-xl border-2 transition-all duration-200 ${
-                        selectedTheme === theme.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      {theme.preview}
-                    </button>
-                    <p className="text-sm font-medium text-gray-700">
-                      {theme.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Font Size Section */}
-            <div className="bg-white rounded-xl md:rounded-2xl shadow-md p-4 md:p-6 lg:p-8 mb-6 md:mb-8 flex flex-col md:flex-row items-start justify-between gap-6 md:gap-8">
-              {/* Title + Deskripsi */}
-              <div className="w-full md:w-1/3">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2 text-left">
-                  Ukuran Font
-                </h2>
-                <p className="text-gray-600 text-sm text-left">
-                  Pilih ukuran font yang Anda inginkan
-                </p>
-              </div>
-
-              {/* Pilihan Font */}
-              <div className="w-full md:flex-1 flex flex-col sm:flex-row items-center gap-4 md:gap-6 lg:gap-8">
-                {fontSizes.map((font, index) => (
-                  <div key={font.id} className="text-left">
-                    <button
-                      onClick={() => setSelectedFontSize(font.id)}
-                      className={`w-12 h-12 md:w-16 md:h-16 mb-2 md:mb-3 flex items-center justify-center rounded-lg md:rounded-xl border-2 transition-all duration-200 ${
-                        selectedFontSize === font.id
-                          ? "border-blue-500 bg-blue-50 text-blue-600"
-                          : "border-gray-200 hover:border-gray-300 text-gray-600"
-                      }`}
-                    >
-                      <span
-                        className={`font-medium ${font.size} ${
-                          index === 0
-                            ? "text-gray-400"
-                            : index === 1
-                            ? "text-gray-600"
-                            : "text-gray-800"
-                        }`}
-                      >
-                        {font.label}
-                      </span>
-                    </button>
-                    <p className="text-xs md:text-sm text-gray-600 capitalize">
-                      {font.id}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-8 md:mt-16 p-4 md:p-6 bg-white rounded-xl md:rounded-2xl shadow-sm flex flex-col-reverse sm:flex-row justify-end gap-3 md:gap-4">
-              {/* Tombol Batalkan */}
-              <button className="px-4 py-2.5 md:px-6 md:py-3 bg-white border border-gray-200 rounded-lg md:rounded-xl shadow-sm text-gray-600 hover:text-gray-800 hover:border-gray-300 font-medium transition-all duration-200 w-full sm:w-auto">
-                Batalkan
-              </button>
-
-              {/* Tombol Simpan Perubahan */}
-              <button className="px-4 py-2.5 md:px-6 md:py-3 bg-[#226597] text-white rounded-lg md:rounded-xl shadow-md hover:bg-[#1e5a87] font-medium transition-all duration-200 w-full sm:w-auto mb-3 sm:mb-0">
-                Simpan perubahan
-              </button>
-            </div>
+            ))}
           </div>
         </div>
+
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Ukuran Font
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Pilih ukuran font yang Anda inginkan
+            </p>
+          </div>
+
+          <div className="flex gap-8">
+            {fontSizes.map((font, index) => (
+              <div key={font.id}>
+                <button
+                  onClick={() => setSelectedFontSize(font.id)}
+                  className={`w-16 h-16 mb-3 flex items-center justify-center rounded-lg border-2 transition-all duration-200 ${
+                    selectedFontSize === font.id
+                      ? "border-blue-500 bg-blue-50 text-blue-600"
+                      : "border-gray-200 hover:border-gray-300 text-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`font-medium ${font.size} ${
+                      index === 0
+                        ? "text-gray-400"
+                        : index === 1
+                        ? "text-gray-600"
+                        : "text-gray-800"
+                    }`}
+                  >
+                    {font.label}
+                  </span>
+                </button>
+                <p className="text-sm text-gray-600 capitalize">{font.id}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-4">
+          <button className="px-6 py-3 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-600 hover:text-gray-800 hover:border-gray-300 font-medium transition-all duration-200">
+            Batalkan
+          </button>
+          <button className="px-6 py-3 bg-[#226597] text-white rounded-lg shadow-md hover:bg-[#1e5a87] font-medium transition-all duration-200">
+            Simpan perubahan
+          </button>
+        </div>
       </div>
-    </LayoutMasyarakat>
+    </div>
   );
 }
