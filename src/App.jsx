@@ -159,7 +159,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/loginsso" replace />} />
 
         {/* Halaman dengan Layout */}
         <Route path="/" element={<LayoutSeksi />}>
