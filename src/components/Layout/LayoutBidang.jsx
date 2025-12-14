@@ -18,11 +18,8 @@ export default function LayoutBidang({ children }) {
         }
 
         const response = await fetch(`/api/me`, {
-          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
           },
         });
 
@@ -32,19 +29,18 @@ export default function LayoutBidang({ children }) {
             navigate("/login");
             return;
           }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error("Fetch profile gagal");
         }
 
         const data = await response.json();
         setProfileData(data);
         localStorage.setItem("user_profile", JSON.stringify(data));
       } catch (error) {
-        console.error("Error fetching profile:", error);
-        const savedProfile = localStorage.getItem("user_profile");
-        if (savedProfile) {
-          setProfileData(JSON.parse(savedProfile));
+        console.error(error);
+        const cached = localStorage.getItem("user_profile");
+        if (cached) {
+          setProfileData(JSON.parse(cached));
         } else {
-          localStorage.removeItem("token");
           navigate("/login");
         }
       } finally {
@@ -55,30 +51,30 @@ export default function LayoutBidang({ children }) {
     fetchProfile();
   }, [navigate]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen bg-slate-50 items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597]"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar kiri — tetap di tempat */}
-      <div className="fixed top-0 left-0 h-full w-64 bg-white shadow">
+      {/* Sidebar */}
+      <div className="fixed top-0 left-0 h-full w-64 bg-white shadow z-20">
         <SidebarBidang />
       </div>
 
-      {/* Bagian kanan */}
+      {/* Konten kanan */}
       <div className="flex-1 ml-64">
-        {/* Navbar atas — tetap di tempat */}
+        {/* Navbar */}
         <div className="fixed top-0 left-64 right-0 bg-white shadow z-10">
           <Navbar profileData={profileData} />
         </div>
 
-        {/* Konten utama — biar bisa di-scroll */}
-        <main className="pt-20 p-6">{children || <Outlet />}</main>
+        {/* Main */}
+        <main className="pt-20 p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-[60vh]">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#226597]" />
+            </div>
+          ) : (
+            children || <Outlet />
+          )}
+        </main>
       </div>
     </div>
   );

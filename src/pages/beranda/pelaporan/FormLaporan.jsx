@@ -145,17 +145,16 @@ export default function FormLaporan() {
     }));
   };
 
-  const isFormValid = () => {
-    const judulOk = formData.judulPelaporan.trim() !== "";
-    const rincianOk = formData.rincianMasalah.trim() !== "";
-    const penyelesaianOk = formData.penyelesaianDiharapkan.trim() !== "";
-    const assetSelected = formData.selectedAssetId.trim() !== "";
-    const fileOk = uploadedFiles.length > 0;
+ const isFormValid = () => {
+  const judulOk = formData.judulPelaporan.trim() !== "";
+  const rincianOk = formData.rincianMasalah.trim() !== "";
+  const penyelesaianOk = formData.penyelesaianDiharapkan.trim() !== "";
+  const assetOk = formData.selectedAssetId.trim() !== "";
+  const fileOk = uploadedFiles.length > 0;
 
-    return (
-      judulOk && rincianOk && penyelesaianOk && subKategoriSelected && fileOk
-    );
-  };
+  return judulOk && rincianOk && penyelesaianOk && assetOk && fileOk;
+};
+
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -441,7 +440,7 @@ export default function FormLaporan() {
       selectedAssetId: "",
     });
     setUploadedFiles([]);
-    setselectedAsset(null);
+    setSelectedAsset(null);
     setShowSuccessPopup(false);
   };
 

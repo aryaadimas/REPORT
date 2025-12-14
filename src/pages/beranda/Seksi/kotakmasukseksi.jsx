@@ -1,133 +1,179 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TrashIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
+
+const BASE_URL = "https://service-desk-be-production.up.railway.app";
 
 export default function KotakMasukSeksi() {
   const [activeTab, setActiveTab] = useState("semua");
   const [deleteMode, setDeleteMode] = useState(false);
   const [selected, setSelected] = useState([]);
+  const [loadingList, setLoadingList] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loadingRead, setLoadingRead] = useState(false);
 
-  const [data, setData] = useState([
-    {
-      id: 1,
-      tipe: "tiket",
-      judul: "Tiket Masuk",
-      detail: "Tiket dengan ID LPR2782972 perlu ditindaklanjuti.",
-      tag: "Tiket",
-      waktu: "Baru saja",
-    },
-    {
-      id: 2,
-      tipe: "tiket",
-      judul: "Tiket Masuk",
-      detail: "Tiket dengan ID LPR346313 perlu ditindaklanjuti.",
-      tag: "Tiket",
-      waktu: "12 menit yang lalu",
-    },
-    {
-      id: 3,
-      tipe: "status",
-      judul: "Status Tiket Diperbarui",
-      detail: "Tiket dengan ID LPR238887 telah diverifikasi oleh bidang.",
-      tag: "Status",
-      waktu: "59 menit yang lalu",
-    },
-    {
-      id: 4,
-      tipe: "pengumuman",
-      judul: "Pengumuman Baru",
-      detail: "Sistem akan maintenance jam 09.00 malam.",
-      tag: "Pengumuman",
-      waktu: "2 jam yang lalu",
-    },
-    {
-      id: 5,
-      tipe: "tiket",
-      judul: "Tiket Masuk",
-      detail: "Tiket dengan ID LPR298313 perlu ditindaklanjuti.",
-      tag: "Tiket",
-      waktu: "2 menit yang lalu",
-    },
-    {
-      id: 4,
-      tipe: "pengumuman",
-      judul: "Pengumuman Baru",
-      detail: "Sistem akan maintenance jam 11.00 pagi.",
-      tag: "Pengumuman",
-      waktu: "10 jam yang lalu",
-    },
-  ]);
+  const [data, setData] = useState([]);
 
+  const token = localStorage.getItem("token");
+
+  /* =========================
+      FETCH NOTIFICATIONS
+  ========================== */
+  const fetchNotifications = async () => {
+    try {
+      setLoadingList(true);
+      const res = await fetch(`${BASE_URL}/api/notifications/seksi`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await res.json();
+      setData(json.data || []);
+    } catch (err) {
+      console.error("Gagal fetch notifikasi:", err);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  /* =========================
+      UTIL
+  ========================== */
   const toggleSelect = (id) => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
+  const formatTime = (date) =>
+    new Date(date).toLocaleString("id-ID", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+
+  /* =========================
+      DELETE NOTIFICATIONS
+  ========================== */
   const handleDeleteClick = () => {
-    // klik pertama → masukkan ke delete mode
     if (!deleteMode) {
       setDeleteMode(true);
       return;
     }
 
-    // jika deleteMode ON tapi tidak ada item yg dipilih
     if (selected.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Tidak ada pesan yang dipilih!",
-        text: "Pilih pesan terlebih dahulu sebelum menghapus.",
-        confirmButtonColor: "#0F2C59",
-      });
+      Swal.fire("Oops", "Pilih pesan terlebih dahulu", "warning");
       return;
     }
 
-    // konfirmasi penghapusan
     Swal.fire({
-      title: "Apakah Anda yakin?",
-      text: "Pesan yang dipilih akan dihapus.",
+      title: "Hapus notifikasi?",
+      text: "Pesan yang dipilih akan dihapus permanen",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, hapus!",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
       confirmButtonColor: "#d33",
-      cancelButtonColor: "#6c757d",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setData(data.filter((item) => !selected.includes(item.id)));
+      confirmButtonText: "Ya, hapus",
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+
+      try {
+        setLoadingDelete(true);
+
+        await Promise.all(
+          selected.map((id) =>
+            fetch(`${BASE_URL}/api/notifications/seksi/${id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+          )
+        );
+
+        setData((prev) =>
+          prev.filter((item) => !selected.includes(item.notification_id))
+        );
+
         setSelected([]);
         setDeleteMode(false);
 
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: "Pesan berhasil dihapus.",
-          confirmButtonColor: "#0F2C59",
-        });
+        Swal.fire("Berhasil", "Notifikasi dihapus", "success");
+      } catch (err) {
+        Swal.fire("Error", "Gagal menghapus notifikasi", "error");
+      } finally {
+        setLoadingDelete(false);
       }
     });
   };
 
+  /* =========================
+      MARK AS READ
+  ========================== */
+  const markAsRead = async (id) => {
+    try {
+      await fetch(`${BASE_URL}/api/notifications/seksi/${id}/read`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setData((prev) =>
+        prev.map((item) =>
+          item.notification_id === id ? { ...item, is_read: true } : item
+        )
+      );
+    } catch (err) {
+      console.error("Gagal tandai baca:", err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      setLoadingRead(true);
+
+      await fetch(`${BASE_URL}/api/notifications/seksi/read-all`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      fetchNotifications();
+    } catch (err) {
+      console.error("Gagal tandai baca semua:", err);
+    } finally {
+      setLoadingRead(false);
+    }
+  };
+
+  /* =========================
+      FILTER TAB
+  ========================== */
   const filteredData = data.filter((item) => {
     if (activeTab === "semua") return true;
-    return item.tipe === activeTab;
+    return item.notification_type === activeTab;
   });
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-[#0F2C59] mb-3">Kotak Masuk</h1>
+      <h1 className="text-3xl font-bold text-[#0F2C59] mb-4">
+        Kotak Masuk
+      </h1>
 
       <div className="bg-white p-6 rounded-2xl shadow">
-
-        {/* TAB FILTER */}
+        {/* TAB */}
         <div className="flex gap-3 mb-6">
           {[
             { id: "semua", label: "Semua" },
-            { id: "tiket", label: "Tiket" },
+            { id: "ticket", label: "Tiket" },
             { id: "status", label: "Status" },
-            { id: "pengumuman", label: "Pengumuman" },
+            { id: "announcemet", label: "Pengumuman" },
+            { id: "war_room", label: "war room"}
           ].map((tab) => (
             <button
               key={tab.id}
@@ -137,44 +183,74 @@ export default function KotakMasukSeksi() {
                 setSelected([]);
               }}
               className={`px-5 py-2 rounded-full border text-sm font-semibold transition
-              ${
-                activeTab === tab.id
-                  ? "bg-[#0F2C59] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
+                ${
+                  activeTab === tab.id
+                    ? "bg-[#0F2C59] text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* TOMBOL */}
+        {/* ACTION BUTTON */}
         <div className="flex justify-end gap-3 mb-4">
           <button
             onClick={handleDeleteClick}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium"
+            disabled={loadingDelete}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white
+              ${
+                loadingDelete
+                  ? "bg-red-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
           >
-            <TrashIcon className="w-5 h-5" />
-            {deleteMode ? "Hapus Sekarang" : "Hapus"}
+            {loadingDelete ? (
+              <>
+                <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                Menghapus...
+              </>
+            ) : (
+              <>
+                <TrashIcon className="w-5 h-5" />
+                {deleteMode ? "Hapus Sekarang" : "Hapus"}
+              </>
+            )}
           </button>
 
-          <button className="flex items-center gap-2 bg-[#0F2C59] hover:bg-[#15397A] text-white px-4 py-2 rounded-lg font-medium">
-            <ArrowPathIcon className="w-5 h-5" /> Refresh
+          <button
+            onClick={markAllAsRead}
+            disabled={loadingRead}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white
+              ${
+                loadingRead
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#0F2C59] hover:bg-[#15397A]"
+              }`}
+          >
+            <ArrowPathIcon
+              className={`w-5 h-5 ${loadingRead ? "animate-spin" : ""}`}
+            />
+            {loadingRead ? "Memproses..." : "Tandai Baca Semua"}
           </button>
         </div>
 
-        {/* LIST PESAN */}
+        {/* LIST */}
         <div className="space-y-4">
           {filteredData.map((item) => (
             <div
-              key={item.id}
-              className="flex items-start gap-4 p-5 bg-white border rounded-xl shadow-sm"
+              key={item.notification_id}
+              className={`flex items-start gap-4 p-5 border rounded-xl
+                ${item.is_read ? "bg-white" : "bg-blue-50"}`}
             >
               {deleteMode && (
                 <input
                   type="checkbox"
-                  checked={selected.includes(item.id)}
-                  onChange={() => toggleSelect(item.id)}
+                  checked={selected.includes(item.notification_id)}
+                  onChange={() =>
+                    toggleSelect(item.notification_id)
+                  }
                   className="mt-2 w-5 h-5 cursor-pointer"
                 />
               )}
@@ -183,22 +259,35 @@ export default function KotakMasukSeksi() {
                 <DocumentTextIcon className="w-7 h-7 text-[#0F2C59]" />
               </div>
 
-              <div className="flex-1">
+              <div
+                className="flex-1 cursor-pointer"
+                onClick={() => markAsRead(item.notification_id)}
+              >
                 <h3 className="text-lg font-semibold text-gray-700">
-                  {item.judul}
+                  {item.notification_type === "ticket"
+                    ? "Tiket Masuk"
+                    : "Notifikasi"}
                 </h3>
-                <p className="text-gray-600">{item.detail}</p>
 
-                <span className="inline-block px-3 py-1 mt-2 text-xs font-medium bg-blue-100 text-blue-700 rounded-lg">
-                  {item.tag}
+                <p className="text-gray-600">{item.message}</p>
+
+                <span className="inline-block mt-2 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg">
+                  {item.notification_type}
                 </span>
               </div>
 
-              <div className="text-sm text-gray-500">{item.waktu}</div>
+              <div className="text-sm text-gray-500">
+                {formatTime(item.created_at)}
+              </div>
             </div>
           ))}
-        </div>
 
+          {!loadingList && filteredData.length === 0 && (
+            <p className="text-center text-gray-400">
+              Tidak ada notifikasi
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -91,7 +91,7 @@ export default function UpdateProgressTeknisi() {
       });
 
       if (status === "Selesai") {
-        navigate("/arsipseksi");
+        navigate("/dashboardteknisi");
       } else {
         navigate("/dashboardteknisi");
       }

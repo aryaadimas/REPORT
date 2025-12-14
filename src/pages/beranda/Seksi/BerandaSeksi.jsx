@@ -50,11 +50,15 @@ const filteredTickets = rawTickets.filter(t => {
   
 
   const [currentPage, setCurrentPage] = useState(1);
+
   const rowsPerPage = 10;
-const totalPages = Math.ceil(filteredTickets.length / rowsPerPage);
-const indexOfLastRow = currentPage * rowsPerPage;
-const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-const currentRows = filteredTickets.slice(indexOfFirstRow, indexOfLastRow);
+  const totalData = filteredTickets.length;
+  const totalPages = Math.ceil(totalData / rowsPerPage);
+
+const currentRows = filteredTickets.slice(
+  (currentPage - 1) * rowsPerPage,
+  currentPage * rowsPerPage);
+
 
   const [dashboardData, setDashboardData] = useState({
   total_tickets: 0,
@@ -217,6 +221,45 @@ function updateSerialList(selectedName) {
     fetchDashboard();
     fetchAssets();
   }, []);
+
+
+  const getPaginationRange = (current, total) => {
+  const delta = 1;
+  const range = [];
+
+  // Selalu tampilkan halaman pertama
+  range.push(1);
+
+  // Hitung start & end window
+  let start = Math.max(2, current - delta);
+  let end = Math.min(total - 1, current + delta);
+
+  // Kalau dekat awal
+  if (current <= delta + 2) {
+    start = 2;
+    end = Math.min(total - 1, 1 + delta * 2);
+  }
+
+  // Kalau dekat akhir
+  if (current >= total - (delta + 1)) {
+    start = Math.max(2, total - delta * 2);
+    end = total - 1;
+  }
+
+  if (start > 2) range.push("...");
+
+  for (let i = start; i <= end; i++) {
+    range.push(i);
+  }
+
+  if (end < total - 1) range.push("...");
+
+  // Selalu tampilkan halaman terakhir
+  if (total > 1) range.push(total);
+
+  return range;
+};
+
 
 
   return (
@@ -506,47 +549,69 @@ function updateSerialList(selectedName) {
           </table>
         </div>
 
-        {/* Footer */}
-          <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-            <span>
-              Menampilkan data {indexOfFirstRow + 1} sampai {Math.min(indexOfLastRow, filteredTickets.length)} dari {filteredTickets.length} data
-            </span>
+        {/* FOOTER PAGINATION */}
+      <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-4">
+        {/* INFO DATA */}
+        <p className="text-sm text-gray-500">
+          Menampilkan data{" "}
+          <span className="font-medium">
+            {(currentPage - 1) * rowsPerPage + 1}
+          </span>{" "}
+          sampai{" "}
+          <span className="font-medium">
+            {Math.min(currentPage * rowsPerPage, totalData)}
+          </span>{" "}
+          dari{" "}
+          <span className="font-medium">{totalData}</span> data
+        </p>
 
-            <div className="flex gap-2">
-              {/* Prev Button */}
-              <button
-                className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
+        {/* PAGINATION */}
+        <div className="flex items-center gap-1">
+          {/* PREV */}
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 text-sm border rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            &lt;
+          </button>
+
+          {/* PAGE NUMBERS */}
+          {getPaginationRange(currentPage, totalPages).map((page, idx) =>
+            page === "..." ? (
+              <span
+                key={idx}
+                className="px-3 py-1 text-sm text-gray-400 select-none"
               >
-                &lt;
-              </button>
-
-              {/* Numbered Buttons */}
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  className={`px-3 py-1 border rounded-lg ${
-                    currentPage === index + 1
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-gray-100"
+                ...
+              </span>
+            ) : (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 text-sm rounded-lg border transition
+                  ${
+                    page === currentPage
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white hover:bg-gray-100"
                   }`}
-                  onClick={() => setCurrentPage(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              ))}
-
-              {/* Next Button */}
-              <button
-                className="px-3 py-1 border rounded-lg hover:bg-gray-100 disabled:opacity-40"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
               >
-                &gt;
+                {page}
               </button>
-            </div>
-          </div>
+            )
+          )}
+
+          {/* NEXT */}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 text-sm border rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+
 
       </div>
     </div>

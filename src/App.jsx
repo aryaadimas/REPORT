@@ -115,6 +115,7 @@ import AksiTiket from "./pages/bidang/AksiTiket";
 import MonitoringBidang from "./pages/bidang/MonitoringBidang";
 import RatingKepuasan from "./pages/bidang/RatingKepuasan";
 import DetailBidang from "./pages/bidang/DetailBidang";
+import AksiPelBidang from "./pages/bidang/AksiPelBidang";
 
 //*-- Admin OPD --*/
 import DashboardOpd from "./pages/adminopd/DashboardOpd";
@@ -310,10 +311,13 @@ function App() {
         <Route path="/dashboardbidang" element={<DashboardBidang />} />
         <Route path="/detailbidang/:id" element={<DetailBidang />} />
         <Route path="/aksitiket" element={<AksiTiket />} />
+        <Route path="/aksitiket/:ticketId" element={<AksiTiket />} />
         {/* <Route path="/lihatrating" element={<LihatRating />} /> */}
         <Route path="/aksibidang" element={<AksiTiket />} />
         <Route path="/monitoringbidang" element={<MonitoringBidang />} />
         <Route path="/ratingkepuasan" element={<RatingKepuasan />} />
+        <Route path="aksipelbidang" element={<AksiPelBidang />} />
+        <Route path="/bidang/aksi/:ticket_id" element={<AksiPelBidang />}/>
         <Route path="/dashboardopd" element={<DashboardOpd />} />
         <Route path="/cekdetail" element={<CekDetail />} />
         <Route path="/knowledgebasedraft" element={<KnowledgeBaseDraft />} />

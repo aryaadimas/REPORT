@@ -24,14 +24,20 @@ const ActionIcon = () => (
 );
 
 // DROPDOWN
-const FilterDropdown = ({ placeholder, options = [] }) => (
+const FilterDropdown = ({ placeholder, options = [], value, onChange }) => (
   <div className="relative">
     <select
+      value={value}
+      onChange={onChange}
       className="w-full text-left text-sm text-gray-700 p-2 bg-white rounded border border-gray-300 appearance-none pr-8"
     >
-      <option value="" disabled hidden>{placeholder}</option>
+      <option value="" disabled hidden>
+        {placeholder}
+      </option>
       {options.map((opt, i) => (
-        <option key={i} value={opt}>{opt}</option>
+        <option key={i} value={opt}>
+          {opt}
+        </option>
       ))}
     </select>
 
@@ -69,23 +75,50 @@ export default function DashboardBidang() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // filter dummy (biar struktur kamu tetap ada)
+  const [filterKategori, setFilterKategori] = useState("");
+  const [filterJenis, setFilterJenis] = useState("");
+  const [filterPrioritas, setFilterPrioritas] = useState("");
 
+  // ========================== PAGINATION ==========================
   const indexLast = currentPage * itemsPerPage;
   const indexFirst = indexLast - itemsPerPage;
 
-  const currentData = tableData.slice(indexFirst, indexLast);
+  // ========================== PRIORITY STYLE ==========================
+  const getPriorityStyle = (priority) => {
+    if (!priority) return "bg-gray-200 text-gray-700";
 
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+    const p = String(priority).toLowerCase();
+    if (p === "high" || p === "tinggi")
+      return "bg-red-100 text-red-700 border border-red-300";
+    if (p === "medium" || p === "sedang")
+      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+    if (p === "low" || p === "rendah")
+      return "bg-green-100 text-green-700 border border-green-300";
 
-  // ========================== FETCH DASHBOARD ===================================
+    return "bg-gray-200 text-gray-700";
+  };
+
+  // ========================== AMBIL TICKET ID AMAN (FIX UTAMA) ==========================
+  const getTicketId = (row) => {
+    // paling aman: ticket_id dari backend
+    if (row?.ticket_id) return row.ticket_id;
+
+    // jaga-jaga kalau backend bungkus di row.ticket
+    if (row?.ticket?.ticket_id) return row.ticket.ticket_id;
+
+    // fallback terakhir
+    if (row?.id) return row.id;
+
+    return null;
+  };
+
+  // ========================== FETCH DASHBOARD ==========================
   const fetchDashboard = async () => {
     try {
-      setLoading(true);
-
       const res = await fetch(`${BASE_URL}/api/dashboard/bidang`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const json = await res.json();
 
       setStats({
@@ -96,85 +129,95 @@ export default function DashboardBidang() {
       });
     } catch (err) {
       console.error("Dashboard error:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // ========================== FETCH PELAPORAN ===================================
+  // ========================== FETCH PELAPORAN ==========================
   const fetchPelaporan = async () => {
     try {
-      setLoading(true);
-
       const res = await fetch(
         `${BASE_URL}/api/tickets/bidang/verified/pelaporan-online`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const json = await res.json();
       setTableData(json.data || []);
     } catch (err) {
       console.error("Pelaporan error:", err);
-    } finally {
-      setLoading(false);
+      setTableData([]);
     }
   };
 
-  // ========================== FETCH PELAYANAN ===================================
+  // ========================== FETCH PELAYANAN ==========================
   const fetchPelayanan = async () => {
     try {
-      setLoading(true);
-
       const res = await fetch(
         `${BASE_URL}/api/tickets/bidang/verified/pengajuan-pelayanan`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const json = await res.json();
       setTableData(json.data || []);
     } catch (err) {
       console.error("Pelayanan error:", err);
-    } finally {
-      setLoading(false);
+      setTableData([]);
     }
   };
 
   // ========================== LOAD DATA BERDASARKAN TAB =========================
   useEffect(() => {
-    if (activeTab === "pelaporan") {
-      fetchDashboard();
-      fetchPelaporan();
-    } else {
-      fetchPelayanan();
-    }
+    // pindah tab -> balik halaman 1
+    setCurrentPage(1);
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        // dashboard selalu update biar konsisten
+        await fetchDashboard();
+
+        if (activeTab === "pelaporan") {
+          await fetchPelaporan();
+        } else {
+          await fetchPelayanan();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // ========================== REFRESH BUTTON ===================================
-  const handleRefresh = () => {
-    if (activeTab === "pelaporan") {
-      fetchDashboard();
-      fetchPelaporan();
-    } else {
-      fetchPelayanan();
+  // ========================== REFRESH BUTTON ==========================
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      await fetchDashboard();
+      if (activeTab === "pelaporan") await fetchPelaporan();
+      else await fetchPelayanan();
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ========================== PRIORITY STYLE ===================================
-  const getPriorityStyle = (priority) => {
-    if (!priority) return "bg-gray-200 text-gray-700";
+  // ========================== FILTER (opsional, aman) ==========================
+  const filteredTable = tableData.filter((row) => {
+    const kategori = String(row.asset?.kategori || row.kategori || "").toLowerCase();
+    const jenis = String(row.asset?.jenis_asset || row.jenis_asset || "").toLowerCase();
+    const priority = String(row.priority || "").toLowerCase();
 
-    const p = priority.toLowerCase();
-    if (p === "high" || p === "tinggi") return "bg-red-100 text-red-700 border border-red-300";
-    if (p === "medium" || p === "sedang") return "bg-yellow-100 text-yellow-700 border border-yellow-300";
-    if (p === "low" || p === "rendah") return "bg-green-100 text-green-700 border border-green-300";
+    const okKategori = !filterKategori || kategori === filterKategori.toLowerCase();
+    const okJenis = !filterJenis || jenis === filterJenis.toLowerCase();
+    const okPrioritas = !filterPrioritas || priority === filterPrioritas.toLowerCase();
 
-    return "bg-gray-200 text-gray-700";
-  };
+    return okKategori && okJenis && okPrioritas;
+  });
+
+  const currentData = filteredTable.slice(indexFirst, indexLast);
+  const totalPages = Math.ceil(filteredTable.length / itemsPerPage);
 
   return (
     <LayoutBidang>
       <main className="p-6 bg-gray-50">
-
         {/* HEADER */}
         <div className="bg-white shadow-sm border rounded-xl p-6 mb-8">
           <h1 className="text-2xl font-bold text-[#226597]">Dashboard</h1>
@@ -188,12 +231,9 @@ export default function DashboardBidang() {
             { number: stats.revisi, label: "Revisi", icon: "/assets/Revisi.png" },
             { number: stats.ditolak, label: "Ditolak", icon: "/assets/Ditolak.png" },
           ].map((item, i) => (
-            <div
-              key={i}
-              className="bg-white border rounded-xl p-6 shadow hover:shadow-md transition"
-            >
+            <div key={i} className="bg-white border rounded-xl p-6 shadow hover:shadow-md transition">
               <div className="flex items-center gap-3 mb-3">
-                <img src={item.icon} className="w-8 h-8 object-contain" />
+                <img src={item.icon} className="w-8 h-8 object-contain" alt="" />
                 <h3 className="font-semibold text-gray-800">{item.label}</h3>
               </div>
               <p className="text-3xl font-bold text-[#0F2C59]">{item.number}</p>
@@ -204,7 +244,6 @@ export default function DashboardBidang() {
 
         {/* CARD TABLE */}
         <div className="bg-white shadow-md border rounded-xl p-7">
-
           {/* TAB + REFRESH */}
           <div className="flex justify-between items-center border-b pb-3 mb-6">
             <div className="flex gap-8">
@@ -223,9 +262,9 @@ export default function DashboardBidang() {
               ))}
             </div>
 
-            {/* Refresh */}
             <button
               onClick={handleRefresh}
+              disabled={loading}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition
                 ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#226597] hover:bg-blue-600 text-white"}
               `}
@@ -241,23 +280,45 @@ export default function DashboardBidang() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FilterRow label="Kategori">
-                <FilterDropdown placeholder="Pilih kategori" options={["Hardware", "Software", "Jaringan", "SDM"]} />
+                <FilterDropdown
+                  placeholder="Pilih kategori"
+                  options={["ti", "non ti"]}
+                  value={filterKategori || ""}
+                  onChange={(e) => {
+                    setFilterKategori(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
               </FilterRow>
 
               <FilterRow label="Jenis">
-                <FilterDropdown placeholder="Pilih jenis" options={["barang", "SDM"]} />
+                <FilterDropdown
+                  placeholder="Pilih jenis"
+                  options={["barang", "sdm"]}
+                  value={filterJenis || ""}
+                  onChange={(e) => {
+                    setFilterJenis(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
               </FilterRow>
 
               <FilterRow label="Prioritas">
-                <FilterDropdown placeholder="Pilih prioritas" options={["Low", "Medium", "High"]} />
+                <FilterDropdown
+                  placeholder="Pilih prioritas"
+                  options={["low", "medium", "high"]}
+                  value={filterPrioritas || ""}
+                  onChange={(e) => {
+                    setFilterPrioritas(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
               </FilterRow>
             </div>
           </div>
 
           {/* TABEL */}
           <div className="border rounded-lg overflow-hidden">
-
-            {/* HEADER TABEL */}
             <div className="grid grid-cols-7 bg-[#0F2C59] text-white font-medium text-sm p-3 text-center">
               <div className="text-left pl-2">Pengirim</div>
               <div>Tgl. Masuk</div>
@@ -269,113 +330,130 @@ export default function DashboardBidang() {
             </div>
 
             {/* BODY */}
-            {currentData.map((row, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-7 items-center p-3 border-b text-sm hover:bg-gray-50"
-              >
-                {/* Pengirim */}
-                <div className="flex items-center gap-3 pl-2">
-                  <img
-                    src={row.creator?.profile || "/assets/default.jpg"}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  {row.creator?.full_name || "Tidak ada nama"}
-                </div>
+            {loading && (
+              <div className="p-6 text-center text-gray-500">Memuat data...</div>
+            )}
 
-                {/* Tanggal */}
-                <div className="text-center">
-                  {row.created_at?.slice(0, 10) || "-"}
-                </div>
+            {!loading && currentData.length === 0 && (
+              <div className="p-6 text-center text-gray-500">Tidak ada data.</div>
+            )}
 
-                {/* Data Aset */}
-                <div className="text-center">
-                  {activeTab === "pelaporan"
-                    ? (row.asset?.nama_asset || "-")
-                    : (row.subkategori_nama || "-")}
-                </div>
+            {!loading &&
+              currentData.map((row, i) => {
+                const ticketId = getTicketId(row);
 
-                {/* Nomor Seri */}
-                <div className="text-center">
-                  {activeTab === "pelaporan"
-                    ? (row.asset?.nomor_seri || "-")
-                    : "-"}
-                </div>
+                return (
+                  <div
+                    key={ticketId || i}
+                    className="grid grid-cols-7 items-center p-3 border-b text-sm hover:bg-gray-50"
+                  >
+                    {/* Pengirim */}
+                    <div className="flex items-center gap-3 pl-2">
+                      <img
+                        src={row.creator?.profile || "/assets/default.jpg"}
+                        className="w-8 h-8 rounded-full object-cover"
+                        alt=""
+                      />
+                      {row.creator?.full_name || "Tidak ada nama"}
+                    </div>
 
-                {/* Lampiran */}
-                <div className="flex justify-center items-center gap-1 text-[#0F2C59] underline cursor-pointer">
-                  <DocumentIcon />
-                  <span className="text-xs">
-                    {row.files?.length > 0 ? "lampiran" : "-"}
-                  </span>
-                </div>
+                    {/* Tanggal */}
+                    <div className="text-center">{row.created_at?.slice(0, 10) || "-"}</div>
 
-                {/* Priority */}
-                <div className="flex justify-center">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityStyle(row.priority)}`}>
-                    {row.priority}
-                  </span>
-                </div>
+                    {/* Data Aset */}
+                    <div className="text-center">
+                      {activeTab === "pelaporan"
+                        ? row.asset?.nama_asset || "-"
+                        : row.subkategori_nama || "-"}
+                    </div>
 
-                {/* Aksi */}
-                <div
-                  className="flex justify-center cursor-pointer"
-                  onClick={() => navigate(`/aksitiket/${row.ticket_id}`)}
-                >
-                  <ActionIcon />
-                </div>
-              </div>
-            ))}
+                    {/* Nomor Seri */}
+                    <div className="text-center">
+                      {activeTab === "pelaporan" ? row.asset?.nomor_seri || "-" : "-"}
+                    </div>
+
+                    {/* Lampiran */}
+                    <div className="flex justify-center items-center gap-1 text-[#0F2C59] underline cursor-pointer">
+                      <DocumentIcon />
+                      <span className="text-xs">{row.files?.length > 0 ? "lampiran" : "-"}</span>
+                    </div>
+
+                    {/* Priority */}
+                    <div className="flex justify-center">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityStyle(
+                          row.priority
+                        )}`}
+                      >
+                        {row.priority || "-"}
+                      </span>
+                    </div>
+
+                    {/* Aksi (FIX: ANTI UNDEFINED) */}
+                    <div
+                      className={`flex justify-center ${
+                        ticketId ? "cursor-pointer" : "cursor-not-allowed opacity-40"
+                      }`}
+                      onClick={() => {
+  if (!ticketId) {
+    console.error("ticket_id tidak ada pada row:", row);
+    return;
+  }
+
+  if (activeTab === "pelaporan") {
+    navigate(`/bidang/aksi/${ticketId}`);   // 👉 AksiPelBidang.jsx
+  } else {
+    navigate(`/aksitiket/${ticketId}`);     // 👉 AksiTiket.jsx
+  }
+}}
+
+                      title={ticketId ? "Buka Aksi Tiket" : "ticket_id tidak ditemukan"}
+                    >
+                      <ActionIcon />
+                    </div>
+                  </div>
+                );
+              })}
           </div>
 
-            {/* PAGINATION */}
-<div className="flex justify-end items-center p-4 gap-3">
+          {/* PAGINATION */}
+          <div className="flex justify-end items-center p-4 gap-3">
+            <button
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-[#0F2C59] text-white"
+              }`}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
 
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setCurrentPage(num)}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === num ? "bg-[#0F2C59] text-white" : "bg-white text-gray-700"
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
 
-  {/* Prev Button */}
-  <button
-    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-    className={`px-3 py-1 rounded ${
-      currentPage === 1
-        ? "bg-gray-300 cursor-not-allowed"
-        : "bg-[#0F2C59] text-white"
-    }`}
-  >
-    Prev
-  </button>
-
-  {/* Page Numbers */}
-  <div className="flex gap-2">
-    {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-      <button
-        key={num}
-        onClick={() => setCurrentPage(num)}
-        className={`px-3 py-1 rounded border ${
-          currentPage === num
-            ? "bg-[#0F2C59] text-white"
-            : "bg-white text-gray-700"
-        }`}
-      >
-        {num}
-      </button>
-    ))}
-  </div>
-
-  {/* Next Button */}
-  <button
-    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-    className={`px-3 py-1 rounded ${
-      currentPage === totalPages
-        ? "bg-gray-300 cursor-not-allowed"
-        : "bg-[#0F2C59] text-white"
-    }`}
-  >
-    Next
-  </button>
-
-</div>
-
-
+            <button
+              onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === totalPages || totalPages === 0
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-[#0F2C59] text-white"
+              }`}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </main>
     </LayoutBidang>
