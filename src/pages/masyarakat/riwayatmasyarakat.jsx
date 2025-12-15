@@ -40,7 +40,7 @@ export default function RiwayatMasyarakat() {
         }
 
         const response = await fetch(
-          "https://service-desk-be-production.up.railway.app/api/tickets/masyarakat/finished",
+          `${import.meta.env.VITE_API_BASE_URL}/api/tickets/masyarakat/finished`,
           {
             method: "GET",
             headers: {

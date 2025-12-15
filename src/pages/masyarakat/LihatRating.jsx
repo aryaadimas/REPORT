@@ -42,9 +42,7 @@ export default function LihatRating() {
       // 3. Jika masih tidak ada data, tampilkan error
       if (!ticketItem || !ticketItem.ticket_id) {
         console.log("Tidak ada data dari state atau localStorage");
-        setDataError(
-          "Data tiket tidak ditemukan. Silakan kembali ke halaman riwayat."
-        );
+        setDataError("Data tiket tidak ditemukan. Silakan kembali ke halaman riwayat.");
         setLoading(false);
         return;
       }
@@ -138,11 +136,11 @@ export default function LihatRating() {
           <div className="p-6">
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-8 relative overflow-hidden max-w-5xl mx-auto">
               {/* Debug Info */}
-              {process.env.NODE_ENV === "development" && (
+              {process.env.NODE_ENV === 'development' && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800">
-                    <strong>Debug Info:</strong> ID Tiket:{" "}
-                    {item.ticket_id || item.id} | Rating: {rating}/5
+                    <strong>Debug Info:</strong> ID Tiket: {item.ticket_id || item.id} | 
+                    Rating: {rating}/5
                   </p>
                 </div>
               )}
@@ -348,15 +346,10 @@ export default function LihatRating() {
                 )}
               </div>
 
-              {process.env.NODE_ENV === "development" && (
+              {process.env.NODE_ENV === 'development' && (
                 <div className="mt-6 p-3 bg-gray-100 rounded text-xs text-gray-600">
-                  <p>
-                    <strong>Rating Data:</strong>{" "}
-                    {rating ? `${rating}/5` : "Tidak ada"}
-                  </p>
-                  <p>
-                    <strong>Comment:</strong> {comment.substring(0, 50)}...
-                  </p>
+                  <p><strong>Rating Data:</strong> {rating ? `${rating}/5` : "Tidak ada"}</p>
+                  <p><strong>Comment:</strong> {comment.substring(0, 50)}...</p>
                 </div>
               )}
             </div>
