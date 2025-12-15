@@ -116,7 +116,7 @@ const LogIn = () => {
 
     try {
      const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`,
+  `${import.meta.env.VITE_API_BASE_URL}/login/masyarakat`, 
         {
           method: "POST",
           headers: {
