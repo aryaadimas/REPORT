@@ -103,6 +103,7 @@ import BeriRatingMasyarakat from "./pages/masyarakat/BeriRatingMasyarakat";
 import LihatRiwayatMasyarakat from "./pages/masyarakat/LihatRiwayatMasyarakat";
 import LihatRatingMasyarakat from "./pages/masyarakat/LihatRatingMasyarakat";
 import FormMasyarakat from "./pages/masyarakat/FormMasyarakat";
+import TiketDitolakMasyarakat from "./pages/masyarakat/TiketDitolakMasyarakat";
 
 //*-- Universal Profil --*/
 import ProfilUniversal from "./pages/Profil";
@@ -259,6 +260,8 @@ function App() {
           <Route path="lihatrating" element={<LihatRating />} />
           <Route path="berirating" element={<BeriRating />} />
           <Route path="reopenmasyarakat" element={<ReopenMasyarakat />} />
+          <Route path="profilmasyarakat" element={<ProfilMasyarakat />} />
+          <Route path="/tiketditolakmasyarakat" element={<TiketDitolakMasyarakat />} />
           <Route
             path="ndaruratmasyarakat"
             element={<NotifDaruratMasyarakat />}
