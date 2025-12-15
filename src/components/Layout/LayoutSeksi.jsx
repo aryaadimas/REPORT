@@ -17,7 +17,17 @@ export default function LayoutSeksi() {
           return;
         }
 
-        const response = await fetch(`/api/me`, {
+        // first try to use cached user from localStorage (from SSO or login)
+        const cachedUser = localStorage.getItem("user") || localStorage.getItem("userData");
+        if (cachedUser) {
+          const userData = JSON.parse(cachedUser);
+          setProfileData(userData);
+          localStorage.setItem("user_profile", JSON.stringify(userData));
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`https://arise-app.my.id/api/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -40,7 +50,7 @@ export default function LayoutSeksi() {
         localStorage.setItem("user_profile", JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching profile:", error);
-        const savedProfile = localStorage.getItem("user_profile");
+        const savedProfile = localStorage.getItem("user_profile") || localStorage.getItem("user") || localStorage.getItem("userData");
         if (savedProfile) {
           setProfileData(JSON.parse(savedProfile));
         } else {

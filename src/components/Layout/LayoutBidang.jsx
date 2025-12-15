@@ -17,7 +17,17 @@ export default function LayoutBidang({ children }) {
           return;
         }
 
-        const response = await fetch(`/api/me`, {
+        // first try to use cached user from localStorage (from SSO or login)
+        const cachedUser = localStorage.getItem("user") || localStorage.getItem("userData");
+        if (cachedUser) {
+          const userData = JSON.parse(cachedUser);
+          setProfileData(userData);
+          localStorage.setItem("user_profile", JSON.stringify(userData));
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`https://arise-app.my.id/api/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -37,7 +47,7 @@ export default function LayoutBidang({ children }) {
         localStorage.setItem("user_profile", JSON.stringify(data));
       } catch (error) {
         console.error(error);
-        const cached = localStorage.getItem("user_profile");
+        const cached = localStorage.getItem("user_profile") || localStorage.getItem("user") || localStorage.getItem("userData");
         if (cached) {
           setProfileData(JSON.parse(cached));
         } else {

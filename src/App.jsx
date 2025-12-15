@@ -12,6 +12,7 @@ import BerandaMasyarakat from "./pages/masyarakat/BerandaMasyarakat";
 import Register from "./pages/Register";
 import LogIn from "./pages/Login";
 import LoginSso from "./pages/LoginSso";
+import SsoCallback from "./pages/SsoCallback";
 import LupaPassword from "./pages/LupaPassword";
 import MasukKode from "./pages/MasukKode";
 import KataSandiBaru from "./pages/KataSandiBaru";
@@ -160,7 +161,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/loginsso" replace />} />
 
         {/* Halaman dengan Layout */}
         <Route path="/" element={<LayoutSeksi />}>
@@ -296,6 +297,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<LogIn />} />
         <Route path="/loginsso" element={<LoginSso />} />
+        <Route path="/sso-callback" element={<SsoCallback />} />
         <Route path="/lupapassword" element={<LupaPassword />} />
         <Route path="/masukkode" element={<MasukKode />} />
         <Route path="/katasandibaru" element={<KataSandiBaru />} />

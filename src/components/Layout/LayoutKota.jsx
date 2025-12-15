@@ -40,7 +40,7 @@ export default function LayoutKota() {
         localStorage.setItem("user_profile", JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching profile:", error);
-        const savedProfile = localStorage.getItem("user_profile");
+        const savedProfile = localStorage.getItem("user_profile") || localStorage.getItem("user") || localStorage.getItem("userData");
         if (savedProfile) {
           setProfileData(JSON.parse(savedProfile));
         } else {
